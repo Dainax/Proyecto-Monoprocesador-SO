@@ -20,6 +20,10 @@ public class CPU extends Thread{
     private int cycleCounter;
     private int remainingCycles;
     
+    // Proceso que se está ejecutando
+    // Si es null, el SO está en control.
+    private Process currentProcess;
+    
     // Monitor para la sincronizacion para usar wait() y notify()
     private final Object syncMonitor = new Object();
     
@@ -38,15 +42,6 @@ public class CPU extends Thread{
     }
     
     // ----- Sincronización -----
-    
-    /**
-     * 
-     */
-    public void receiveTick() {
-        synchronized (syncMonitor) {
-            syncMonitor.notify();
-        }
-    }
 
     /**
      * Detiene el hilo de CPU y lo saca de la espera (wait).
@@ -70,14 +65,67 @@ public class CPU extends Thread{
         while (isProcessRunning) {
             synchronized (syncMonitor) {
                 try {
+                    
+                    // Espera el 'tick' del reloj
                     syncMonitor.wait();
-                    // La politica no es RR
-                    if (remainingCycles!=-1) {
+                    
+                    // Si stopCPU fue llamado, sale
+                    if (!this.isProcessRunning) {
                         break;
-                    } 
-                    // La politica es RR
-                    else {
+                    }
+                    
+                    // Incrementa el contador global de ciclos de CPU 
+                    this.cycleCounter++;
+                    
+                    // Si es null se esta ejecutando el CPU
+                    if (currentProcess != null) {
+                        // Proceso de Usuario
                         
+                        // Ejecutar una instrucción del proceso
+                        
+                        //boolean stillRunning = currentProcess.executeInstruction();
+                        
+                        
+                        
+                        // Lógica para planificación preemptiva (Round Robin)
+                        if (remainingCycles > 0) { // Indica que estamos en RR y queda quantum
+                            remainingCycles--;
+                        }
+
+                        // Comprobación de finalización, E/S, o Quantum
+//                        if (!stillRunning || remainingCycles == 0) {
+//                            
+//                            // Llamar al planificador del SO para un cambio de contexto
+//                            // Aquí es donde el Planificador toma el control (El SO se ejecuta)
+//                            // scheduler.handlePreemption(currentProcess, remainingCycles == 0); 
+//                            
+//                            // Desasignar el proceso de la CPU 
+//                            // (el Planificador asignará el siguiente en su turno de ejecución)
+//                            // currentProcess = null; 
+//                        }
+                        
+                    } else {
+                        // El Planificador/Sistema Operativo toma el control
+                        
+                        // El SO debe encargarse de la gestión:
+                        // - Crear nuevos procesos (a largo plazo). [cite: 33]
+                        // - Mover procesos de Listo a Listo/Bloqueado Suspendido. [cite: 32]
+                        // - Ejecutar el Planificador (Scheduler) a corto plazo. [cite: 37]
+                        
+                        // **Llamar al planificador del SO para que seleccione un proceso**
+                        // Process nextProcess = scheduler.selectNextProcess();
+                        // if (nextProcess != null) {
+                        //    setCurrentProcess(nextProcess);
+                        //    // Si es RR, reiniciar el quantum
+                        //    if (scheduler.isRoundRobin()) {
+                        //        remainingCycles = scheduler.getQuantum();
+                        //    }
+                        // }
+                        
+                        // NOTA: Es crucial que tu clase 'Scheduler' o 'OperatingSystem'
+                        // tenga su propia lógica para simular su tiempo de ejecución.
+                        // Podrías usar un 'flag' o un 'currentSOOperation' para indicar
+                        // que el SO está trabajando durante este ciclo.
                     }
                 }
                 catch (InterruptedException e) {
@@ -128,6 +176,19 @@ public class CPU extends Thread{
 
     public void setRemainingCycles(int remainingCycles) {
         this.remainingCycles = remainingCycles;
+    }
+    
+//    public void setCurrentProcess(Process process) {
+//        this.currentProcess = process;
+//        // Al cargar un proceso, actualizamos los registros de la CPU con los del PCB
+//        if (process != null) {
+//            this.PC = process.get;
+//            this.MAR = process.getMemoryAddressRegister();
+//        }
+//    }
+    
+    public Process getCurrentProcess() {
+        return currentProcess;
     }
     
 }
