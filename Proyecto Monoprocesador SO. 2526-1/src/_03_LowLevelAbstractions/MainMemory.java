@@ -57,11 +57,12 @@ public class MainMemory {
     /**
      * Marca espacio ocupado para un proceso (base-límite)
      *
+     * @param process
      * @param base
      * @param size
      * @return true si completa exitosamente, false si no
      */
-    public boolean allocate(int base, int size) {
+    public boolean allocate(Process process, int base, int size) {
         if (base + size > MEMORY_SIZE) {
             return false;
         }
@@ -73,6 +74,7 @@ public class MainMemory {
         for (int i = base; i < base + size; i++) {
             memorySlots[i] = true;
         }
+        this.addProcess(process);
         return true;
     }
 
@@ -93,7 +95,7 @@ public class MainMemory {
      * del void que recibe un proceso
      * @param Data
      */
-    public void addProcess(Process Data) { 
+    private void addProcess(Process Data) { 
         this.processInMemory.insertLast(Data);
     }
 }

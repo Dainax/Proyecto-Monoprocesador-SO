@@ -10,5 +10,151 @@ package _04_OperatingSystem;
  */
 public class Process {
  
+    // ---------- Atributos ----------
+    // 
+    private int PC;
+    private int MAR;
+    private String name;
+    private int totalInstructions;
+    private int remainingInstructions;
+    private ProcessType type;           
+    private ProcessState state;
+    private int cyclesToGenerateException; // Para generar IO si es IO_Bound
+    private int cyclesToManageException;   // Para satisfacer interrupcion
+    private int baseDirection;
+
+    /** ----- Planificación -----
+     *  FCFS:First-Come-First-Served o FIFO se usara el id del proceso
+     * Para SPN shortest process next se usara el que tenga el menor totalInstruction
+     * Para SRT shortest remaining time se usara el que tenga el menor remainingInstruction
+     */
+    private int cyclesWaitingCPU;
+    private int responseRate; //Tasa de respuesta al proceso para la politica HRRN (ver formula)
     
+    /** Para comunicar el resultado de la ejecución a la CPU
+     * true: El proceso ejecutó una instrucción y desea seguir (no terminó, no pidió E/S).
+     * false: El proceso terminó o solicitó una excepción/E/S.
+    */ 
+    private volatile boolean executedSuccessfully;
+    
+    // Para sincronización
+    private final Object processMonitor = new Object();
+    private volatile boolean keepRunning = true;
+    
+    
+    // ---------- Metodos ----------
+
+    /**
+     * Constructor de la clase
+     * @param totalInstructions
+     * @param name
+     * @param type
+     * @param baseDirection
+     * @param cyclesToGenerateException
+     * @param cyclesToManageException 
+     */
+    public Process(String name, int totalInstructions, ProcessType type, int cyclesToGenerateException, int cyclesToManageException, int baseDirection) {
+        this.PC = 0;
+        this.MAR = baseDirection;
+        this.name = name;
+        this.totalInstructions = totalInstructions;
+        this.remainingInstructions = totalInstructions;
+        this.type = type;
+        this.state = ProcessState.NEW;
+        this.cyclesToGenerateException = cyclesToGenerateException;
+        this.cyclesToManageException = cyclesToManageException;
+        this.cyclesWaitingCPU = 0;
+        this.responseRate = 0;
+        this.baseDirection = baseDirection;
+        this.executedSuccessfully = true;
+    }
+    
+    // Metodo para despertar al hilo por un ciclo
+    public void executeOneCycle() {
+        synchronized (processMonitor) {
+            processMonitor.notify(); 
+        }
+    }
+    
+    // Método que la CPU consulta después de despertar al proceso
+    public boolean didExecuteSuccessfully() {
+        return executedSuccessfully;
+    }
+    
+    
+    /**
+     * Método que simula la ejecución de una instrucción
+     */
+    @Override
+    public void run() {
+        // Bucle de vida del proceso (Hilo de usuario)
+        while (keepRunning) {
+            synchronized (processMonitor) {
+                try {
+                    // Esperar la señal de la CPU (que nos permite correr)
+                    processMonitor.wait();
+                    
+                    if (!keepRunning) break; 
+
+                    // Simula la ejecucion de una instruccion
+                    if (this.PC < this.totalInstructions) {
+                        this.PC = this.PC+1; // PC y MAR aumentan en 1 por ciclo 
+                        this.MAR = this.MAR+1;
+                        this.remainingInstructions = this.remainingInstructions-1;
+                        
+                        System.out.println("[" +this.name+ "] Ejecutando: PC=" +this.PC+ "/" +this.totalInstructions+ ". MAR="+this.MAR);
+                        this.executedSuccessfully = true;
+
+                        /** Logica de I/O bound
+                         * Cuando el proceso solicite una operacion E/S el CPU debera ver 
+                         * que este indico que no se ejecuto exitosamente pero no ha terminado
+                         */ 
+//                        if(this.PC == this.cyclesToGenerateException){
+//                            System.out.println("Generando E/S");
+//                            this.executedSuccessfully = false;
+//                        }
+                        
+                    } else {
+                        // El proceso ha completado todas sus instrucciones
+                        System.out.println("Proceso completado");
+                        this.executedSuccessfully = false; 
+                        this.keepRunning = false;
+                        break;
+                        // El SO debera llevarlo a finalizado
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    keepRunning = false;
+                }
+            }
+        }
+    }
+
+    public int getPC() {
+        return PC;
+    }
+
+    public void setPC(int PC) {
+        this.PC = PC;
+    }
+
+    public int getMAR() {
+        return MAR;
+    }
+
+    public void setMAR(int MAR) {
+        this.MAR = MAR;
+    }
+    
+    public String getPName() {
+        return this.name;
+    }
+
+    public int getTotalInstructions() {
+        return totalInstructions;
+    }
+
+    public void setTotalInstructions(int totalInstructions) {
+        this.totalInstructions = totalInstructions;
+    }
 }

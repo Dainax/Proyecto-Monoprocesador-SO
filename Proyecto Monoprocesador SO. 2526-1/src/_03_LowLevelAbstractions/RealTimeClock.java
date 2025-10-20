@@ -57,9 +57,7 @@ public class RealTimeClock extends Thread {
                 System.out.println("Ciclo:" + currentCycle);  // COMENTAR LUEGO DE FINALIZAR
                 
                 // Sincronizar al CPU
-                synchronized (cpuTarget) {
-                    cpuTarget.notify(); // Despierta al CPU
-                }
+                this.cpuTarget.receiveTick();
                 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
