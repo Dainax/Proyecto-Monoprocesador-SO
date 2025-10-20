@@ -8,7 +8,7 @@ package _04_OperatingSystem;
  *
  * @author DiegoM
  */
-public class Process {
+public class Process extends Thread{
  
     // ---------- Atributos ----------
     // 
