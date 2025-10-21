@@ -5,6 +5,7 @@
 package _03_LowLevelAbstractions;
 
 import _04_OperatingSystem.Process;
+import _04_OperatingSystem.ProcessType;
 
 /**
  *
@@ -28,7 +29,7 @@ public class CPU extends Thread {
 
     // Monitor para la sincronizacion para usar wait() y notify()
     private final Object syncMonitor = new Object();
-    
+
     private DMA dma;
 
     // --------------- Metodos ---------------
@@ -54,7 +55,7 @@ public class CPU extends Thread {
             syncMonitor.notify();
         }
     }
-    
+
     public void stopCPU() {
         this.isProcessRunning = false;
         // Despertar a la CPU para que salga del wait() y termine el hilo.
@@ -67,20 +68,22 @@ public class CPU extends Thread {
      * Metodo principal para ejecutar un proceso en CPU
      */
     @Override
-    public void run() { 
+    public void run() {
         this.isProcessRunning = true;
-        
+
         while (isProcessRunning) {
             synchronized (syncMonitor) {
                 try {
-                    if (currentProcess!=null&&currentProcess.getState()==Process.State.NEW){
+                    if (currentProcess != null && currentProcess.getState() == Process.State.NEW) {
                         currentProcess.start();
-                        System.out.println("Iniciando proceso:"+currentProcess.getPID());
+                        System.out.println("Iniciando proceso:" + currentProcess.getPID());
                     }
-                    
+
                     syncMonitor.wait(); // Espera el 'tick' del reloj
 
-                    if (!this.isProcessRunning) { break;} // Si stopCPU fue llamado, sale
+                    if (!this.isProcessRunning) {
+                        break;
+                    } // Si stopCPU fue llamado, sale
 
                     this.PC++; // Incrementa el contador global de ciclos de CPU 
                     this.MAR++; // Incrementa el contador global de ciclos de CPU 
@@ -88,43 +91,52 @@ public class CPU extends Thread {
 
                     // Si es null se esta ejecutando el SO
                     if (currentProcess != null) {
-                        
+
                         // Proceso de Usuario
                         currentProcess.executeOneCycle(); // Ejecutar una instrucción del proceso
 
                         /**
-                         * Lógica para planificación Round Robin
-                         * Si es menor a 0 (Cuando lo coloquemos en -1)
-                         * No tomara en cuenta los ciclos restantes
+                         * Lógica para planificación Round Robin Si es menor a 0
+                         * (Cuando lo coloquemos en -1) No tomara en cuenta los
+                         * ciclos restantes
                          */
                         if (remainingCycles > 0) { // Indica que estamos en RR y queda quantum
                             remainingCycles--;
                         }
-                        
+
                         // Lee el resultado de la ejecucion
                         boolean processWantsToContinue = currentProcess.didExecuteSuccessfully();
-                        
+
                         // Comprobacion de Quantum
-                        if (remainingCycles == 0){
+                        if (remainingCycles == 0) {
                             System.out.println("Quantum de tiempo excedido");
                             // Se acabo el quantum de tiempo del proceso
                             //Llamar al SO para que ejecute RR y coloque al siguiente
                         }
-                        
-                        // Comprobación de finalización, E/S, 
-                        if (processWantsToContinue == false) {
-                            this.dma.setCurrentProcess(currentProcess); // Solo para probar
-                            this.dma.receiveTick();
-                            this.currentProcess = null;
-                            // Llamar al planificador del SO para un cambio de proceso
-                            // Aquí es donde el Planificador toma el control (El SO se ejecuta)
+
+                        // Comprobación de E/S y terminacion
+                        if (processWantsToContinue == false && currentProcess.getType() == ProcessType.IO_BOUND) {
+                            //  Si el proceso no ha terminado sus instrucciones pero "no quiere continuar"
+                            // es que necesita una operacion E/S
+                            if (currentProcess.getPC() != currentProcess.getTotalInstructions()) {
+
+                                this.dma.setCurrentProcess(currentProcess); // Solo para probar
+                                this.dma.receiveTick();
+                                this.currentProcess = null;
+                                // Llamar al planificador del SO para un cambio de proceso
+                                // Aquí es donde el Planificador toma el control (El SO se ejecuta)
+                                // (el Planificador asignará el siguiente en su turno de ejecución)
+                            }
+                            else{ // En caso contrario, significa que termino sus instrucciones
+                                
+                            }
+                        } else if (processWantsToContinue == false) {
+                            // Considerar colocar una variable proceso terminado para que la revise el SO
                             
-                            // Desasignar el proceso de la CPU 
-                            // (el Planificador asignará el siguiente en su turno de ejecución)
-                            // currentProcess = null;   
+                            // El proceso ha sido completado, se debe llevar a finalizado
+                            // Llamar al planificador del SO para un cambio de proceso
                         }
-                    }
-                    else {
+                    } else {
                         System.out.println("No hay proceso");
                         // Se debe ejecutar el sistema operativo     
                     }
@@ -177,7 +189,7 @@ public class CPU extends Thread {
         this.remainingCycles = remainingCycles;
     }
 
-    public void setCurrentProcess(Process process,int quantum) {
+    public void setCurrentProcess(Process process, int quantum) {
         this.currentProcess = process;
         // Al cargar un proceso, actualizamos los registros de la CPU con los del PCB
         if (process != null) {
@@ -186,6 +198,7 @@ public class CPU extends Thread {
             this.remainingCycles = quantum;
         }
     }
+
     public Process getCurrentProcess() {
         return currentProcess;
     }

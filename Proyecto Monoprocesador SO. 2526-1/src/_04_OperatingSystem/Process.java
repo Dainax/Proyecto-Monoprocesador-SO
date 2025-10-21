@@ -169,6 +169,10 @@ public class Process extends Thread{
         this.totalInstructions = totalInstructions;
     }
 
+    public ProcessType getType() {
+        return type;
+    }
+
     public int getCyclesToManageException() {
         return cyclesToManageException;
     }
