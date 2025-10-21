@@ -61,6 +61,7 @@ public class DMA extends Thread {
             synchronized (syncMonitor) {
                 try {
                     syncMonitor.wait();
+                    
                     if (this.currentProcess != null) {
                         System.out.println("Ejecutando DMA");
 
@@ -73,9 +74,8 @@ public class DMA extends Thread {
                             this.currentProcess = null;
                             // Invocar al SO
                         }
-                    } else {
-                        System.out.println("No hay proceso E/S");
-                    }
+                    } 
+                    
 
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

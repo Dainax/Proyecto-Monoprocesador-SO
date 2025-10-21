@@ -119,7 +119,6 @@ public class CPU extends Thread {
                             //  Si el proceso no ha terminado sus instrucciones pero "no quiere continuar"
                             // es que necesita una operacion E/S
                             if (currentProcess.getPC() != currentProcess.getTotalInstructions()) {
-
                                 this.dma.setCurrentProcess(currentProcess); // Solo para probar
                                 this.dma.receiveTick();
                                 this.currentProcess = null;
