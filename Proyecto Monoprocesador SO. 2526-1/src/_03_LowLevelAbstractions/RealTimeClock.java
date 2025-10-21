@@ -23,6 +23,7 @@ public class RealTimeClock extends Thread {
     private volatile long clockDuration;    // Esta es la que se cambia dinamicamente
     private volatile boolean isRunning;
     private final CPU cpuTarget; // Referencia al hilo CPU que debe notificar
+    private final DMA dmaTarget; // Referencia al hilo CPU que debe notificar
     
     /**
      * Constructor que acepta un manejador de ticks y, opcionalmente, una
@@ -31,8 +32,9 @@ public class RealTimeClock extends Thread {
      * @param cpuTarget Objeto cpu a notificar
      * @param duration Duración indicada del ciclo en ms. Usará 1000ms por defecto
      */
-    public RealTimeClock(CPU cpuTarget, long duration) {
+    public RealTimeClock(CPU cpuTarget, DMA dmaTarget, long duration) {
         this.cpuTarget = cpuTarget;
+        this.dmaTarget = dmaTarget;
         this.clockDuration = duration > 0 ? duration : DEFAULT_DURATION;
         RealTimeClock.totalCyclesElapsed = new AtomicLong(0);
         setName("Thread del Reloj");
@@ -56,8 +58,9 @@ public class RealTimeClock extends Thread {
                 long currentCycle = totalCyclesElapsed.incrementAndGet();
                 System.out.println("Ciclo:" + currentCycle);  // COMENTAR LUEGO DE FINALIZAR
                 
-                // Sincronizar al CPU
+                // Sincronizar al CPU y al DMA
                 this.cpuTarget.receiveTick();
+                this.dmaTarget.receiveTick();
                 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

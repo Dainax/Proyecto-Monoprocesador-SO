@@ -4,6 +4,8 @@
  */
 package _04_OperatingSystem;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  *
  * @author DiegoM
@@ -12,6 +14,7 @@ public class Process extends Thread{
  
     // ---------- Atributos ----------
     // 
+    private int PID;
     private int PC;
     private int MAR;
     private String name;
@@ -41,6 +44,8 @@ public class Process extends Thread{
     private final Object processMonitor = new Object();
     private volatile boolean keepRunning = true;
     
+    // Contador atómico para asegurar que los ID son únicos incluso si se crean en hilos distintos
+    private static final AtomicInteger PID_COUNTER = new AtomicInteger(1);
     
     // ---------- Metodos ----------
 
@@ -54,6 +59,7 @@ public class Process extends Thread{
      * @param cyclesToManageException 
      */
     public Process(String name, int totalInstructions, ProcessType type, int cyclesToGenerateException, int cyclesToManageException, int baseDirection) {
+        this.PID = PID_COUNTER.getAndIncrement();
         this.PC = 0;
         this.MAR = baseDirection;
         this.name = name;
@@ -109,10 +115,11 @@ public class Process extends Thread{
                          * Cuando el proceso solicite una operacion E/S el CPU debera ver 
                          * que este indico que no se ejecuto exitosamente pero no ha terminado
                          */ 
-//                        if(this.PC == this.cyclesToGenerateException){
-//                            System.out.println("Generando E/S");
-//                            this.executedSuccessfully = false;
-//                        }
+                        if(this.PC == this.cyclesToGenerateException){
+                            System.out.println("Generando E/S");
+                            this.executedSuccessfully = false;
+                            this.keepRunning = false;
+                        }
                         
                     } else {
                         // El proceso ha completado todas sus instrucciones
@@ -130,6 +137,10 @@ public class Process extends Thread{
         }
     }
 
+    public int getPID() {
+        return PID;
+    }
+    
     public int getPC() {
         return PC;
     }
@@ -156,5 +167,15 @@ public class Process extends Thread{
 
     public void setTotalInstructions(int totalInstructions) {
         this.totalInstructions = totalInstructions;
+    }
+
+    public int getCyclesToManageException() {
+        return cyclesToManageException;
+    }
+    
+    
+    
+    public boolean equals(int pid){
+        return this.PID == pid;
     }
 }

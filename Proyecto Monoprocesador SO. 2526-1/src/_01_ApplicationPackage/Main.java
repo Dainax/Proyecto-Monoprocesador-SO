@@ -5,6 +5,7 @@
 package _01_ApplicationPackage;
 
 import _03_LowLevelAbstractions.CPU;
+import _03_LowLevelAbstractions.DMA;
 import _03_LowLevelAbstractions.MainMemory;
 import _03_LowLevelAbstractions.RealTimeClock;
 import _04_OperatingSystem.Process;
@@ -22,9 +23,10 @@ public class Main {
     public static void main(String[] args) throws InterruptedException {
         
         //Prueba de CPU, proceso y MP
-        CPU cpu = new CPU();
+        DMA dma = new DMA();
+        CPU cpu = new CPU(dma);
         MainMemory memory = new MainMemory();
-        RealTimeClock clock = new RealTimeClock(cpu, 1000); 
+        RealTimeClock clock = new RealTimeClock(cpu, dma, 1000); 
         final int QUANTUM = -1;
 
         // --- 2. Simulación del Planificador a Largo Plazo: Admisión ---
@@ -60,8 +62,9 @@ public class Main {
             return;
         }
         
-        cpu.start();
         clock.start();
+        cpu.start();
+        dma.start();
 
         System.out.println("\n--- FASE 2: EJECUCIÓN (Round Robin Quantum=" + QUANTUM + ") ---\n");
 
@@ -96,11 +99,11 @@ public class Main {
         Thread.sleep(4000); 
 
         // --- 5. Detener Simulación ---
-        System.out.println("\n--- DETENIENDO SIMULACIÓN ---\n");
-        clock.stopReloj();
-        cpu.stopCPU();
-        p1.interrupt();
-        p2.interrupt();
+//        System.out.println("\n--- DETENIENDO SIMULACIÓN ---\n");
+//        clock.stopReloj();
+//        cpu.stopCPU();
+//        p1.interrupt();
+//        p2.interrupt();
         
         
         

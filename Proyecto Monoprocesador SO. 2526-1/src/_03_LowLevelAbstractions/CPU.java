@@ -28,18 +28,21 @@ public class CPU extends Thread {
 
     // Monitor para la sincronizacion para usar wait() y notify()
     private final Object syncMonitor = new Object();
+    
+    private DMA dma;
 
     // --------------- Metodos ---------------
     /**
      * Constructor
      */
-    public CPU() {
+    public CPU(DMA dma) { // Le paso el DMA solo para probar, el SO le dara el proceso al DMA
         this.PC = 0;
         this.MAR = 0;
         this.isProcessRunning = false;
         this.cycleCounter = 0;
         this.remainingCycles = -1;
         setName("Hilo del CPU");
+        this.dma = dma;
     }
 
     // ----- Sincronización -----
@@ -61,24 +64,26 @@ public class CPU extends Thread {
     }
 
     /**
-     *
+     * Metodo principal para ejecutar un proceso en CPU
      */
     @Override
-    public void run() {
+    public void run() { 
         this.isProcessRunning = true;
         
-       
         while (isProcessRunning) {
             synchronized (syncMonitor) {
                 try {
-                    if (currentProcess.getState()==Process.State.NEW){
+                    if (currentProcess!=null&&currentProcess.getState()==Process.State.NEW){
                         currentProcess.start();
+                        System.out.println("Iniciando proceso:"+currentProcess.getPID());
                     }
                     
                     syncMonitor.wait(); // Espera el 'tick' del reloj
 
                     if (!this.isProcessRunning) { break;} // Si stopCPU fue llamado, sale
 
+                    this.PC++; // Incrementa el contador global de ciclos de CPU 
+                    this.MAR++; // Incrementa el contador global de ciclos de CPU 
                     this.cycleCounter++; // Incrementa el contador global de ciclos de CPU 
 
                     // Si es null se esta ejecutando el SO
@@ -108,6 +113,8 @@ public class CPU extends Thread {
                         
                         // Comprobación de finalización, E/S, 
                         if (processWantsToContinue == false) {
+                            this.dma.setCurrentProcess(currentProcess); // Solo para probar
+                            this.dma.receiveTick();
                             this.currentProcess = null;
                             // Llamar al planificador del SO para un cambio de proceso
                             // Aquí es donde el Planificador toma el control (El SO se ejecuta)
