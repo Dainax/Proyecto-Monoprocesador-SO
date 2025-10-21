@@ -14,6 +14,8 @@ import javax.swing.JFrame;
  * @author Danaz
  */
 public class MenuPanel extends javax.swing.JPanel {
+    
+    private Main mainFrame;
 
     public MenuPanel() {
         initComponents();
@@ -22,17 +24,31 @@ public class MenuPanel extends javax.swing.JPanel {
         init();
         
     }
+    
+    public void setMainFrame(Main mainFrame){
+        this.mainFrame=mainFrame;
+    }
 
     private void init(){
-      
+      //Botones Principales del programa
       listMenu1.addItem(new Model_Menu("CpuIcon1-white","Simulación", Model_Menu.MenuType.MENU));
-           
       listMenu1.addItem(new Model_Menu("SettingIcon1","Configuración", Model_Menu.MenuType.MENU));
-        
-      listMenu1.addItem(new Model_Menu("GraphicsIcon1","Gráficos", Model_Menu.MenuType.MENU));
-           
+      listMenu1.addItem(new Model_Menu("GraphicsIcon1","Gráficos", Model_Menu.MenuType.MENU));   
       listMenu1.addItem(new Model_Menu("StadisticsIcon1","Estadísticas", Model_Menu.MenuType.MENU));
     
+      
+      //Listener para los cambios de pantalla con los botones
+      listMenu1.addListSelectionListener(e -> {
+              if (!e.getValueIsAdjusting()) {
+                  int selectedIndex = listMenu1.getSelectedIndex();
+                  switch (selectedIndex) {
+                      case 0 -> mainFrame.switchToPanel("simulation");
+                      case 1 -> mainFrame.switchToPanel("config");
+                      case 2 -> mainFrame.switchToPanel("graphics");
+                      case 3 -> mainFrame.switchToPanel("stats");
+                  }
+              }
+      });
     
     }
             
