@@ -40,12 +40,12 @@ public class MainMemory {
                 }
             for (SimpleNode<Process> node = processInMemory.GetpFirst(); node != null; node = node.GetNxt()) {
                 Process p = node.GetData();
-                //int pBase = p.getBaseRegister();
-                //int pLimit = p.getLimitRegister();
-//                if (!(newLimit < pBase || base > pLimit)) {
-//                    available = false;
-//                    break;
-//                }      
+                int pBase = p.getBaseDirection();
+                int pLimit = p.getLimitDirection();
+                if (!(newLimit < pBase || base > pLimit)) {
+                    available = false;
+                    break;
+                }      
             }
             if (available) {
                 return base; // Espacio encontrado

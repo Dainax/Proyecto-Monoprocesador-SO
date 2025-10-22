@@ -22,6 +22,9 @@ public class DMA extends Thread {
     // Si es null, no se esta gestionando la E/S de ningun proceso
     private volatile Process currentProcess;
 
+    // Lista de nuevos
+    private SimpleList newProcess; 
+            
     // Para simular el area de Swap y no hacer una clase disco
     private SimpleList readySuspendedProcess; // Procesos listos suspendidos en el area de Swap
     private SimpleList blockedSuspendedProcess; // Procesos listos suspendidos en el area de Swap

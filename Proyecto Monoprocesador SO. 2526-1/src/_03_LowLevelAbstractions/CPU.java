@@ -76,7 +76,10 @@ public class CPU extends Thread {
                 try {
                     if (currentProcess != null && currentProcess.getState() == Process.State.NEW) {
                         currentProcess.start();
-                        System.out.println("Iniciando proceso:" + currentProcess.getPID());
+                    }
+
+                    if (currentProcess != null) {
+                        System.out.println("Iniciando proceso:" + currentProcess.getPName());
                     }
 
                     syncMonitor.wait(); // Espera el 'tick' del reloj
@@ -119,19 +122,23 @@ public class CPU extends Thread {
                             //  Si el proceso no ha terminado sus instrucciones pero "no quiere continuar"
                             // es que necesita una operacion E/S
                             if (currentProcess.getPC() != currentProcess.getTotalInstructions()) {
-                                this.dma.setCurrentProcess(currentProcess); // Solo para probar
+                                
+                                // --------------------
+                                //  LUEGO DE QUE FUNCIONE TODO DEBO REFACTORIZAR QUE EL DMA LO RECIBE EL SO NO EL CPU
+                                // --------------------
+                                
+                                this.dma.setCurrentProcess(currentProcess); // Solo para probar lo debe hacer el SO
                                 this.dma.receiveTick();
                                 this.currentProcess = null;
                                 // Llamar al planificador del SO para un cambio de proceso
                                 // Aquí es donde el Planificador toma el control (El SO se ejecuta)
                                 // (el Planificador asignará el siguiente en su turno de ejecución)
-                            }
-                            else{ // En caso contrario, significa que termino sus instrucciones
-                                
+                            } else { // En caso contrario, significa que termino sus instrucciones
+
                             }
                         } else if (processWantsToContinue == false) {
                             // Considerar colocar una variable proceso terminado para que la revise el SO
-                            
+
                             // El proceso ha sido completado, se debe llevar a finalizado
                             // Llamar al planificador del SO para un cambio de proceso
                         }

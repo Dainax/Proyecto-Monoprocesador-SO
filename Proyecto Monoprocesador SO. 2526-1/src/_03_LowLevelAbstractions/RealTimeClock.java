@@ -30,6 +30,7 @@ public class RealTimeClock extends Thread {
      * duración inicial.
      *
      * @param cpuTarget Objeto cpu a notificar
+     * @param dmaTarget Objeto dma a notificar
      * @param duration Duración indicada del ciclo en ms. Usará 1000ms por defecto
      */
     public RealTimeClock(CPU cpuTarget, DMA dmaTarget, long duration) {
