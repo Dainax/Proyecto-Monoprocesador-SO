@@ -10,69 +10,57 @@ import javax.swing.JPanel;
  * @author Danaz
  */
 public class Main extends javax.swing.JFrame {
-    
+
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Main.class.getName());
 
-    private CardLayout cardLayout;  // Add this field
-    private JPanel simulationPanel, configPanel, graphicsPanel, statsPanel;  // Add these fields for each interface
-    
+    private CardLayout cardLayout;
+    private JPanel simulationPanel, configPanel, graphicsPanel, statsPanel;
+
     public Main() {
         initComponents();
         setTitle("Simulacion Monoprocesador");
         this.setLocationRelativeTo(null);
         this.setResizable(false);
         menuPanel1.initMoving(Main.this);
-        
-        // NEW: Set up CardLayout for jPanel1 (this was missing)
+
         cardLayout = new CardLayout();
         content.setLayout(cardLayout);
-        
-        // In Main.java constructor, after setting up CardLayout
-        simulationPanel = new SimulationPanel();  // Instantiate your designed panel
+
+        simulationPanel = new SimulationPanel();
         configPanel = new ConfigPanel();
         graphicsPanel = new GraphicsPanel();
         statsPanel = new StatsPanel();
 
-        // Add to jPanel1 (same as before)
         content.add(simulationPanel, "simulation");
         content.add(configPanel, "config");
         content.add(graphicsPanel, "graphics");
         content.add(statsPanel, "stats");
 
-        // Show default
         cardLayout.show(content, "simulation");
 
-        // Pass reference to menuPanel for switching
-         menuPanel1.setMainFrame(this);
-        
-        
-        
-        // RUTA RELATIVA DE TU IMAGEN
-    // Asegúrate de que la ruta coincida con la ubicación de tu archivo en el proyecto.
-    String rutaIcono = "/_08_SourcesGUI/CpuIcon-blue.png"; // Si tienes una carpeta 'imagenes' en la raíz del proyecto
-    
-    try {
-        // Carga la imagen desde la ruta relativa del proyecto
-        Image icono = new ImageIcon(getClass().getResource(rutaIcono)).getImage();
-        
-        // Establece la imagen como el icono de la ventana
-        this.setIconImage(icono);
-        
-    } catch (NullPointerException e) {
-        System.err.println("No se encontró el archivo de imagen en la ruta: " + rutaIcono);
-        // Opcional: Manejar el error si la imagen no se carga
+        menuPanel1.setMainFrame(this);
+
+        //Imagen de la aplicacion
+        String rutaIcono = "/_08_SourcesGUI/CpuIcon-blue.png";
+
+        try {
+            // Carga la imagen desde la ruta relativa del proyecto
+            Image icono = new ImageIcon(getClass().getResource(rutaIcono)).getImage();
+
+            // Establece la imagen como el icono de la ventana
+            this.setIconImage(icono);
+
+        } catch (NullPointerException e) {
+            System.err.println("No se encontró el archivo de imagen en la ruta: " + rutaIcono);
+           
+        }
+
     }
-    
-      
 
-}
-    
-     public void switchToPanel(String panelName) {
-    cardLayout.show(content, panelName);  // Changed 'content' to 'jPanel1'
-}
-    
+    public void switchToPanel(String panelName) {
+        cardLayout.show(content, panelName);  // Changed 'content' to 'jPanel1'
+    }
 
- 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -85,6 +73,8 @@ public class Main extends javax.swing.JFrame {
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+
+        menuPanel1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
         jPanel1.add(menuPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 250, 670));
 
         content.setBackground(new java.awt.Color(255, 255, 255));
@@ -93,14 +83,14 @@ public class Main extends javax.swing.JFrame {
         content.setLayout(contentLayout);
         contentLayout.setHorizontalGroup(
             contentLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 750, Short.MAX_VALUE)
+            .addGap(0, 1000, Short.MAX_VALUE)
         );
         contentLayout.setVerticalGroup(
             contentLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGap(0, 670, Short.MAX_VALUE)
         );
 
-        jPanel1.add(content, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 0, 750, 670));
+        jPanel1.add(content, new org.netbeans.lib.awtextra.AbsoluteConstraints(250, 0, 1000, 670));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -146,7 +136,5 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private _07_GUI.MenuPanel menuPanel1;
     // End of variables declaration//GEN-END:variables
-
-        
 
 }

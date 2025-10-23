@@ -15,6 +15,8 @@ import javax.swing.JFrame;
  */
 public class MenuPanel extends javax.swing.JPanel {
     
+    private int x;
+    private int y;
     private Main mainFrame;
 
     public MenuPanel() {
@@ -63,6 +65,8 @@ public class MenuPanel extends javax.swing.JPanel {
         listMenu1 = new _07_GUI.ListMenu<>();
         jLabel2 = new javax.swing.JLabel();
 
+        setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
+
         panelMoving.setOpaque(false);
 
         jLabel1.setBackground(new java.awt.Color(255, 255, 255));
@@ -92,6 +96,7 @@ public class MenuPanel extends javax.swing.JPanel {
         listMenu1.setOpaque(false);
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
         jLabel2.setText("<html>Hecho por:<br>Diego Méndez<br>Ares Ramírez<br>Daniela Zambrano</html>");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -113,12 +118,14 @@ public class MenuPanel extends javax.swing.JPanel {
                 .addComponent(panelMoving, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(listMenu1, javax.swing.GroupLayout.PREFERRED_SIZE, 367, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 43, Short.MAX_VALUE)
                 .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(12, Short.MAX_VALUE))
+                .addGap(14, 14, 14))
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    
+    //Fondo Degradado
     @Override
     protected void paintChildren(Graphics grphcs){
         Graphics2D g2=(Graphics2D)grphcs;
@@ -133,8 +140,6 @@ public class MenuPanel extends javax.swing.JPanel {
     }
     
     
-    private int x;
-    private int y;
     
     public void initMoving(JFrame frame){
         panelMoving.addMouseListener(new MouseAdapter(){
