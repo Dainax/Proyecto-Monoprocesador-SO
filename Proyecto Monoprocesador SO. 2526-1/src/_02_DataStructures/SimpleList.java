@@ -15,8 +15,8 @@ public class SimpleList<T> {
     private int size;
 
     /**
-     * Instancia la clase SimpleList definiendo los atributos pFirst y
-     * pLast como null y size como 0. Crea la lista vacia.
+     * Instancia la clase SimpleList definiendo los atributos pFirst y pLast
+     * como null y size como 0. Crea la lista vacia.
      */
     public SimpleList() {
         this.pFirst = this.pLast = null;
@@ -24,8 +24,8 @@ public class SimpleList<T> {
     }
 
     /**
-     * Verifica si una instancia de la clase SimpleList se encuentra vacia
-     * o no. Verifica si la lista tiene por lo menos un elemento.
+     * Verifica si una instancia de la clase SimpleList se encuentra vacia o no.
+     * Verifica si la lista tiene por lo menos un elemento.
      *
      * @return Retorna True si la lista no tiene elementos. En caso contrario
      * retorna false.
@@ -105,8 +105,7 @@ public class SimpleList<T> {
     }
 
     /**
-     * Busca el valor espeficicado en una instancia de la clase
-     * SimpleList.
+     * Busca el valor espeficicado en una instancia de la clase SimpleList.
      *
      * @param Data Representa el valor que se busca en la lista.
      * @return Retorna un puntero al nodo donde se encuenta, si el valor
@@ -128,8 +127,8 @@ public class SimpleList<T> {
 
     /**
      * Elimina el nodo que contiene el valor especificado en una instancia de la
-     * clase SimpleList. En caso de que el valor no se encuentre en la
-     * lista muestra el mensaje: "El valor a eliminar no esta en la lista."
+     * clase SimpleList. En caso de que el valor no se encuentre en la lista
+     * muestra el mensaje: "El valor a eliminar no esta en la lista."
      *
      * @param Data Representa el valor que tiene el nodo que se eliminara en la
      * lista.
@@ -142,7 +141,23 @@ public class SimpleList<T> {
                     pPrev = pCurrent, pCurrent = pCurrent.GetNxt()) {
 
                 if (java.util.Objects.equals(pCurrent.GetData(), Data)) {
-                    pPrev.SetNxt(pCurrent.GetNxt());
+
+                    if (pPrev == null) {
+                        // CASO 1: Eliminando la CABEZA (pCurrent es pFirst)
+                        this.pFirst = pCurrent.GetNxt();
+                    } else {
+                        // CASO 2: Eliminando un nodo interno o la cola
+                        pPrev.SetNxt(pCurrent.GetNxt());
+                    }
+
+                    // Actualizar pLast si el nodo eliminado era el último
+                    if (pCurrent == this.pLast) {
+                        this.pLast = pPrev;
+                    }
+
+                    // Importante: Actualizar el tamaño de la lista
+                    this.size--;
+
                     break;
                 }
             }
@@ -208,14 +223,7 @@ public class SimpleList<T> {
             }
         }
     }
-    
-    
-    /** HACER
-     *  Ordena una lista segun el ciclo de creacion de un proceso
-     */
-    
-    
-    
+
     /**
      * Obtiene el nodo guardado en el atributo pFirst de una instancia de la
      * clase SimpleList.
@@ -248,13 +256,18 @@ public class SimpleList<T> {
     }
 
     /**
-     * Modifica el atributo pFirst de una instancia de la clase
-     * SimpleList, remplazandolo por un nuevo nodo.
+     * Modifica el atributo pFirst de una instancia de la clase SimpleList,
+     * remplazandolo por un nuevo nodo.
      *
      * @param nFirst
      */
     public void SetpFirst(SimpleNode nFirst) {
         this.pFirst = nFirst;
+
+        if (nFirst == null) {
+            this.pLast = null;
+            this.size = 0;
+        }
     }
 
     /**
