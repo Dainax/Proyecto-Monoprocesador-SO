@@ -41,6 +41,7 @@ public class DMA extends Thread {
     public DMA() {
         this.remainingCycles = -1;
         this.currentProcess = null;
+        this.newProcesses = new SimpleList();
         this.readySuspendedProcesses = new SimpleList();
         this.blockedSuspendedProcesses = new SimpleList();
         this.busy = false;

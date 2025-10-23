@@ -82,8 +82,8 @@ public class Main {
         p9.setPPriority(3);
         
         os.newProcess("P10_Longest", 20, ProcessType.CPU_BOUND, -1, -1);
-        Process p10 = (Process) os.getReadyQueue().GetValInIndex(4).GetData();
-        p10.setPPriority(4);
+        //Process p10 = (Process) os.getReadyQueue().GetValInIndex(4).GetData();
+        //p10.setPPriority(4);
         
         System.out.println("\n\n=======================================================");
         System.out.println("=== FASE 2: PRUEBA DE ORDENAMIENTO POR 6 POLÍTICAS ===");
