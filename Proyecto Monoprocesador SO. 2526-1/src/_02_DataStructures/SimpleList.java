@@ -141,7 +141,23 @@ public class SimpleList<T> {
                     pPrev = pCurrent, pCurrent = pCurrent.GetNxt()) {
 
                 if (java.util.Objects.equals(pCurrent.GetData(), Data)) {
-                    pPrev.SetNxt(pCurrent.GetNxt());
+
+                    if (pPrev == null) {
+                        // CASO 1: Eliminando la CABEZA (pCurrent es pFirst)
+                        this.pFirst = pCurrent.GetNxt();
+                    } else {
+                        // CASO 2: Eliminando un nodo interno o la cola
+                        pPrev.SetNxt(pCurrent.GetNxt());
+                    }
+
+                    // Actualizar pLast si el nodo eliminado era el último
+                    if (pCurrent == this.pLast) {
+                        this.pLast = pPrev;
+                    }
+
+                    // Importante: Actualizar el tamaño de la lista
+                    this.size--;
+
                     break;
                 }
             }

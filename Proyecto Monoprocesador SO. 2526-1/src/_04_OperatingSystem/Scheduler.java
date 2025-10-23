@@ -12,7 +12,7 @@ import _04_OperatingSystem.Process;
  *
  * @author AresR
  */
-public class Scheduler extends Thread {
+public class Scheduler {
 
     //          ----- Atributos -----
     private PolicyType currentPolicy;
@@ -34,7 +34,6 @@ public class Scheduler extends Thread {
         this.osReference = osReference;
         this.currentPolicy = currentPolicy;
         this.ordered = false;
-        this.setName("Scheduler");
     }
 
     // ---------- Planificacion a corto plazo ----------
@@ -58,8 +57,13 @@ public class Scheduler extends Thread {
             this.ordered = true;
         }
 
-        // La cola debe estar ordenada segun el algoritmo de ordenamiento
+        // Tomo el proceso. La cola debe estar ordenada segun el algoritmo de ordenamiento
         Process nextProcess = (Process) readyProcesses.GetpFirst().GetData();
+        
+        // Cambio su estado y lo elimino de la cola
+        nextProcess.setState(ProcessState.RUNNING);
+        this.osReference.getReadyQueue().delNodewithVal(nextProcess);
+        
         System.out.println("Seleccionado el proceso "+nextProcess.getPID()+" para ejecutarse");
         return nextProcess;
     }
@@ -72,11 +76,6 @@ public class Scheduler extends Thread {
         if (readyProcesses.GetSize() <= 1) {
             this.ordered = true;
             return;
-        }
-        
-        // Estas métricas deben actualizarse antes de ordenar en cada ciclo.
-        if (currentPolicy == PolicyType.HRRN || currentPolicy == PolicyType.SRT) {
-            updateHRRNMetrics(readyProcesses);
         }
         
         switch (currentPolicy) {
@@ -226,7 +225,7 @@ public class Scheduler extends Thread {
     /**
      * Actualiza el tiempo de espera y recalcula la Tasa de Respuesta (HRRN).
      */
-    private void updateHRRNMetrics(SimpleList<Process> list) {
+    public void updateHRRNMetrics(SimpleList<Process> list) {
         SimpleNode current = list.GetpFirst();
         while (current != null) {
             Process p = (Process) current.GetData();

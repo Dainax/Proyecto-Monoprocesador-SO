@@ -127,6 +127,7 @@ public class Process extends Thread {
                             System.out.println("Generando E/S");
                             this.executedSuccessfully = false;
                             this.keepRunning = false;
+                            // llama al So para que maneje la operacion E/S
                         }
                     } else {
                         // El proceso ha completado todas sus instrucciones

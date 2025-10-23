@@ -6,6 +6,7 @@ package _03_LowLevelAbstractions;
 
 import _02_DataStructures.SimpleNode;
 import _02_DataStructures.SimpleList;
+import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process;
 
 /**
@@ -16,11 +17,13 @@ public class MainMemory {
 
     private final int MEMORY_SIZE = 128; // 128 para almacenar mas, 20 o 64 para probar suspendidos
     private boolean[] memorySlots; // true = ocupado, false = libre
-    private SimpleList<Process> processInMemory;
+    
+    // Para poder referenciar los metodos del SO
+    private final OperatingSystem osReference;
 
-    public MainMemory() {
+    public MainMemory(OperatingSystem osReference) {
         this.memorySlots = new boolean[MEMORY_SIZE];
-        this.processInMemory = new SimpleList();
+        this.osReference = osReference;
         
     }
 
@@ -38,7 +41,7 @@ public class MainMemory {
             if (size > MEMORY_SIZE){
                     return -1;
                 }
-            for (SimpleNode<Process> node = processInMemory.GetpFirst(); node != null; node = node.GetNxt()) {
+            for (SimpleNode<Process> node = this.osReference.getReadyQueue().GetpFirst(); node != null; node = node.GetNxt()) {
                 Process p = node.GetData();
                 int pBase = p.getBaseDirection();
                 int pLimit = p.getLimitDirection();
@@ -62,7 +65,7 @@ public class MainMemory {
      * @param size
      * @return true si completa exitosamente, false si no
      */
-    public boolean allocate(Process process, int base, int size) {
+    public boolean allocate(int base, int size) {
         if (base + size > MEMORY_SIZE) {
             return false;
         }
@@ -74,7 +77,6 @@ public class MainMemory {
         for (int i = base; i < base + size; i++) {
             memorySlots[i] = true;
         }
-        this.addProcess(process);
         return true;
     }
 
@@ -88,15 +90,6 @@ public class MainMemory {
         for (int i = base; i < base + size; i++) {
             memorySlots[i] = false;
         }
-    }
-    
-    /**
-     * Funcion para añadir un proceso a la memoria principal // Cambiar despues
-     * del void que recibe un proceso
-     * @param Data
-     */
-    private void addProcess(Process Data) { 
-        this.processInMemory.insertLast(Data);
     }
 }
 

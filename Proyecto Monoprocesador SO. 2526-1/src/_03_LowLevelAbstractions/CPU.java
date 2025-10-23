@@ -4,6 +4,7 @@
  */
 package _03_LowLevelAbstractions;
 
+import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process;
 import _04_OperatingSystem.ProcessType;
 
@@ -30,20 +31,21 @@ public class CPU extends Thread {
     // Monitor para la sincronizacion para usar wait() y notify()
     private final Object syncMonitor = new Object();
 
-    private DMA dma;
-
+    // Para poder referenciar los metodos del SO
+    private final OperatingSystem osReference;
+    
     // --------------- Metodos ---------------
     /**
      * Constructor
      */
-    public CPU(DMA dma) { // Le paso el DMA solo para probar, el SO le dara el proceso al DMA
+    public CPU(OperatingSystem osReference) {
         this.PC = 0;
         this.MAR = 0;
         this.isProcessRunning = false;
         this.cycleCounter = 0;
         this.remainingCycles = -1;
+        this.osReference = osReference;
         setName("Hilo del CPU");
-        this.dma = dma;
     }
 
     // ----- Sincronización -----
@@ -92,6 +94,8 @@ public class CPU extends Thread {
                     this.MAR++; // Incrementa el contador global de ciclos de CPU 
                     this.cycleCounter++; // Incrementa el contador global de ciclos de CPU 
 
+                    this.osReference.getScheduler().updateHRRNMetrics(this.osReference.getReadyQueue());
+                    
                     // Si es null se esta ejecutando el SO
                     if (currentProcess != null) {
 
@@ -123,18 +127,14 @@ public class CPU extends Thread {
                             // es que necesita una operacion E/S
                             if (currentProcess.getPC() != currentProcess.getTotalInstructions()) {
                                 
-                                // --------------------
-                                //  LUEGO DE QUE FUNCIONE TODO DEBO REFACTORIZAR QUE EL DMA LO RECIBE EL SO NO EL CPU
-                                // --------------------
-                                
-                                this.dma.setCurrentProcess(currentProcess); // Solo para probar lo debe hacer el SO
-                                this.dma.receiveTick();
+                                this.osReference.getDma().setCurrentProcess(currentProcess); // Solo para probar lo debe hacer el SO
+                                this.osReference.getDma().receiveTick();
                                 this.currentProcess = null;
                                 // Llamar al planificador del SO para un cambio de proceso
                                 // Aquí es donde el Planificador toma el control (El SO se ejecuta)
                                 // (el Planificador asignará el siguiente en su turno de ejecución)
                             } else { // En caso contrario, significa que termino sus instrucciones
-
+ 
                             }
                         } else if (processWantsToContinue == false) {
                             // Considerar colocar una variable proceso terminado para que la revise el SO

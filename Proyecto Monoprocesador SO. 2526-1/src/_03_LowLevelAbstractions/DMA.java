@@ -23,12 +23,14 @@ public class DMA extends Thread {
     private volatile Process currentProcess;
 
     // Lista de nuevos
-    private SimpleList newProcess; 
+    private SimpleList newProcesses; 
             
     // Para simular el area de Swap y no hacer una clase disco
-    private SimpleList readySuspendedProcess; // Procesos listos suspendidos en el area de Swap
-    private SimpleList blockedSuspendedProcess; // Procesos listos suspendidos en el area de Swap
+    private SimpleList readySuspendedProcesses; // Procesos listos suspendidos en el area de Swap
+    private SimpleList blockedSuspendedProcesses; // Procesos listos suspendidos en el area de Swap
 
+    private volatile boolean busy; // Para saber si esta ocupado o no
+    
     // Monitor para la sincronizacion para usar wait() y notify()
     private final Object syncMonitor = new Object();
 
@@ -39,8 +41,9 @@ public class DMA extends Thread {
     public DMA() {
         this.remainingCycles = -1;
         this.currentProcess = null;
-        this.readySuspendedProcess = new SimpleList();
-        this.blockedSuspendedProcess = new SimpleList();
+        this.readySuspendedProcesses = new SimpleList();
+        this.blockedSuspendedProcesses = new SimpleList();
+        this.busy = false;
     }
 
     // ----- Sincronización -----
@@ -75,41 +78,44 @@ public class DMA extends Thread {
                             // Para darselo al Sistema operativo
                             Process terminatedProcess = this.currentProcess;
                             this.currentProcess = null;
+                            this.busy=false;
                             // Invocar al SO
                         }
-                    } 
-                    
-
+                    }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
             }
         }
     }
+    
+    public void addNewProcess(Process newProcess){
+        this.newProcesses.insertLast(newProcess);
+    }
 
     // Estas 6 funciones de readysuspended y blockedSuspended hay que probarlas
     public void addReadySuspendedProcess(Process newRSProcess) {
-        this.readySuspendedProcess.insertLast(newRSProcess);
+        this.readySuspendedProcesses.insertLast(newRSProcess);
     }
 
     public void addBlockedSuspendedProcess(Process newRSProcess) {
-        this.readySuspendedProcess.insertLast(newRSProcess);
+        this.readySuspendedProcesses.insertLast(newRSProcess);
     }
 
     public void getReadySuspendedProcess(int pidRSProcess) {
-        this.readySuspendedProcess.locateData(pidRSProcess);
+        this.readySuspendedProcesses.locateData(pidRSProcess);
     }
 
     public void getBlockedSuspendedProcess(int pidBSProcess) {
-        this.blockedSuspendedProcess.locateData(pidBSProcess);
+        this.blockedSuspendedProcesses.locateData(pidBSProcess);
     }
 
     public void delReadySuspendedProcess(int pidRSProcess) {
-        this.readySuspendedProcess.delNodewithVal(pidRSProcess);
+        this.readySuspendedProcesses.delNodewithVal(pidRSProcess);
     }
 
     public void delBlockedSuspendedProcess(int pidBSProcess) {
-        this.blockedSuspendedProcess.delNodewithVal(pidBSProcess);
+        this.blockedSuspendedProcesses.delNodewithVal(pidBSProcess);
     }
 
     // ------ Getters y Setters ------
@@ -128,5 +134,6 @@ public class DMA extends Thread {
     public void setCurrentProcess(Process process) {
         this.currentProcess = process;
         this.remainingCycles = process.getCyclesToManageException();
+        this.busy = true;
     }
 }

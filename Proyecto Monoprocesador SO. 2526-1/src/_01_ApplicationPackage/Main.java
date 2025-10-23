@@ -6,15 +6,10 @@ package _01_ApplicationPackage;
 
 import _02_DataStructures.SimpleList;
 import _02_DataStructures.SimpleNode;
-import _03_LowLevelAbstractions.CPU;
-import _03_LowLevelAbstractions.DMA;
-import _03_LowLevelAbstractions.MainMemory;
-import _03_LowLevelAbstractions.RealTimeClock;
 import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process;
-import _04_OperatingSystem.ProcessType;
 import _04_OperatingSystem.PolicyType;
-import _04_OperatingSystem.Scheduler;
+import _04_OperatingSystem.ProcessType;
 
 /**
  *
@@ -22,9 +17,6 @@ import _04_OperatingSystem.Scheduler;
  */
 public class Main {
     
-    /**
-     * Imprime el contenido de la cola de listos en formato tabular.
-     */
     public static void printReadyQueue(SimpleList<Process> queue, String title) {
         System.out.println("\n" + title);
         System.out.println("+-----+--------------+---------+---------+-------+--------+----------+");
@@ -44,76 +36,55 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws InterruptedException {
-        
-        // 1. Inicialización de Memoria y Colas
-        MainMemory memory = new MainMemory();
-        SimpleList<Process> readyQueue = new SimpleList<>();
-        
+        OperatingSystem os = new OperatingSystem(PolicyType.FIFO);
+
         System.out.println("===========================================================================================");
-        System.out.println("=== FASE 1: ADMISIÓN Y ASIGNACIÓN DE MEMORIA (Simulación de Scheduler de Largo Plazo) ===");
+        System.out.println("=== FASE 1: ADMISIÓN DE PROCESOS USANDO SO.newProcess() ===");
         System.out.println("===========================================================================================");
 
-        // --- Creación de Procesos (usando el constructor CORREGIDO) ---
-        // P(Name, Total Inst, Type, Cycles to Gen Exc, Cycles to Man Exc, Base Dir)
-
-        // P1: CPU-Bound, Alta Prioridad (Prio: 1), Corto, no necesita I/O.
-        final int P1_SIZE = 10;
-        int p1_base = memory.isSpaceAvailable(P1_SIZE);
-        Process p1 = new Process("P1_HPrio", P1_SIZE, ProcessType.CPU_BOUND, -1, -1, p1_base);
-        memory.allocate(p1, p1_base, P1_SIZE);
-        p1.setPPriority(1);     // Fija la prioridad a 1 (más alta)
-        p1.setRemainingInstructions(15);
-        System.out.println("Proceso " + p1.getPID() + " admitido en Base: " + p1_base);
         
-        // P2: I/O-Bound, Larga ejecución, alta espera. (Simulando un proceso reanudado)
-        final int P2_SIZE = 15;
-        int p2_base = memory.isSpaceAvailable(P2_SIZE);
-        Process p2 = new Process("P2_IO_Long", P2_SIZE, ProcessType.IO_BOUND, 5, 2, p2_base);
-        memory.allocate(p2, p2_base, P2_SIZE);
-        p2.setRemainingInstructions(30); // Ha ejecutado 10 ciclos
-        p2.setCyclesWaitingCPU(10);     // Lleva 10 ciclos esperando (infla el HRRN)
+        // P(name, totalInstructions, type, cyclesToGenInterruption, cyclesToManInterruption)
+        os.newProcess("P1_HPrio", 10, ProcessType.CPU_BOUND, -1, -1);
+        Process p1 = (Process) os.getReadyQueue().GetValInIndex(0).GetData();     // Fija la prioridad a 1 (más alta)
+        p1.setPPriority(1);   
+        
+        os.newProcess("P2_IO_Long", 15, ProcessType.IO_BOUND, 5, 2);
+        Process p2 = (Process) os.getReadyQueue().GetValInIndex(1).GetData();
         p2.setPPriority(5);
-        System.out.println("Proceso " + p2.getPID() + " admitido en Base: " + p2_base);
         
-        // P3: CPU-Bound, Muy corto.
-        final int P3_SIZE = 8;
-        int p3_base = memory.isSpaceAvailable(P3_SIZE);
-        Process p3 = new Process("P3_Shortest", P3_SIZE, ProcessType.CPU_BOUND, -1, -1, p3_base);
-        memory.allocate(p3, p3_base, P3_SIZE);
-        p3.setRemainingInstructions(5);
+        os.newProcess("P3_Shortest", 8, ProcessType.CPU_BOUND, -1, -1);
+        Process p3 = (Process) os.getReadyQueue().GetValInIndex(2).GetData();
         p3.setPPriority(3);
-        System.out.println("Proceso " + p3.getPID() + " admitido en Base: " + p3_base);
-
-        // P4: CPU-Bound, Prioridad media.
-        final int P4_SIZE = 12;
-        int p4_base = memory.isSpaceAvailable(P4_SIZE);
-        Process p4 = new Process("P4_MidPrio", P4_SIZE, ProcessType.CPU_BOUND, -1, -1, p4_base);
-        memory.allocate(p4, p4_base, P4_SIZE);
-        p4.setRemainingInstructions(18);
-        p4.setCyclesWaitingCPU(5);
-        p4.setPPriority(2);
-        System.out.println("Proceso " + p4.getPID() + " admitido en Base: " + p4_base);
         
-        // P5: CPU-Bound, Más largo (total).
-        final int P5_SIZE = 20;
-        int p5_base = memory.isSpaceAvailable(P5_SIZE);
-        Process p5 = new Process("P5_Longest", P5_SIZE, ProcessType.CPU_BOUND, -1, -1, p5_base);
-        memory.allocate(p5, p5_base, P5_SIZE);
-        p5.setRemainingInstructions(50);
+        os.newProcess("P4_MidPrio", 12, ProcessType.CPU_BOUND, -1, -1);
+        Process p4 = (Process) os.getReadyQueue().GetValInIndex(3).GetData();
+        p4.setPPriority(3);
+        
+        os.newProcess("P5_Longest", 20, ProcessType.CPU_BOUND, -1, -1);
+        Process p5 = (Process) os.getReadyQueue().GetValInIndex(4).GetData();
         p5.setPPriority(4);
-        System.out.println("Proceso " + p5.getPID() + " admitido en Base: " + p5_base);
         
-        // Inserción en orden de llegada (PID)
-        readyQueue.insertLast(p1);
-        readyQueue.insertLast(p2);
-        readyQueue.insertLast(p3);
-        readyQueue.insertLast(p4);
-        readyQueue.insertLast(p5);
+        os.newProcess("P6_HPrio", 10, ProcessType.CPU_BOUND, -1, -1);
+        Process p6 = (Process) os.getReadyQueue().GetValInIndex(0).GetData();     // Fija la prioridad a 1 (más alta)
+        p6.setPPriority(1);
+                
         
-        // 2. Simulación del Planificador de Corto Plazo
-        OperatingSystem mockOS = new OperatingSystem(readyQueue);
-        Scheduler scheduler = new Scheduler(mockOS, PolicyType.FIFO); 
-
+        os.newProcess("P7_IO_Long", 15, ProcessType.IO_BOUND, 5, 2);
+        Process p7 = (Process) os.getReadyQueue().GetValInIndex(1).GetData();
+        p7.setPPriority(5);
+        
+        os.newProcess("P8_Shortest", 8, ProcessType.CPU_BOUND, -1, -1);
+        Process p8 = (Process) os.getReadyQueue().GetValInIndex(2).GetData();
+        p8.setPPriority(3);
+        
+        os.newProcess("P9_MidPrio", 12, ProcessType.CPU_BOUND, -1, -1);
+        Process p9 = (Process) os.getReadyQueue().GetValInIndex(3).GetData();
+        p9.setPPriority(3);
+        
+        os.newProcess("P10_Longest", 20, ProcessType.CPU_BOUND, -1, -1);
+        Process p10 = (Process) os.getReadyQueue().GetValInIndex(4).GetData();
+        p10.setPPriority(4);
+        
         System.out.println("\n\n=======================================================");
         System.out.println("=== FASE 2: PRUEBA DE ORDENAMIENTO POR 6 POLÍTICAS ===");
         System.out.println("=======================================================");
@@ -128,20 +99,133 @@ public class Main {
         };
 
         for (PolicyType policy : policiesToTest) {
-            scheduler.setCurrentPolicy(policy);
-            Process nextProcess = scheduler.selectNextProcess(); 
+            os.getScheduler().setCurrentPolicy(policy);
+            Process nextProcess = os.getScheduler().selectNextProcess(); 
             
-            printReadyQueue(readyQueue, "COLA DE LISTOS ORDENADA POR: " + policy);
+            printReadyQueue(os.getReadyQueue(), "COLA DE LISTOS ORDENADA POR: " + policy);
             
             if (nextProcess != null) {
                 System.out.println(">>> PROCESO SELECCIONADO: " + nextProcess.getPName() + " (PID " + nextProcess.getPID() + ")");
             }
             System.out.println("===========================================================================================");
         }
-    
         
     }
-        
+
+
+///**
+//     * Imprime el contenido de la cola de listos en formato tabular.
+//     */
+//    public static void printReadyQueue(SimpleList<Process> queue, String title) {
+//        System.out.println("\n" + title);
+//        System.out.println("+-----+--------------+---------+---------+-------+--------+----------+");
+//        System.out.println("| PID | Nombre   | Total   | Remaining |   Priority    | Wait   | HRRN-R"
+//                );
+//        System.out.println("+-----+--------------+---------+---------+-------+--------+----------+");
+//        
+//        SimpleNode<Process> current = queue.GetpFirst();
+//        while (current != null) {
+//            System.out.println(current.GetData().toString());
+//            current = current.GetNxt();
+//        }
+//        System.out.println("+-----+--------------+---------+---------+-------+--------+----------+");
+//    }
+    
+    
+// 1. Inicialización de Memoria y Colas
+//        MainMemory memory = new MainMemory();
+//        SimpleList<Process> readyQueue = new SimpleList<>();
+//        
+//        System.out.println("===========================================================================================");
+//        System.out.println("=== FASE 1: ADMISIÓN Y ASIGNACIÓN DE MEMORIA (Simulación de Scheduler de Largo Plazo) ===");
+//        System.out.println("===========================================================================================");
+//
+//        // --- Creación de Procesos (usando el constructor CORREGIDO) ---
+//        // P(Name, Total Inst, Type, Cycles to Gen Exc, Cycles to Man Exc, Base Dir)
+//
+//        // P1: CPU-Bound, Alta Prioridad (Prio: 1), Corto, no necesita I/O.
+//        final int P1_SIZE = 10;
+//        int p1_base = memory.isSpaceAvailable(P1_SIZE);
+//        Process p1 = new Process("P1_HPrio", P1_SIZE, ProcessType.CPU_BOUND, -1, -1, p1_base);
+//        memory.allocate(p1, p1_base, P1_SIZE);
+//        p1.setPPriority(1);     // Fija la prioridad a 1 (más alta)
+//        p1.setRemainingInstructions(15);
+//        System.out.println("Proceso " + p1.getPID() + " admitido en Base: " + p1_base);
+//        
+//        // P2: I/O-Bound, Larga ejecución, alta espera. (Simulando un proceso reanudado)
+//        final int P2_SIZE = 15;
+//        int p2_base = memory.isSpaceAvailable(P2_SIZE);
+//        Process p2 = new Process("P2_IO_Long", P2_SIZE, ProcessType.IO_BOUND, 5, 2, p2_base);
+//        memory.allocate(p2, p2_base, P2_SIZE);
+//        p2.setRemainingInstructions(30); // Ha ejecutado 10 ciclos
+//        p2.setCyclesWaitingCPU(10);     // Lleva 10 ciclos esperando (infla el HRRN)
+//        p2.setPPriority(5);
+//        System.out.println("Proceso " + p2.getPID() + " admitido en Base: " + p2_base);
+//        
+//        // P3: CPU-Bound, Muy corto.
+//        final int P3_SIZE = 8;
+//        int p3_base = memory.isSpaceAvailable(P3_SIZE);
+//        Process p3 = new Process("P3_Shortest", P3_SIZE, ProcessType.CPU_BOUND, -1, -1, p3_base);
+//        memory.allocate(p3, p3_base, P3_SIZE);
+//        p3.setRemainingInstructions(5);
+//        p3.setPPriority(3);
+//        System.out.println("Proceso " + p3.getPID() + " admitido en Base: " + p3_base);
+//
+//        // P4: CPU-Bound, Prioridad media.
+//        final int P4_SIZE = 12;
+//        int p4_base = memory.isSpaceAvailable(P4_SIZE);
+//        Process p4 = new Process("P4_MidPrio", P4_SIZE, ProcessType.CPU_BOUND, -1, -1, p4_base);
+//        memory.allocate(p4, p4_base, P4_SIZE);
+//        p4.setRemainingInstructions(18);
+//        p4.setCyclesWaitingCPU(5);
+//        p4.setPPriority(2);
+//        System.out.println("Proceso " + p4.getPID() + " admitido en Base: " + p4_base);
+//        
+//        // P5: CPU-Bound, Más largo (total).
+//        final int P5_SIZE = 20;
+//        int p5_base = memory.isSpaceAvailable(P5_SIZE);
+//        Process p5 = new Process("P5_Longest", P5_SIZE, ProcessType.CPU_BOUND, -1, -1, p5_base);
+//        memory.allocate(p5, p5_base, P5_SIZE);
+//        p5.setRemainingInstructions(50);
+//        p5.setPPriority(4);
+//        System.out.println("Proceso " + p5.getPID() + " admitido en Base: " + p5_base);
+//        
+//        // Inserción en orden de llegada (PID)
+//        readyQueue.insertLast(p1);
+//        readyQueue.insertLast(p2);
+//        readyQueue.insertLast(p3);
+//        readyQueue.insertLast(p4);
+//        readyQueue.insertLast(p5);
+//        
+//        // 2. Simulación del Planificador de Corto Plazo
+//        OperatingSystem mockOS = new OperatingSystem(readyQueue);
+//        Scheduler scheduler = new Scheduler(mockOS, PolicyType.FIFO); 
+//
+//        System.out.println("\n\n=======================================================");
+//        System.out.println("=== FASE 2: PRUEBA DE ORDENAMIENTO POR 6 POLÍTICAS ===");
+//        System.out.println("=======================================================");
+//
+//        PolicyType[] policiesToTest = {
+//            PolicyType.FIFO, 
+//            PolicyType.ROUND_ROBIN, 
+//            PolicyType.SPN, 
+//            PolicyType.SRT, 
+//            PolicyType.Priority, 
+//            PolicyType.HRRN
+//        };
+//
+//        for (PolicyType policy : policiesToTest) {
+//            scheduler.setCurrentPolicy(policy);
+//            Process nextProcess = scheduler.selectNextProcess(); 
+//            
+//            printReadyQueue(readyQueue, "COLA DE LISTOS ORDENADA POR: " + policy);
+//            
+//            if (nextProcess != null) {
+//                System.out.println(">>> PROCESO SELECCIONADO: " + nextProcess.getPName() + " (PID " + nextProcess.getPID() + ")");
+//            }
+//            System.out.println("===========================================================================================");
+//        }
+//    
         
 //        //Prueba de CPU, proceso y MP
 //        DMA dma = new DMA();
