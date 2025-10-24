@@ -117,27 +117,25 @@ public class CPU extends Thread {
                             // CPU bound solo indicara que no quiere continuar si termino
                             if (currentProcess.getType() == ProcessType.CPU_BOUND) {
                                 // Funcion de terminacion de un proceso por el SO
+                                this.osReference.terminateProcess();
 
                             } // Si el proceso no ha terminado sus instrucciones pero "no quiere continuar" es que necesita una operacion E/S
                             else if (currentProcess.getPC() != currentProcess.getTotalInstructions()) {
                                 System.out.println("CPU: Proceso requiere E/S. Desalojo y Notifico a SO.");
-                                Process processToSetToDMA = this.getCurrentProcess();
-                                this.osReference.manageIORequest(processToSetToDMA);
+                                this.osReference.manageIORequest();
 
                                 // En caso de proceso IO bound se debe verificar si el DMA termino su E/S 
                             } else if (currentProcess.getPC() == currentProcess.getTotalInstructions() && currentProcess.isExceptionManaged() == true) {
 
                                 // Funcion de terminacion del proceso
-                                
-
+                                this.osReference.terminateProcess();
                             }
                         }
                         
                         // Politica RR
                         if (remainingCycles == 0) {
                             System.out.println("CPU: Quantum de tiempo excedido.");
-                            this.osReference.handlePreemption(this.currentProcess); 
-                            this.currentProcess = null; // Cede la CPU
+                            this.osReference.handlePreemption(this.currentProcess);
                         }
 
                     // Si es null se ejecutara el SO
