@@ -179,12 +179,13 @@ public class OperatingSystem extends Thread {
 
         preemptedProcess.setState(ProcessState.READY);
         this.getReadyQueue().insertLast(preemptedProcess);
-
+        this.getCpu().setCurrentProcess(null, -1);
         System.out.println("SO: Desalojo de PID " + preemptedProcess.getPID() + ". Movido a READY.");
         notifyOS(); // Despierta el hilo del SO para que llame a dispatchProcess
     }
 
-    public void manageIORequest(Process processToSet) {
+    public void manageIORequest() {
+        Process processToSet = this.getCpu().getCurrentProcess();
         processToSet.setState(ProcessState.BLOCKED); // Cambio el estado
 
         // Si el DMA esta desocupado le seteo el proceso
@@ -215,10 +216,7 @@ public class OperatingSystem extends Thread {
             this.getDma().setCurrentProcess(nextProcessForIO); // Envio al DMA al proceso
             this.getDma().receiveTick(); // Le indico al DMA que continue
         }
-
-        //-----------        
-        // COLOCAR LA SEGUNDA POLITICA
-        //-----------
+        
         if (this.scheduler.getCurrentPolicy() == PolicyType.ROUND_ROBIN || this.scheduler.getCurrentPolicy() == PolicyType.ROUND_ROBIN) {
 
             // Llamar al Dispatcher
