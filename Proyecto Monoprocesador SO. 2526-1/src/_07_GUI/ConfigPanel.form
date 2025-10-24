@@ -223,7 +223,7 @@
                   <Color blue="ff" green="ff" red="ff" type="rgb"/>
                 </Property>
                 <Property name="horizontalAlignment" type="int" value="0"/>
-                <Property name="text" type="java.lang.String" value="Configuraci&#xf3;n de Precargado"/>
+                <Property name="text" type="java.lang.String" value="Creaci&#xf3;n de JSON -Simulaci&#xf3;n Precargada"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
@@ -431,7 +431,7 @@
                       <Color blue="ff" green="ff" red="ff" type="rgb"/>
                     </Property>
                     <Property name="horizontalAlignment" type="int" value="0"/>
-                    <Property name="text" type="java.lang.String" value="Nuevo Proceso"/>
+                    <Property name="text" type="java.lang.String" value="Nuevo Proceso para JSON"/>
                   </Properties>
                 </Component>
               </SubComponents>
@@ -471,7 +471,7 @@
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                  <AbsoluteConstraints x="730" y="340" width="240" height="-1"/>
+                  <AbsoluteConstraints x="730" y="340" width="240" height="100"/>
                 </Constraint>
               </Constraints>
 
@@ -485,10 +485,7 @@
                       </Group>
                       <Group type="102" alignment="1" attributes="0">
                           <EmptySpace max="32767" attributes="0"/>
-                          <Group type="103" groupAlignment="0" max="-2" attributes="0">
-                              <Component id="jButton3" alignment="0" pref="130" max="32767" attributes="0"/>
-                              <Component id="jSpinner2" alignment="0" max="32767" attributes="0"/>
-                          </Group>
+                          <Component id="jSpinner2" min="-2" pref="130" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="54" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -500,19 +497,12 @@
                           <Component id="label7" min="-2" max="-2" attributes="0"/>
                           <EmptySpace max="-2" attributes="0"/>
                           <Component id="jSpinner2" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace type="separate" max="-2" attributes="0"/>
-                          <Component id="jButton3" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="24" max="32767" attributes="0"/>
+                          <EmptySpace pref="25" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
               </Layout>
               <SubComponents>
-                <Component class="javax.swing.JButton" name="jButton3">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Guardar Cambios"/>
-                  </Properties>
-                </Component>
                 <Component class="java.awt.Label" name="label7">
                   <Properties>
                     <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
@@ -555,11 +545,11 @@
             </Component>
             <Component class="javax.swing.JButton" name="jButton5">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Guardar Configuraci&#xf3;n de Precargado"/>
+                <Property name="text" type="java.lang.String" value="Crear JSON"/>
               </Properties>
               <Constraints>
                 <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout" value="org.netbeans.modules.form.compat2.layouts.DesignAbsoluteLayout$AbsoluteConstraintsDescription">
-                  <AbsoluteConstraints x="730" y="530" width="240" height="40"/>
+                  <AbsoluteConstraints x="730" y="460" width="240" height="40"/>
                 </Constraint>
               </Constraints>
             </Component>

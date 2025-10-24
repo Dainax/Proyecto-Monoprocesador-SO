@@ -41,7 +41,6 @@ public class ConfigPanel extends javax.swing.JPanel {
         jLabel19 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         jPanel7 = new javax.swing.JPanel();
-        jButton3 = new javax.swing.JButton();
         label7 = new java.awt.Label();
         jSpinner2 = new javax.swing.JSpinner();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -133,7 +132,7 @@ public class ConfigPanel extends javax.swing.JPanel {
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Configuración de Precargado");
+        jLabel1.setText("Creación de JSON -Simulación Precargada");
         jPanel2.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 280, -1, -1));
 
         jPanel3.setBackground(new java.awt.Color(0, 0, 70));
@@ -182,7 +181,7 @@ public class ConfigPanel extends javax.swing.JPanel {
         jLabel19.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel19.setForeground(new java.awt.Color(255, 255, 255));
         jLabel19.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel19.setText("Nuevo Proceso");
+        jLabel19.setText("Nuevo Proceso para JSON");
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -261,8 +260,6 @@ public class ConfigPanel extends javax.swing.JPanel {
         jPanel7.setBackground(new java.awt.Color(0, 0, 70));
         jPanel7.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        jButton3.setText("Guardar Cambios");
-
         label7.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         label7.setForeground(new java.awt.Color(255, 255, 255));
         label7.setText("Duración de Ciclos de Reloj");
@@ -277,9 +274,7 @@ public class ConfigPanel extends javax.swing.JPanel {
                 .addGap(23, 23, 23))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jButton3, javax.swing.GroupLayout.DEFAULT_SIZE, 130, Short.MAX_VALUE)
-                    .addComponent(jSpinner2))
+                .addComponent(jSpinner2, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(54, 54, 54))
         );
         jPanel7Layout.setVerticalGroup(
@@ -289,12 +284,10 @@ public class ConfigPanel extends javax.swing.JPanel {
                 .addComponent(label7, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jSpinner2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
-                .addComponent(jButton3)
-                .addContainerGap(24, Short.MAX_VALUE))
+                .addContainerGap(25, Short.MAX_VALUE))
         );
 
-        jPanel2.add(jPanel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 340, 240, -1));
+        jPanel2.add(jPanel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 340, 240, 100));
         jPanel2.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 370, 240, 250));
 
         label8.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
@@ -302,8 +295,8 @@ public class ConfigPanel extends javax.swing.JPanel {
         label8.setText("Procesos creados");
         jPanel2.add(label8, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 340, -1, -1));
 
-        jButton5.setText("Guardar Configuración de Precargado");
-        jPanel2.add(jButton5, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 530, 240, 40));
+        jButton5.setText("Crear JSON");
+        jPanel2.add(jButton5, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 460, 240, 40));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -345,7 +338,6 @@ public class ConfigPanel extends javax.swing.JPanel {
     private javax.swing.JSpinner ioTimeSpinner;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton5;
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;

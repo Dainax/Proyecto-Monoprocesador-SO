@@ -175,12 +175,12 @@ public class SimulationPanel extends javax.swing.JPanel {
         readyList = new javax.swing.JScrollPane();
         finishedList = new javax.swing.JScrollPane();
         blockedList = new javax.swing.JScrollPane();
-        jToggleButton1 = new javax.swing.JToggleButton();
         jLabel13 = new javax.swing.JLabel();
         plannerLog = new javax.swing.JLabel();
         jToggleButton2 = new javax.swing.JToggleButton();
-        jToggleButton3 = new javax.swing.JToggleButton();
-        jToggleButton4 = new javax.swing.JToggleButton();
+        jButton1 = new javax.swing.JButton();
+        jButton2 = new javax.swing.JButton();
+        jButton3 = new javax.swing.JButton();
 
         jPanel1.setBackground(new java.awt.Color(13, 84, 141));
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -509,17 +509,6 @@ public class SimulationPanel extends javax.swing.JPanel {
         jPanel1.add(finishedList, new org.netbeans.lib.awtextra.AbsoluteConstraints(570, 360, 120, 290));
         jPanel1.add(blockedList, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, 120, 290));
 
-        jToggleButton1.setBackground(new java.awt.Color(0, 0, 70));
-        jToggleButton1.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
-        jToggleButton1.setForeground(new java.awt.Color(255, 255, 255));
-        jToggleButton1.setText("Precargar una simulación");
-        jToggleButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton1ActionPerformed(evt);
-            }
-        });
-        jPanel1.add(jToggleButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 450, 240, 30));
-
         jLabel13.setBackground(new java.awt.Color(255, 255, 255));
         jLabel13.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel13.setForeground(new java.awt.Color(255, 255, 255));
@@ -545,27 +534,23 @@ public class SimulationPanel extends javax.swing.JPanel {
         });
         jPanel1.add(jToggleButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 320, 240, 40));
 
-        jToggleButton3.setBackground(new java.awt.Color(0, 0, 70));
-        jToggleButton3.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
-        jToggleButton3.setForeground(new java.awt.Color(255, 255, 255));
-        jToggleButton3.setText("Reiniciar Simulación");
-        jToggleButton3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton3ActionPerformed(evt);
-            }
-        });
-        jPanel1.add(jToggleButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 370, 240, 30));
+        jButton1.setBackground(new java.awt.Color(0, 0, 70));
+        jButton1.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
+        jButton1.setForeground(new java.awt.Color(255, 255, 255));
+        jButton1.setText("Precargar una simulación");
+        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 450, 240, 30));
 
-        jToggleButton4.setBackground(new java.awt.Color(0, 0, 70));
-        jToggleButton4.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
-        jToggleButton4.setForeground(new java.awt.Color(255, 255, 255));
-        jToggleButton4.setText("Generación automática 20 procesos");
-        jToggleButton4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton4ActionPerformed(evt);
-            }
-        });
-        jPanel1.add(jToggleButton4, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 410, 240, 30));
+        jButton2.setBackground(new java.awt.Color(0, 0, 70));
+        jButton2.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
+        jButton2.setForeground(new java.awt.Color(255, 255, 255));
+        jButton2.setText("Reiniciar Simulación");
+        jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 370, 240, 30));
+
+        jButton3.setBackground(new java.awt.Color(0, 0, 70));
+        jButton3.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
+        jButton3.setForeground(new java.awt.Color(255, 255, 255));
+        jButton3.setText("Generación automática 20 procesos");
+        jPanel1.add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 410, 240, 30));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -579,29 +564,17 @@ public class SimulationPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void nameFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nameFieldActionPerformed
+    private void jToggleButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton2ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_nameFieldActionPerformed
+    }//GEN-LAST:event_jToggleButton2ActionPerformed
 
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_submitButtonActionPerformed
 
-    private void jToggleButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton1ActionPerformed
+    private void nameFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nameFieldActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jToggleButton1ActionPerformed
-
-    private void jToggleButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jToggleButton2ActionPerformed
-
-    private void jToggleButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jToggleButton3ActionPerformed
-
-    private void jToggleButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jToggleButton4ActionPerformed
+    }//GEN-LAST:event_nameFieldActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -617,6 +590,9 @@ public class SimulationPanel extends javax.swing.JPanel {
     private javax.swing.JSpinner instructionsSpinner;
     private javax.swing.JRadioButton ioBoundRadio;
     private javax.swing.JSpinner ioTimeSpinner;
+    private javax.swing.JButton jButton1;
+    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
@@ -638,10 +614,7 @@ public class SimulationPanel extends javax.swing.JPanel {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
-    private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JToggleButton jToggleButton2;
-    private javax.swing.JToggleButton jToggleButton3;
-    private javax.swing.JToggleButton jToggleButton4;
     private java.awt.Label label2;
     private java.awt.Label label4;
     private java.awt.Label label5;
