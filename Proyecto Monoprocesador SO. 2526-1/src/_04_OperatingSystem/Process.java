@@ -25,6 +25,7 @@ public class Process extends Thread {
     private ProcessState state;
     private int cyclesToGenerateException; // Para generar IO si es IO_Bound
     private int cyclesToManageException;   // Para satisfacer interrupcion
+    private boolean ExceptionManaged;
     private int baseDirection;
 
     /**
@@ -75,6 +76,7 @@ public class Process extends Thread {
         this.state = ProcessState.NEW;
         this.cyclesToGenerateException = cyclesToGenerateInterruption;
         this.cyclesToManageException = cyclesToManageInterruption;
+        this.ExceptionManaged = false;
         this.priority = RANDOM.nextInt(5) + 1;
         this.cyclesWaitingCPU = 0;
         this.responseRate = 0;
@@ -125,9 +127,8 @@ public class Process extends Thread {
                          */
                         if (this.PC == this.cyclesToGenerateException) {
                             System.out.println("Generando E/S");
-                            this.executedSuccessfully = false;
+                            this.executedSuccessfully = false; // llama al SO a traves de la CPU para que maneje la operacion E/S
                             this.keepRunning = false;
-                            // llama al So para que maneje la operacion E/S
                         }
                     } else {
                         // El proceso ha completado todas sus instrucciones
@@ -223,6 +224,14 @@ public class Process extends Thread {
 
     public void setCyclesToManageException(int cyclesToManageException) {
         this.cyclesToManageException = cyclesToManageException;
+    }
+
+    public boolean isExceptionManaged() {
+        return ExceptionManaged;
+    }
+
+    public void setExceptionManaged(boolean ExceptionManaged) {
+        this.ExceptionManaged = ExceptionManaged;
     }
 
     public int getBaseDirection() {

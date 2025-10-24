@@ -10,6 +10,7 @@ import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process;
 import _04_OperatingSystem.PolicyType;
 import _04_OperatingSystem.ProcessType;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -31,86 +32,149 @@ public class Main {
         }
         System.out.println("+-----+--------------+---------+---------+-------+--------+----------+");
     }
+    
+    private static void printSystemState(OperatingSystem os, int cycle) {
+        System.out.println("\n----------------------------------------------------");
+        System.out.println("--- ESTADO DEL SISTEMA (Ciclo: " + cycle + ") ---");
+        System.out.println("----------------------------------------------------");
+        printReadyQueue(os.getReadyQueue(), ("\nCOLA DE Listos (" + os.getReadyQueue().GetSize() + "):"));
+        printReadyQueue(os.getBlockedQueue(), ("\nCOLA DE Bloqueados (" + os.getBlockedQueue().GetSize() + "):"));
+        printReadyQueue(os.getTerminatedQueue(), ("\nCOLA DE TERMINADOS (" + os.getTerminatedQueue().GetSize() + "):"));
+        System.out.println("----------------------------------------------------");
+        
+        try {
+            // Pausa para que el usuario pueda leer el estado
+            TimeUnit.MILLISECONDS.sleep(100); 
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) throws InterruptedException {
-        OperatingSystem os = new OperatingSystem(PolicyType.FIFO);
-
-        System.out.println("===========================================================================================");
-        System.out.println("=== FASE 1: ADMISIÓN DE PROCESOS USANDO SO.newProcess() ===");
-        System.out.println("===========================================================================================");
-
+        OperatingSystem os = new OperatingSystem(PolicyType.ROUND_ROBIN, 5000);
         
+        os.startOS();
+
+        System.out.println("===========================================================================================");
+        System.out.println("=== INICIO DE LA SIMULACIÓN - ROUND ROBIN (QUANTUM=4) ===");
+        System.out.println("===========================================================================================");
+
         // P(name, totalInstructions, type, cyclesToGenInterruption, cyclesToManInterruption)
-        os.newProcess("P1_HPrio", 10, ProcessType.CPU_BOUND, -1, -1);
-        Process p1 = (Process) os.getReadyQueue().GetValInIndex(0).GetData();     // Fija la prioridad a 1 (más alta)
-        p1.setPPriority(1);   
+        // P1: CPU-Bound. Se ejecuta hasta el final. Total=10.
+        os.newProcess("P1_CPU", 10, ProcessType.CPU_BOUND, -1, -1);
         
-        os.newProcess("P2_IO_Long", 15, ProcessType.IO_BOUND, 5, 2);
-        Process p2 = (Process) os.getReadyQueue().GetValInIndex(1).GetData();
-        p2.setPPriority(5);
+        // P2: I/O-Bound. Genera I/O al ciclo 5. Total=15. I/O dura 3 ciclos.
+        os.newProcess("P2_IO", 15, ProcessType.IO_BOUND, 5, 3);
         
-        os.newProcess("P3_Shortest", 8, ProcessType.CPU_BOUND, -1, -1);
-        Process p3 = (Process) os.getReadyQueue().GetValInIndex(2).GetData();
-        p3.setPPriority(3);
+        // P3: CPU-Bound. Se ejecuta hasta el final. Total=8.
+        os.newProcess("P3_Short", 8, ProcessType.CPU_BOUND, -1, -1);
         
-        os.newProcess("P4_MidPrio", 12, ProcessType.CPU_BOUND, -1, -1);
-        Process p4 = (Process) os.getReadyQueue().GetValInIndex(3).GetData();
-        p4.setPPriority(3);
+        // P4: CPU-Bound. Se ejecuta hasta el final. Total=12.
+        os.newProcess("P4_Mid", 12, ProcessType.CPU_BOUND, -1, -1);
         
-        os.newProcess("P5_Longest", 20, ProcessType.CPU_BOUND, -1, -1);
-        Process p5 = (Process) os.getReadyQueue().GetValInIndex(4).GetData();
-        p5.setPPriority(4);
         
-        os.newProcess("P6_HPrio", 10, ProcessType.CPU_BOUND, -1, -1);
-        Process p6 = (Process) os.getReadyQueue().GetValInIndex(0).GetData();     // Fija la prioridad a 1 (más alta)
-        p6.setPPriority(1);
-                
-        
-        os.newProcess("P7_IO_Long", 15, ProcessType.IO_BOUND, 5, 2);
-        Process p7 = (Process) os.getReadyQueue().GetValInIndex(1).GetData();
-        p7.setPPriority(5);
-        
-        os.newProcess("P8_Shortest", 8, ProcessType.CPU_BOUND, -1, -1);
-        Process p8 = (Process) os.getReadyQueue().GetValInIndex(2).GetData();
-        p8.setPPriority(3);
-        
-        os.newProcess("P9_MidPrio", 12, ProcessType.CPU_BOUND, -1, -1);
-        Process p9 = (Process) os.getReadyQueue().GetValInIndex(3).GetData();
-        p9.setPPriority(3);
-        
-        os.newProcess("P10_Longest", 20, ProcessType.CPU_BOUND, -1, -1);
-        //Process p10 = (Process) os.getReadyQueue().GetValInIndex(4).GetData();
-        //p10.setPPriority(4);
-        
-        System.out.println("\n\n=======================================================");
-        System.out.println("=== FASE 2: PRUEBA DE ORDENAMIENTO POR 6 POLÍTICAS ===");
-        System.out.println("=======================================================");
-
-        PolicyType[] policiesToTest = {
-            PolicyType.FIFO, 
-            PolicyType.ROUND_ROBIN, 
-            PolicyType.SPN, 
-            PolicyType.SRT, 
-            PolicyType.Priority, 
-            PolicyType.HRRN
-        };
-
-        for (PolicyType policy : policiesToTest) {
-            os.getScheduler().setCurrentPolicy(policy);
-            Process nextProcess = os.getScheduler().selectNextProcess(); 
+        int currentCycle = 1;
+        while (os.getTerminatedQueue().GetSize()< 4) {
+            // Pausa principal del hilo Main para dejar que la simulación corra
+            TimeUnit.MILLISECONDS.sleep(os.getCpu().getCycleCounter() > 0 ? 1000 : 2000); 
             
-            printReadyQueue(os.getReadyQueue(), "COLA DE LISTOS ORDENADA POR: " + policy);
-            
-            if (nextProcess != null) {
-                System.out.println(">>> PROCESO SELECCIONADO: " + nextProcess.getPName() + " (PID " + nextProcess.getPID() + ")");
+            // Revisa y muestra el estado
+            printSystemState(os, currentCycle);
+            currentCycle = os.getCpu().getCycleCounter();
+
+            // Lógica para detener la simulación si algo falla (opcional)
+            if (currentCycle > 100) {
+                 System.out.println("\n*** SIMULACIÓN DETENIDA POR LÍMITE DE CICLOS ***");
+                 break;
             }
-            System.out.println("===========================================================================================");
         }
         
+        System.out.println("\n=======================================================");
+        System.out.println("=== SIMULACIÓN FINALIZADA ===");
+        System.out.println("=======================================================");
+        printSystemState(os, os.getCpu().getCycleCounter());
+        
     }
+//        OperatingSystem os = new OperatingSystem(PolicyType.FIFO, 1000);
+//        
+//        os.startOS();
+//
+//        System.out.println("===========================================================================================");
+//        System.out.println("=== FASE 1: ADMISIÓN DE PROCESOS USANDO SO.newProcess() ===");
+//        System.out.println("===========================================================================================");
+//
+//        
+//        // P(name, totalInstructions, type, cyclesToGenInterruption, cyclesToManInterruption)
+//        os.newProcess("P1_HPrio", 10, ProcessType.CPU_BOUND, -1, -1);
+//        Process p1 = (Process) os.getReadyQueue().GetValInIndex(0).GetData();     // Fija la prioridad a 1 (más alta)
+//        p1.setPPriority(1);   
+//        
+//        os.newProcess("P2_IO_Long", 15, ProcessType.IO_BOUND, 5, 2);
+//        Process p2 = (Process) os.getReadyQueue().GetValInIndex(1).GetData();
+//        p2.setPPriority(5);
+//        
+//        os.newProcess("P3_Shortest", 8, ProcessType.CPU_BOUND, -1, -1);
+//        Process p3 = (Process) os.getReadyQueue().GetValInIndex(2).GetData();
+//        p3.setPPriority(3);
+//        
+//        os.newProcess("P4_MidPrio", 12, ProcessType.CPU_BOUND, -1, -1);
+//        Process p4 = (Process) os.getReadyQueue().GetValInIndex(3).GetData();
+//        p4.setPPriority(3);
+//        
+//        os.newProcess("P5_Longest", 20, ProcessType.CPU_BOUND, -1, -1);
+//        Process p5 = (Process) os.getReadyQueue().GetValInIndex(4).GetData();
+//        p5.setPPriority(4);
+//        
+//        os.newProcess("P6_HPrio", 10, ProcessType.CPU_BOUND, -1, -1);
+//        Process p6 = (Process) os.getReadyQueue().GetValInIndex(0).GetData();     // Fija la prioridad a 1 (más alta)
+//        p6.setPPriority(1);
+//                
+//        
+//        os.newProcess("P7_IO_Long", 15, ProcessType.IO_BOUND, 5, 2);
+//        Process p7 = (Process) os.getReadyQueue().GetValInIndex(1).GetData();
+//        p7.setPPriority(5);
+//        
+//        os.newProcess("P8_Shortest", 8, ProcessType.CPU_BOUND, -1, -1);
+//        Process p8 = (Process) os.getReadyQueue().GetValInIndex(2).GetData();
+//        p8.setPPriority(3);
+//        
+//        os.newProcess("P9_MidPrio", 12, ProcessType.CPU_BOUND, -1, -1);
+//        Process p9 = (Process) os.getReadyQueue().GetValInIndex(3).GetData();
+//        p9.setPPriority(3);
+//        
+//        os.newProcess("P10_Longest", 20, ProcessType.CPU_BOUND, -1, -1);
+//        //Process p10 = (Process) os.getReadyQueue().GetValInIndex(4).GetData();
+//        //p10.setPPriority(4);
+//        
+//        System.out.println("\n\n=======================================================");
+//        System.out.println("=== FASE 2: PRUEBA DE ORDENAMIENTO POR 6 POLÍTICAS ===");
+//        System.out.println("=======================================================");
+//
+//        PolicyType[] policiesToTest = {
+//            PolicyType.FIFO, 
+//            PolicyType.ROUND_ROBIN, 
+//            PolicyType.SPN, 
+//            PolicyType.SRT, 
+//            PolicyType.Priority, 
+//            PolicyType.HRRN
+//        };
+//
+//        for (PolicyType policy : policiesToTest) {
+//            os.getScheduler().setCurrentPolicy(policy);
+//            Process nextProcess = os.getScheduler().selectNextProcess(); 
+//            
+//            printReadyQueue(os.getReadyQueue(), "COLA DE LISTOS ORDENADA POR: " + policy);
+//            
+//            if (nextProcess != null) {
+//                System.out.println(">>> PROCESO SELECCIONADO: " + nextProcess.getPName() + " (PID " + nextProcess.getPID() + ")");
+//            }
+//            System.out.println("===========================================================================================");
+//        }
+        
+    
 
 
 ///**

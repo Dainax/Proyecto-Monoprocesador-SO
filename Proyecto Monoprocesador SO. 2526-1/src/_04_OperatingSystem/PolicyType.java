@@ -10,7 +10,7 @@ package _04_OperatingSystem;
  */
 public enum PolicyType {
     
-    Priority,   // Prioridades
+    Priority,   // Nonpreemptive Priority
     FIFO,       // First In First Out 
     ROUND_ROBIN, 
     SPN,        // Short Process next
