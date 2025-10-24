@@ -5,6 +5,7 @@
 package _03_LowLevelAbstractions;
 
 import _02_DataStructures.SimpleList;
+import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process;
 
 /**
@@ -22,10 +23,10 @@ public class DMA extends Thread {
     // Si es null, no se esta gestionando la E/S de ningun proceso
     private volatile Process currentProcess;
 
-    // Lista de nuevos
+    // Cola de nuevos
     private SimpleList newProcesses; 
             
-    // Para simular el area de Swap y no hacer una clase disco
+    // Cola de suspendidos. Se simula el area de Swap y no hacer una clase disco
     private SimpleList readySuspendedProcesses; // Procesos listos suspendidos en el area de Swap
     private SimpleList blockedSuspendedProcesses; // Procesos listos suspendidos en el area de Swap
 
@@ -33,18 +34,22 @@ public class DMA extends Thread {
     
     // Monitor para la sincronizacion para usar wait() y notify()
     private final Object syncMonitor = new Object();
+    
+    // Para poder referenciar los metodos del SO
+    private final OperatingSystem osReference;
 
     // --------------- Metodos ---------------
     /**
      * Constructor
      */
-    public DMA() {
+    public DMA(OperatingSystem osReference) {
         this.remainingCycles = -1;
         this.currentProcess = null;
         this.newProcesses = new SimpleList();
         this.readySuspendedProcesses = new SimpleList();
         this.blockedSuspendedProcesses = new SimpleList();
         this.busy = false;
+        this.osReference = osReference;
     }
 
     // ----- Sincronización -----
@@ -78,9 +83,9 @@ public class DMA extends Thread {
                             System.out.println("Proceso E/S terminado");
                             // Para darselo al Sistema operativo
                             Process terminatedProcess = this.currentProcess;
-                            this.currentProcess = null;
-                            this.busy=false;
-                            // Invocar al SO
+                            
+                            // Invocar al sistema operativo para terminar el proceso
+                            
                         }
                     }
                 } catch (InterruptedException e) {
@@ -137,4 +142,15 @@ public class DMA extends Thread {
         this.remainingCycles = process.getCyclesToManageException();
         this.busy = true;
     }
+
+    public boolean isBusy() {
+        return busy;
+    }
+
+    public void setBusy(boolean busy) {
+        this.busy = busy;
+    }
+    
+    
+    
 }

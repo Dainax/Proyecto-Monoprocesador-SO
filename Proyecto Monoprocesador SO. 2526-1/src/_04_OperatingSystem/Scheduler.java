@@ -18,7 +18,7 @@ public class Scheduler {
     private PolicyType currentPolicy;
     private final OperatingSystem osReference;
     // Indica si la cola de listos ya está ordenada
-    private boolean ordered;
+    private boolean isOrdered;
 
     // Para RR
     private final int quantum = 5;
@@ -33,11 +33,10 @@ public class Scheduler {
     public Scheduler(OperatingSystem osReference, PolicyType currentPolicy) {
         this.osReference = osReference;
         this.currentPolicy = currentPolicy;
-        this.ordered = false;
+        this.isOrdered = false;
     }
 
     // ---------- Planificacion a corto plazo ----------
-    
     /**
      * Seleccionar nuevo proceso de la cola de listos para ponerlo en ejecución
      *
@@ -52,48 +51,61 @@ public class Scheduler {
         }
 
         // Si la lista no está ordenada, la ordenamos 
-        if (!this.ordered) {
+        if (!this.isOrdered) {
             sortReadyQueue();
-            this.ordered = true;
+            this.isOrdered = true;
         }
 
         // Tomo el proceso. La cola debe estar ordenada segun el algoritmo de ordenamiento
         Process nextProcess = (Process) readyProcesses.GetpFirst().GetData();
-        
+
         // Cambio su estado y lo elimino de la cola
         nextProcess.setState(ProcessState.RUNNING);
         this.osReference.getReadyQueue().delNodewithVal(nextProcess);
-        
-        System.out.println("Seleccionado el proceso "+nextProcess.getPID()+" para ejecutarse");
+
+        System.out.println("Seleccionado el proceso " + nextProcess.getPID() + " para ejecutarse");
         return nextProcess;
     }
 
     /**
-     * Metodo para ordenar la cola que llama al metodo de la politica segun sea el caso
+     * Metodo para ordenar la cola que llama al metodo de la politica segun sea
+     * el caso
      */
     public void sortReadyQueue() {
         SimpleList<Process> readyProcesses = osReference.getReadyQueue();
         if (readyProcesses.GetSize() <= 1) {
-            this.ordered = true;
+            this.isOrdered = true;
             return;
         }
-        
+
         switch (currentPolicy) {
-            case Priority: sortPriority(); break;
-            
-            case FIFO: sortFIFO(); break;
-            
-            case ROUND_ROBIN: sortRoundRobin(); break;
-            
-            case SPN: sortSPN(); break;
-            
-            case SRT: sortSRT(); break;
-            
-            case HRRN: sortHRRN(); break;
+            case Priority:
+                sortPriority();
+                break;
+
+            case FIFO:
+                sortFIFO();
+                break;
+
+            case ROUND_ROBIN:
+                sortRoundRobin();
+                break;
+
+            case SPN:
+                sortSPN();
+                break;
+
+            case SRT:
+                sortSRT();
+                break;
+
+            case HRRN:
+                sortHRRN();
+                break;
         }
         System.out.println("Cola de listos reordenada con política " + currentPolicy);
     }
-    
+
     private void sortPriority() {
         // Ordena por prioridad siendo la mas importante la menor (1)
         ordenateWithBubbleSort(PolicyType.Priority);
@@ -127,7 +139,6 @@ public class Scheduler {
         ordenateWithBubbleSort(PolicyType.HRRN);
     }
 
-    
     /**
      * Metodo que centraliza el ordenar la lista
      */
@@ -138,7 +149,7 @@ public class Scheduler {
 
         // Hago un arreglo temporal
         Process[] processArray = new Process[size];
-        
+
         SimpleNode<Process> current = readyProcesses.GetpFirst();
         int index = 0;
         while (current != null) {
@@ -159,7 +170,7 @@ public class Scheduler {
     }
 
     /**
-     * Ordena un array de procesos usando Bubble Sort usando dos metodos 
+     * Ordena un array de procesos usando Bubble Sort usando dos metodos
      */
     private void bubbleSort(Process[] processes, PolicyType policy) {
         int n = processes.length;
@@ -180,7 +191,7 @@ public class Scheduler {
             }
         }
     }
-    
+
     /**
      * Determina si el Proceso 'a' debe ir antes que el Proceso 'b' para
      * organizar la lista
@@ -244,13 +255,10 @@ public class Scheduler {
             current = current.GetNxt();
         }
     }
-    
+
     // ---------- Planificacion a mediano plazo ----------
-    
-    
     // ---------- Planificacion a largo plazo ----------
     // Admision de procesos de nuevo al sistema
-
     // Getters y Setters
     public PolicyType getCurrentPolicy() {
         return currentPolicy;
@@ -258,9 +266,9 @@ public class Scheduler {
 
     public void setCurrentPolicy(PolicyType newPolicy) {
         this.currentPolicy = newPolicy;
-        
-        this.ordered = false; // Para que vuelva a ordenar la cola por el cambio de politica
-        
+
+        this.isOrdered = false; // Para que vuelva a ordenar la cola por el cambio de politica
+
         System.out.println("Política cambiada a " + newPolicy);
     }
 
@@ -268,7 +276,7 @@ public class Scheduler {
         return quantum;
     }
 
-    public void setOrdered(boolean ordered) {
-        this.ordered = ordered;
+    public void setIsOrdered(boolean isOrdered) {
+        this.isOrdered = isOrdered;
     }
 }
