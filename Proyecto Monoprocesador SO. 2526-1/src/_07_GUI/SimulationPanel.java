@@ -219,7 +219,7 @@ public class SimulationPanel extends javax.swing.JPanel {
             terminatedPanel.removeAll();
 
             // 🔹 Nuevos
-            SimpleList<Process1> list = so.getReadyQueue();
+            SimpleList<Process1> list = so.getDma().getNewProcesses();
             SimpleNode<Process1> node = (list == null) ? null : list.GetpFirst();
             while (node != null) {
                 PCBPanel pcb = new PCBPanel(node.GetData());
@@ -246,7 +246,7 @@ public class SimulationPanel extends javax.swing.JPanel {
             }
 
             // 🔹 Suspendidos Listos
-            list = so.getReadyQueue();
+            list = so.getDma().getReadySuspendedProcesses();
             node = (list == null) ? null : list.GetpFirst();
             while (node != null) {
                 PCBPanel pcb = new PCBPanel(node.GetData());
@@ -255,7 +255,7 @@ public class SimulationPanel extends javax.swing.JPanel {
             }
 
             // 🔹 Suspendidos Bloqueados
-            list = so.getReadyQueue();
+            list = so.getDma().getBlockedSuspendedProcesses();
             node = (list == null) ? null : list.GetpFirst();
             while (node != null) {
                 PCBPanel pcb = new PCBPanel(node.GetData());
