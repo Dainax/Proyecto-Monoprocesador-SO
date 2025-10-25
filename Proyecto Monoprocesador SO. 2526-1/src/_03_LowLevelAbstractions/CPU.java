@@ -6,7 +6,6 @@ package _03_LowLevelAbstractions;
 
 import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process1;
-import _04_OperatingSystem.ProcessState;
 import _04_OperatingSystem.ProcessType;
 
 /**
@@ -64,9 +63,9 @@ public class CPU extends Thread {
         this.isProcessRunning = true;
         this.receiveTick();
     }
-    
+
     /**
-     * Detiene la ejecucion del CPU 
+     * Detiene la ejecucion del CPU
      */
     public void stopCPU() {
         this.isProcessRunning = false;
@@ -100,9 +99,9 @@ public class CPU extends Thread {
 
                     // Si hay un proceso se ejecutara 
                     if (currentProcess != null) {
-                        System.out.println("\n[Ciclo " + this.cycleCounter + "] Ejecutando PID " + currentProcess.getPID() + 
-                                            " (Quantum Restante: " + (remainingCycles > 0 ? remainingCycles : "N/A") + ")");
-                        
+                        System.out.println("\n[Ciclo " + this.cycleCounter + "] Ejecutando PID " + currentProcess.getPID()
+                                + " (Quantum Restante: " + (remainingCycles > 0 ? remainingCycles : "N/A") + ")");
+
                         this.PC++; // Incrementa el contador global de ciclos de CPU 
                         this.MAR++; // Incrementa el contador global de ciclos de CPU 
 
@@ -127,26 +126,24 @@ public class CPU extends Thread {
                                 // Funcion de terminacion de un proceso por el SO
                                 this.osReference.terminateProcess();
 
-                            } // Si el proceso no ha terminado sus instrucciones pero "no quiere continuar" es que necesita una operacion E/S
-                            else if (currentProcess.getPC() != currentProcess.getTotalInstructions()) {
-                                System.out.println("CPU: Proceso requiere E/S. Desalojo y Notifico a SO.");
-                                this.osReference.manageIORequest();
-
-                                // En caso de proceso IO bound se debe verificar si el DMA termino su E/S 
-                            } else if (currentProcess.getPC() == currentProcess.getTotalInstructions() && currentProcess.isExceptionManaged() == true) {
-
+                            } // Si el proceso ya hizo todas sus instrucciones y ya se manejo su E/S significa que ya termino
+                            else if (currentProcess.getPC() == currentProcess.getTotalInstructions() && currentProcess.isExceptionManaged() == true) {
                                 // Funcion de terminacion del proceso
                                 this.osReference.terminateProcess();
+                            } // Si el proceso no ha terminado sus instrucciones pero "no quiere continuar" es que necesita una operacion E/S
+                            else {
+                                System.out.println("CPU: Proceso requiere E/S. Desalojo y Notifico a SO.");
+                                this.osReference.manageIORequest();
                             }
                         }
-                        
+
                         // Politica RR
                         if (remainingCycles == 0) {
                             System.out.println("CPU: Quantum de tiempo excedido.");
                             this.osReference.handlePreemption(this.currentProcess);
                         }
 
-                    // Si es null se ejecutara el SO
+                        // Si es null se ejecutara el SO
                     } else {
                         this.currentProcessName = "Sistema Operativo";
                         this.osReference.notifyOS();
@@ -208,7 +205,7 @@ public class CPU extends Thread {
             this.PC = process.getPC();
             this.MAR = process.getMAR();
             this.remainingCycles = quantum;
-        } 
+        }
     }
 
     public Process1 getCurrentProcess() {

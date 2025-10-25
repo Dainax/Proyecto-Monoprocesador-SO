@@ -10,6 +10,7 @@ import _03_LowLevelAbstractions.DMA;
 import _03_LowLevelAbstractions.MainMemory;
 import _03_LowLevelAbstractions.RealTimeClock;
 import java.io.File;
+import java.util.Random;
 
 /**
  *
@@ -33,6 +34,9 @@ public class OperatingSystem extends Thread {
     // Para sincronización
     private final Object osMonitor = new Object();
     private volatile boolean isRunning = true;
+
+    // Para crear procesos random
+    private static final Random RANDOM = new Random();
 
     // Para acceder a la cola de nuevos y a las de suspendidos
     // El SO accede al DMA, para simular que estas estan en almacenamiento 
@@ -110,10 +114,8 @@ public class OperatingSystem extends Thread {
                     }
 
                     // Planificacion a medio
-                    // Swap out: Verificar si la cola de listos esta vacia -> Traer procesos listos suspendidos
-                    // Se puede verificar cual es el tipo de procesos para traer un prcoeso CPU
-                    // Cuando la cola de listos este vacia no hay procesos para ejecutar en MP y se necesita suspender y traer listos
-                    // Swap int
+                    this.getScheduler().manageSwapping();
+
                     //Planificacion a largo plazo
                     this.getScheduler().manageAdmission();
 
@@ -131,6 +133,48 @@ public class OperatingSystem extends Thread {
     }
 
     public void createRandomProcesses(int n) {
+        if (n <= 0) {
+            return;
+        }
+
+        for (int i = 0; i < n; i++) {
+
+            // Instrucciones entre 1 y 128 
+            int instructions = RANDOM.nextInt(60) + 1;
+
+            // Tipo aleatorio
+            ProcessType type = RANDOM.nextBoolean() ? ProcessType.CPU_BOUND : ProcessType.IO_BOUND;
+
+            String name;
+            // Nombre 
+            if (type == ProcessType.CPU_BOUND) {
+                name = "CPU-" + i + ". Inst:" + instructions;
+            } else {
+                name = "I/O-" + i + ". Inst:" + instructions;
+            }
+
+            int cyclesToGenerateInterruption = -1;
+            int cyclesToManageInterruption = 0;
+
+            if (type == ProcessType.IO_BOUND) {
+                // Elegir un ciclo dentro del rango de instrucciones en el que se genere la E/S
+                // Si solo hay 1 instrucción, se generará en la instrucción 1
+                if (instructions <= 1) {
+                    cyclesToGenerateInterruption = 1;
+                } else {
+                    cyclesToGenerateInterruption = RANDOM.nextInt(instructions) + 1; // 1..instructions
+                }
+                // Tiempo de servicio de E/S (DMA) 
+                cyclesToManageInterruption = RANDOM.nextInt(cyclesToGenerateInterruption);
+            } else {
+                // CPU bound: no generación de E/S
+                cyclesToGenerateInterruption = -1; // nunca igualará al PC
+                cyclesToManageInterruption = 0;
+            }
+
+            // Creo el proceso
+            this.newProcess(name, instructions, type, cyclesToGenerateInterruption, cyclesToManageInterruption);
+        }
     }
 
     public void loadConfigFromJSON(File f) {
@@ -192,7 +236,7 @@ public class OperatingSystem extends Thread {
             // Setea el quantum segun la politica
             int quantum = (this.scheduler.getCurrentPolicy() == PolicyType.ROUND_ROBIN) ? scheduler.getQuantum() : -1;
 
-            cpu.setCurrentProcess(nextProcess, quantum);
+            this.cpu.setCurrentProcess(nextProcess, quantum);
             nextProcess.setPState(ProcessState.RUNNING); // Nuevo estado
 
             System.out.println("SO: Despachando proceso PID " + nextProcess.getPID() + ".");
@@ -234,8 +278,16 @@ public class OperatingSystem extends Thread {
 
     public void manageIOInterruptionByDMA(Process1 terminatedIOProcess) {
         terminatedIOProcess.setExceptionManaged(true); // Indico que se manejo la E/S al proceso
-        this.getBlockedQueue().delNodewithVal(terminatedIOProcess); // Quito de la cola de bloqueados
-        this.getReadyQueue().insertLast(terminatedIOProcess); // Lo agrego a la cola de listos
+
+        // Si esta en la cola de bloqueados
+        if (terminatedIOProcess.getPState() == ProcessState.BLOCKED) {
+            this.getBlockedQueue().delNodewithVal(terminatedIOProcess); // Quito de la cola de bloqueados
+            this.getReadyQueue().insertLast(terminatedIOProcess); // Lo agrego a la cola de listos
+        } // Esta en la cola de bloqueados suspendidos
+        else {
+            this.getDma().delBlockedSuspendedProcess(terminatedIOProcess.getPID()); // Lo quito de la cola de bloqueados suspendidos
+            this.getDma().addReadySuspendedProcess(terminatedIOProcess); // Lo agrego a la cola de listos suspendidos
+        }
 
         // Si no hay mas procesos bloqueados el DMA queda libre
         if (this.blockedQueue.isEmpty()) {
@@ -258,6 +310,7 @@ public class OperatingSystem extends Thread {
         System.out.println("CPU: Proceso terminado.");
         Process1 terminatedProcess = this.getCpu().getCurrentProcess(); // Cambio el estado
         terminatedProcess.setPState(ProcessState.TERMINATED);
+        terminatedProcess.setMAR(-1);
         this.getTerminatedQueue().insertLast(terminatedProcess); //Mando el proceso a listos
         this.getCpu().setCurrentProcess(null, -1);// Libera CPU
 

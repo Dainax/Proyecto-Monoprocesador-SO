@@ -271,9 +271,8 @@ public class Scheduler {
 
             // Busco el de menor prioridad y en empate mayor tiempo I/O
             for (int i = 0; i < blockedProcesses.GetSize(); i++) {
-                
+
                 // Revisar que SimpleList.GetValInIndex(i) funciona
-                
                 Process1 p = (Process1) blockedProcesses.GetValInIndex(i).GetData();
 
                 if (p == null) {
@@ -302,9 +301,9 @@ public class Scheduler {
         // Si no hay procesos bloqueados pero si listos de mucho menor prioridad que el primer proceso en la cola de nuevos
         // Suspender al proceso listo de menor prioridad, si hay empate suspender al mas largo (totalInstruction mayor)
         if (!readyProcesses.isEmpty() && !this.osReference.getDma().getNewProcesses().isEmpty()) {
-            
+
             Process1 bestReadyCandidate = null;
-            
+
             Process1 firstNew = (Process1) this.osReference.getDma().getNewProcesses().GetpFirst().GetData();
             int minPriorityReady = 1;
             int maxSizeReady = -1;
@@ -344,16 +343,17 @@ public class Scheduler {
 
     public void manageSwapping() {
 
-        final int multiprogramingLimit = 10;
+        final int multiprogramingLimit = 5;
 
-        // Lógica de swap out 
         Process1 processToSuspend = null;
-
         SimpleList<Process1> readyProcesses = this.osReference.getReadyQueue();
         SimpleList<Process1> blockedProcesses = this.osReference.getBlockedQueue();
 
+        // Lógica de swap out
+        // Se puede verificar cual es el tipo de procesos para traer un proceso CPU
+        // Cuando la cola de listos este vacia no hay procesos para ejecutar en MP y se necesita suspender y traer listos
         // Reviso si la cola de listos esta vacia, si lo esta debo sacar un proceso de bloqueado a bloqueado suspendido
-        if (readyProcesses.isEmpty() && !blockedProcesses.isEmpty()) {
+        if (blockedProcesses.GetSize()>2) {
             // Suspender el Bloqueado de menor prioridad
             processToSuspend = selectProcessToSuspend();
         } // Si la politica es RR el rendimiento se degrada al tener muchos procesos
@@ -371,26 +371,33 @@ public class Scheduler {
 
             // El proceso debe estar en listo o bloqueado para ser Suspendido
             if (processToSuspend.getPState() == ProcessState.BLOCKED) {
-                
-                blockedProcesses.delNodewithVal(processToSuspend);
+
+                blockedProcesses.delNodewithVal(processToSuspend); //Lo muevo a bloqueados suspendidos
                 processToSuspend.setPState(ProcessState.BLOCKED_SUSPENDED);
-                this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions()); //Se debe liberar la memoria del proceso
-                
+
+                // Libero la memoria ocupada por el proceso
+                this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions());
+                processToSuspend.setMAR(-1); //Lo saco de la memoria principal
+
                 this.osReference.getDma().getBlockedSuspendedProcesses().insertLast(processToSuspend);
                 System.out.println("PID " + processToSuspend.getPID() + " movido a bloqueados suspendidos.");
 
             } else if (processToSuspend.getPState() == ProcessState.READY) {
-                
-                readyProcesses.delNodewithVal(processToSuspend);
+
+                readyProcesses.delNodewithVal(processToSuspend); // Lo suspendo
                 processToSuspend.setPState(ProcessState.READY_SUSPENDED);
+
+                // Libero la memoria ocupada por el proceso
                 this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions());
-                
+                processToSuspend.setMAR(-1); //Lo saco de la memoria principal
+
                 this.osReference.getDma().getReadySuspendedProcesses().insertLast(processToSuspend);
                 System.out.println("SO (MTS): SWAP OUT. PID " + processToSuspend.getPID() + " movido a READY_SUSPENDED.");
             }
         }
-
+        
         // Lógica de swap in. Prioridad: Traer procesos que terminaron su I/O y están Listos/Suspendidos
+        // Verificar si la cola de listos esta vacia -> Traer procesos listos suspendidos si hay memoria
         SimpleList<Process1> readySuspendedQueue = this.osReference.getDma().getReadySuspendedProcesses();
 
         if (!this.osReference.getDma().getReadySuspendedProcesses().isEmpty()) {
@@ -419,7 +426,7 @@ public class Scheduler {
      */
     public void manageAdmission() {
         // Admite un proceso si hay 25% de espacio en MP y el sistema no esta full de procesos
-        if (this.osReference.getMp().admiteNewProcess()&& !this.osReference.getDma().getNewProcesses().isEmpty()) {
+        if (this.osReference.getMp().admiteNewProcess() && !this.osReference.getDma().getNewProcesses().isEmpty()) {
 
             System.out.println("Planificador a largo plazo");
             // Utilizara simplemente el FIFO
@@ -436,12 +443,12 @@ public class Scheduler {
                 // Considerar la cola de listo suspendidos. Por ahora solo listo por simplicidad 
                 // Si hay espacio
             } else {
-                newProcessToMP.setBaseDirection(baseDirection);
-                // Coloco el proceso en listo
-                newProcessToMP.setPState(ProcessState.READY);
+                newProcessToMP.setBaseDirection(baseDirection); // Lo ubico en la memoria
+                newProcessToMP.setMAR(baseDirection);
 
-                // Muevo el proceso de la cola de nuevo a la cola de listos
-                this.osReference.getReadyQueue().insertLast(newProcessToMP);
+                newProcessToMP.setPState(ProcessState.READY); // Coloco el proceso en listo
+
+                this.osReference.getReadyQueue().insertLast(newProcessToMP); // Muevo el proceso de la cola de nuevo a la cola de listos
                 this.osReference.getDma().getNewProcesses().delNodewithVal(newProcessToMP);
 
                 // Asignar el espacio en la memoria principal (Actualiza el array memorySlots)

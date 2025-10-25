@@ -7,6 +7,7 @@ import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.PolicyType;
 import static _04_OperatingSystem.PolicyType.Priority;
 import _04_OperatingSystem.Process1;
+import _04_OperatingSystem.ProcessType;
 import _07_GUI.SimulationPanel;
 import java.io.FileReader;
 import javax.swing.SwingUtilities;

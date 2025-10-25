@@ -129,13 +129,11 @@ public class Process1 extends Thread {
                         if (this.PC == this.cyclesToGenerateException) {
                             System.out.println("Generando E/S");
                             this.executedSuccessfully = false; // llama al SO a traves de la CPU para que maneje la operacion E/S
-                            this.keepRunning = false;
                         }
                     } else {
                         // El proceso ha completado todas sus instrucciones
                         System.out.println("Proceso completado");
                         this.executedSuccessfully = false;
-                        this.keepRunning = false;
                         break;
                         // El SO debera llevarlo a finalizado
                     }
