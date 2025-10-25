@@ -22,6 +22,10 @@ public class RealTimeClock extends Thread {
     // Duración actual del ciclo en milisegundos. Es tipo volatile para que se lea el valor más reciente si es modificado desde otro hilo
     private volatile long clockDuration;    // Esta es la que se cambia dinamicamente
     private volatile boolean isRunning;
+    
+    private final Object pauseMonitor = new Object(); // Para pausar/reanudar sin terminar el hilo
+    private volatile boolean paused = false;
+
     private final CPU cpuTarget; // Referencia al hilo CPU que debe notificar
     private final DMA dmaTarget; // Referencia al hilo CPU que debe notificar
     private Runnable onTickListener;// callback externo
@@ -54,6 +58,15 @@ public class RealTimeClock extends Thread {
 
         while (isRunning) {
             try {
+                // Si estamos en pausa, esperar hasta reanudar
+                synchronized (pauseMonitor) {
+                    while (paused && isRunning) {
+                        pauseMonitor.wait();
+                    }
+                }
+
+                if (!isRunning) break;
+
                 // Espera el tiempo. Lee el valor volatile
                 long duration = this.clockDuration;
                 Thread.sleep(duration);
@@ -88,13 +101,37 @@ public class RealTimeClock extends Thread {
             System.err.println("RELOJ Advertencia: La duración del ciclo debe ser positiva.");
         }
     }
+    
+    /**
+     * Hace que el reloj reanude su operacion
+     */
+    public void playClock() {
+        // Reanuda desde pausa. Si el hilo fue arrancado antes, solo libera la espera.
+        this.paused = false;
+        synchronized (pauseMonitor) {
+            pauseMonitor.notifyAll();
+        }
+    }
+    
+    /**
+     * Detiene la cuenta del reloj
+     */
+    public void stopClock() {
+        // Para compatibilidad con llamadas previas a "stopClock",
+        // aquí hacemos una pausa en lugar de terminar el hilo.
+        this.paused = true;
+    }
 
     /**
-     * Detiene la ejecución del hilo
+     * Detiene permanentemente el hilo del reloj (si realmente se desea terminarlo).
      */
-    public void stopReloj() {
+    public void shutdownClock() {
         this.isRunning = false;
-        interrupt();
+        // Despertar si está pausado para que salga del bucle
+        synchronized (pauseMonitor) {
+            pauseMonitor.notifyAll();
+        }
+        this.interrupt();
     }
 
     /**

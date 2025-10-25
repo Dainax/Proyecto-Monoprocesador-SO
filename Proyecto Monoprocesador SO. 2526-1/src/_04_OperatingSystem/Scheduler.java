@@ -419,7 +419,7 @@ public class Scheduler {
      */
     public void manageAdmission() {
         // Admite un proceso si hay 25% de espacio en MP y el sistema no esta full de procesos
-        if (this.osReference.getMp().admiteNewProcess()) {
+        if (this.osReference.getMp().admiteNewProcess()&& !this.osReference.getDma().getNewProcesses().isEmpty()) {
 
             System.out.println("Planificador a largo plazo");
             // Utilizara simplemente el FIFO

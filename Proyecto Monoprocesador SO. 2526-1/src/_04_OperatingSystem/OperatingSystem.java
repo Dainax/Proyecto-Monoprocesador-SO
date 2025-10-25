@@ -60,14 +60,25 @@ public class OperatingSystem extends Thread {
     }
 
     public void startOS() {
+        if (this.getState() == Thread.State.NEW) {
+            this.start();
+            this.cpu.start();
+            this.dma.start();
+            this.clock.start();
+        }
 
-        this.start();
-        this.cpu.start();
-        this.clock.start();
+        this.isRunning = true;
+        this.cpu.playCPU();
+        this.dma.playDMA();
+        this.clock.playClock();
+
     }
 
     public void stopOS() {
         this.isRunning = false;
+        this.cpu.stopCPU();
+        this.dma.stopDMA();
+        this.clock.stopClock();
         // Despertar al SO para que salga del wait()
         synchronized (osMonitor) {
             osMonitor.notify();
@@ -312,8 +323,8 @@ public class OperatingSystem extends Thread {
     public void notifyNewProcessArrival(Scheduler scheduler) {
         scheduler.setIsOrdered(false);
     }
-    
-     public RealTimeClock getClock() {
+
+    public RealTimeClock getClock() {
         return clock;
     }
 
