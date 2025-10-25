@@ -1,5 +1,8 @@
 package _07_GUI;
 
+import _01_ApplicationPackage.Simulator;
+import _04_OperatingSystem.OperatingSystem;
+import _04_OperatingSystem.PolicyType;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -13,26 +16,32 @@ import javax.swing.SpinnerNumberModel;
  * @author Danaz
  */
 public class ConfigPanel extends javax.swing.JPanel {
-  
+
+    private Simulator simulator;
+
+    public void setSimulator(Simulator simulator) {
+        this.simulator = simulator;
+    }
+
     // Instancia de Preferences para persistir datos
     private static final Preferences prefs = Preferences.userNodeForPackage(ConfigPanel.class);
-    
+
     // Claves para guardar los valores
     private static final String POLICY_KEY = "policyComboBox";
     private static final String CYCLES_KEY = "systemCyclesSpinner";
 
     public ConfigPanel() {
         initComponents();
-        
+
         // Configurar el modelo del spinner si no lo hiciste en el diseñador
-        systemCycles.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
-        
+        cycleSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+
         // Cargar los valores guardados al inicializar el panel
         loadSavedValues();
-        
-         // Configuración spinners
+
+        // Configuración spinners
         instructionsSpinner.setModel(new SpinnerNumberModel(1, 1, 1000, 1));  // Min 1, Max 1000, Step 1
-        cyclesSpinner.setModel(new SpinnerNumberModel(1, 1,1, 1));  // Min 0, no max ESTO DEPENDE DEL INSTRUCTION
+        cyclesSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 1));  // Min 0, no max ESTO DEPENDE DEL INSTRUCTION
         ioTimeSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));  // Min 0, no max
 
         // Sincroniza dinámicamente el máximo de cyclesSpinner con instructionsSpinner
@@ -77,7 +86,7 @@ public class ConfigPanel extends javax.swing.JPanel {
             }
         });
     }
-    
+
     private void validateAndCreateProcess() {
         // Get values
         String name = nameField.getText().trim();
@@ -140,7 +149,7 @@ public class ConfigPanel extends javax.swing.JPanel {
         ioBoundRadio.setSelected(false);
     }
 
-     private void loadSavedValues() {
+    private void loadSavedValues() {
         // Cargar el índice seleccionado del ComboBox
         int selectedIndex = prefs.getInt(POLICY_KEY, -1);  // -1 indica que no hay nada guardado
         if (selectedIndex == -1) {
@@ -151,19 +160,40 @@ public class ConfigPanel extends javax.swing.JPanel {
         }
         // Cargar el valor del Spinner (por defecto 1 si no hay guardado)
         int cyclesValue = prefs.getInt(CYCLES_KEY, 1);
-        systemCycles.setValue(cyclesValue);
+        cycleSpinner.setValue(cyclesValue);
     }
-
 
 // Método para guardar solo la política (llámalo desde el botón savePolicy)
     private void savePolicy() {
         prefs.putInt(POLICY_KEY, policyComboBox.getSelectedIndex());
     }
+
     // Método para guardar solo los ciclos (llámalo desde el botón saveSystemCycles)
     private void saveSystemCycles() {
-        prefs.putInt(CYCLES_KEY, (Integer) systemCycles.getValue());
+        int seconds = (Integer) cycleSpinner.getValue(); // usuario introduce segundos
+        long milliseconds = seconds * 1000L; // conversión
+        prefs.putInt(CYCLES_KEY, seconds); // guardamos segundos visibles al usuario
+
+        if (simulator != null) {
+            simulator.getOperatingSystem().getClock().setClockDuration(milliseconds);
+        }
     }
-    
+
+    public void refreshConfig() {
+        if (simulator != null) {
+            OperatingSystem os = simulator.getOperatingSystem();
+
+            // Actualiza política
+            PolicyType currentPolicy = os.getScheduler().getCurrentPolicy();
+            policyComboBox.setSelectedItem(currentPolicy.name());
+
+            // 🔥 Convertir ms → s antes de mostrar
+            long currentCycleMillis = os.getClock().getClockDuration();
+            int currentCycleSeconds = (int) (currentCycleMillis / 1000);
+            cycleSpinner.setValue(currentCycleSeconds);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -173,11 +203,11 @@ public class ConfigPanel extends javax.swing.JPanel {
         jLabel4 = new javax.swing.JLabel();
         planPolicy = new javax.swing.JPanel();
         policyComboBox = new javax.swing.JComboBox<>();
-        savePolicy = new javax.swing.JButton();
+        savePolicyButton = new javax.swing.JButton();
         label3 = new java.awt.Label();
         watchCycles = new javax.swing.JPanel();
-        saveSystemCycles = new javax.swing.JButton();
-        systemCycles = new javax.swing.JSpinner();
+        saveCycleButton = new javax.swing.JButton();
+        cycleSpinner = new javax.swing.JSpinner();
         jLabel5 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
@@ -216,10 +246,10 @@ public class ConfigPanel extends javax.swing.JPanel {
 
         policyComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FCFS", "Round Robin", "SPN", "SRT", "HRRN", "Priority" }));
 
-        savePolicy.setText("Guardar Cambios");
-        savePolicy.addActionListener(new java.awt.event.ActionListener() {
+        savePolicyButton.setText("Guardar Cambios");
+        savePolicyButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                savePolicyActionPerformed(evt);
+                savePolicyButtonActionPerformed(evt);
             }
         });
 
@@ -234,7 +264,7 @@ public class ConfigPanel extends javax.swing.JPanel {
             .addGroup(planPolicyLayout.createSequentialGroup()
                 .addGap(36, 36, 36)
                 .addGroup(planPolicyLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(savePolicy, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(savePolicyButton, javax.swing.GroupLayout.PREFERRED_SIZE, 173, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(planPolicyLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                         .addComponent(label3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(policyComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, 158, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -248,7 +278,7 @@ public class ConfigPanel extends javax.swing.JPanel {
                 .addGap(26, 26, 26)
                 .addComponent(policyComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 31, Short.MAX_VALUE)
-                .addComponent(savePolicy)
+                .addComponent(savePolicyButton)
                 .addGap(15, 15, 15))
         );
 
@@ -257,10 +287,10 @@ public class ConfigPanel extends javax.swing.JPanel {
         watchCycles.setBackground(new java.awt.Color(0, 0, 70));
         watchCycles.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        saveSystemCycles.setText("Guardar Cambios");
-        saveSystemCycles.addActionListener(new java.awt.event.ActionListener() {
+        saveCycleButton.setText("Guardar Cambios");
+        saveCycleButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                saveSystemCyclesActionPerformed(evt);
+                saveCycleButtonActionPerformed(evt);
             }
         });
 
@@ -275,13 +305,13 @@ public class ConfigPanel extends javax.swing.JPanel {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, watchCyclesLayout.createSequentialGroup()
                 .addContainerGap(23, Short.MAX_VALUE)
                 .addGroup(watchCyclesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(saveSystemCycles, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(saveCycleButton, javax.swing.GroupLayout.PREFERRED_SIZE, 272, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(watchCyclesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, watchCyclesLayout.createSequentialGroup()
                             .addComponent(jLabel5)
                             .addGap(16, 16, 16))
                         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, watchCyclesLayout.createSequentialGroup()
-                            .addComponent(systemCycles, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cycleSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGap(67, 67, 67)))))
         );
         watchCyclesLayout.setVerticalGroup(
@@ -290,9 +320,9 @@ public class ConfigPanel extends javax.swing.JPanel {
                 .addGap(19, 19, 19)
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 30, Short.MAX_VALUE)
-                .addComponent(systemCycles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(cycleSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(26, 26, 26)
-                .addComponent(saveSystemCycles)
+                .addComponent(saveCycleButton)
                 .addGap(19, 19, 19))
         );
 
@@ -492,20 +522,72 @@ public class ConfigPanel extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_submitButtonActionPerformed
 
-    private void savePolicyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savePolicyActionPerformed
+    private void savePolicyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savePolicyButtonActionPerformed
+        savePolicyButton.addActionListener(e -> {
+            if (simulator == null) {
+                JOptionPane.showMessageDialog(this, "No hay simulación activa.");
+                return;
+            }
+
+            String selected = (String) policyComboBox.getSelectedItem();
+            PolicyType newPolicy = switch (selected.toUpperCase()) {
+                case "FIFO" ->
+                    PolicyType.FIFO;
+                case "ROUND ROBIN", "RR" ->
+                    PolicyType.ROUND_ROBIN;
+                case "SPN" ->
+                    PolicyType.SPN;
+                case "SRT" ->
+                    PolicyType.SRT;
+                case "HRRN" ->
+                    PolicyType.HRRN;
+                case "PRIORITY" ->
+                    PolicyType.Priority;
+                default ->
+                    PolicyType.FIFO;
+            };
+
+            simulator.getOperatingSystem().getScheduler().setCurrentPolicy(newPolicy);
+
+            JOptionPane.showMessageDialog(this,
+                    "Política de planificación actualizada a: " + newPolicy,
+                    "Configuración guardada",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
         savePolicy();
         javax.swing.JOptionPane.showMessageDialog(this, "Política guardada exitosamente.");
-    }//GEN-LAST:event_savePolicyActionPerformed
+    }//GEN-LAST:event_savePolicyButtonActionPerformed
 
-    private void saveSystemCyclesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveSystemCyclesActionPerformed
-       saveSystemCycles();
+    private void saveCycleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveCycleButtonActionPerformed
+        saveCycleButton.addActionListener(e -> {
+            if (simulator == null) {
+                JOptionPane.showMessageDialog(this, "No hay simulación activa.");
+                return;
+            }
+
+            long newDuration = ((Number) cycleSpinner.getValue()).longValue();
+            if (newDuration <= 0) {
+                JOptionPane.showMessageDialog(this, "La duración debe ser mayor a 0.");
+                return;
+            }
+
+            simulator.getOperatingSystem().getClock().setClockDuration(newDuration);
+
+            JOptionPane.showMessageDialog(this,
+                    "Duración de ciclo actualizada a " + newDuration + " segundos",
+                    "Configuración guardada",
+                    JOptionPane.INFORMATION_MESSAGE);
+        });
+
+        saveSystemCycles();
         javax.swing.JOptionPane.showMessageDialog(this, "Ciclos del sistema guardados exitosamente.");
-    }//GEN-LAST:event_saveSystemCyclesActionPerformed
+    }//GEN-LAST:event_saveCycleButtonActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JRadioButton cpuBoundRadio;
     private javax.swing.JButton createJsonButton;
+    private javax.swing.JSpinner cycleSpinner;
     private javax.swing.JSpinner cyclesSpinner;
     private javax.swing.JSpinner cyclesToJson;
     private javax.swing.JSpinner instructionsSpinner;
@@ -531,10 +613,9 @@ public class ConfigPanel extends javax.swing.JPanel {
     private javax.swing.JPanel planPolicy;
     private javax.swing.JComboBox<String> policyComboBox;
     private javax.swing.JScrollPane processToJson;
-    private javax.swing.JButton savePolicy;
-    private javax.swing.JButton saveSystemCycles;
+    private javax.swing.JButton saveCycleButton;
+    private javax.swing.JButton savePolicyButton;
     private javax.swing.JButton submitButton;
-    private javax.swing.JSpinner systemCycles;
     private javax.swing.JPanel watchCycles;
     // End of variables declaration//GEN-END:variables
 }

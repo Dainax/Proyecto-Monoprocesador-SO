@@ -97,7 +97,7 @@
                       <Group type="102" alignment="0" attributes="0">
                           <EmptySpace min="-2" pref="36" max="-2" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="savePolicy" min="-2" pref="173" max="-2" attributes="0"/>
+                              <Component id="savePolicyButton" min="-2" pref="173" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="1" attributes="0">
                                   <Component id="label3" alignment="1" min="-2" max="-2" attributes="0"/>
                                   <Component id="policyComboBox" alignment="1" min="-2" pref="158" max="-2" attributes="0"/>
@@ -115,7 +115,7 @@
                           <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
                           <Component id="policyComboBox" min="-2" max="-2" attributes="0"/>
                           <EmptySpace pref="31" max="32767" attributes="0"/>
-                          <Component id="savePolicy" min="-2" max="-2" attributes="0"/>
+                          <Component id="savePolicyButton" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -139,12 +139,12 @@
                     <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
                   </AuxValues>
                 </Component>
-                <Component class="javax.swing.JButton" name="savePolicy">
+                <Component class="javax.swing.JButton" name="savePolicyButton">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Guardar Cambios"/>
                   </Properties>
                   <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="savePolicyActionPerformed"/>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="savePolicyButtonActionPerformed"/>
                   </Events>
                 </Component>
                 <Component class="java.awt.Label" name="label3">
@@ -185,14 +185,14 @@
                       <Group type="102" alignment="1" attributes="0">
                           <EmptySpace pref="23" max="32767" attributes="0"/>
                           <Group type="103" groupAlignment="0" attributes="0">
-                              <Component id="saveSystemCycles" min="-2" pref="272" max="-2" attributes="0"/>
+                              <Component id="saveCycleButton" min="-2" pref="272" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" alignment="1" attributes="0">
                                       <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                                       <EmptySpace min="-2" pref="16" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" alignment="1" attributes="0">
-                                      <Component id="systemCycles" min="-2" pref="181" max="-2" attributes="0"/>
+                                      <Component id="cycleSpinner" min="-2" pref="181" max="-2" attributes="0"/>
                                       <EmptySpace min="-2" pref="67" max="-2" attributes="0"/>
                                   </Group>
                               </Group>
@@ -206,24 +206,24 @@
                           <EmptySpace min="-2" pref="19" max="-2" attributes="0"/>
                           <Component id="jLabel5" min="-2" max="-2" attributes="0"/>
                           <EmptySpace pref="30" max="32767" attributes="0"/>
-                          <Component id="systemCycles" min="-2" max="-2" attributes="0"/>
+                          <Component id="cycleSpinner" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="26" max="-2" attributes="0"/>
-                          <Component id="saveSystemCycles" min="-2" max="-2" attributes="0"/>
+                          <Component id="saveCycleButton" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="19" max="-2" attributes="0"/>
                       </Group>
                   </Group>
                 </DimensionLayout>
               </Layout>
               <SubComponents>
-                <Component class="javax.swing.JButton" name="saveSystemCycles">
+                <Component class="javax.swing.JButton" name="saveCycleButton">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Guardar Cambios"/>
                   </Properties>
                   <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveSystemCyclesActionPerformed"/>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveCycleButtonActionPerformed"/>
                   </Events>
                 </Component>
-                <Component class="javax.swing.JSpinner" name="systemCycles">
+                <Component class="javax.swing.JSpinner" name="cycleSpinner">
                 </Component>
                 <Component class="javax.swing.JLabel" name="jLabel5">
                   <Properties>

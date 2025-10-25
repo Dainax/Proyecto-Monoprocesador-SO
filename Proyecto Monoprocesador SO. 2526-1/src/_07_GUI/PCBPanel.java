@@ -42,7 +42,7 @@ public class PCBPanel extends javax.swing.JPanel {
         // Crear labels
         idLabel = new JLabel("ID: " + process.getPID());
         nameLabel = new JLabel("Nombre: " + process.getPName());
-        stateLabel = new JLabel("Estado: " + process.getState());
+        stateLabel = new JLabel("Estado: " + process.getPState());
         pcLabel = new JLabel("PC: " + process.getPC());
         marLabel = new JLabel("MAR: " + process.getMAR());
 
