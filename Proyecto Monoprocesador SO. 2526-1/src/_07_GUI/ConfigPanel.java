@@ -10,6 +10,7 @@ import java.util.prefs.Preferences;
 import javax.swing.ButtonGroup;
 import javax.swing.JOptionPane;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -163,22 +164,6 @@ public class ConfigPanel extends javax.swing.JPanel {
         cycleSpinner.setValue(cyclesValue);
     }
 
-// Método para guardar solo la política (llámalo desde el botón savePolicy)
-    private void savePolicy() {
-        prefs.putInt(POLICY_KEY, policyComboBox.getSelectedIndex());
-    }
-
-    // Método para guardar solo los ciclos (llámalo desde el botón saveSystemCycles)
-    private void saveSystemCycles() {
-        int seconds = (Integer) cycleSpinner.getValue(); // usuario introduce segundos
-        long milliseconds = seconds * 1000L; // conversión
-        prefs.putInt(CYCLES_KEY, seconds); // guardamos segundos visibles al usuario
-
-        if (simulator != null) {
-            simulator.getOperatingSystem().getClock().setClockDuration(milliseconds);
-        }
-    }
-
     public void refreshConfig() {
         if (simulator != null) {
             OperatingSystem os = simulator.getOperatingSystem();
@@ -191,6 +176,44 @@ public class ConfigPanel extends javax.swing.JPanel {
             long currentCycleMillis = os.getClock().getClockDuration();
             int currentCycleSeconds = (int) (currentCycleMillis / 1000);
             cycleSpinner.setValue(currentCycleSeconds);
+        }
+    }
+
+    private void savePolicy() {
+        prefs.putInt(POLICY_KEY, policyComboBox.getSelectedIndex());
+
+        if (simulator != null) {
+            String selectedPolicyName = (String) policyComboBox.getSelectedItem();
+            PolicyType newPolicy = PolicyType.valueOf(selectedPolicyName);
+            simulator.getOperatingSystem().getScheduler().setCurrentPolicy(newPolicy);
+
+            // 🔥 Forzar actualización del UI
+            SwingUtilities.invokeLater(() -> {
+                simulator.getSimulationPanel().updateQueues(simulator.getOperatingSystem());
+                simulator.getSimulationPanel().updateCPU(simulator.getOperatingSystem().getCpu());
+            });
+        }
+    }
+
+    private void saveSystemCycles() {
+        int seconds = (Integer) cycleSpinner.getValue();
+        long milliseconds = seconds * 1000L;
+
+        // Guarda el valor de segundos en las preferencias
+        prefs.putInt(CYCLES_KEY, seconds);
+
+        if (simulator != null) {
+            // Actualiza la duración del ciclo del reloj del sistema operativo
+            simulator.getOperatingSystem().getClock().setClockDuration(milliseconds);
+
+            // 🔥 Refrescar también UI (colas y CPU) por si hay dependencias visuales
+            SwingUtilities.invokeLater(() -> {
+                SimulationPanel panel = simulator.getSimulationPanel();
+                if (panel != null) {
+                    panel.updateQueues(simulator.getOperatingSystem());
+                    panel.updateCPU(simulator.getOperatingSystem().getCpu());
+                }
+            });
         }
     }
 
@@ -548,14 +571,14 @@ public class ConfigPanel extends javax.swing.JPanel {
             };
 
             simulator.getOperatingSystem().getScheduler().setCurrentPolicy(newPolicy);
-
+            savePolicy();
             JOptionPane.showMessageDialog(this,
                     "Política de planificación actualizada a: " + newPolicy,
                     "Configuración guardada",
                     JOptionPane.INFORMATION_MESSAGE);
         });
         savePolicy();
-        javax.swing.JOptionPane.showMessageDialog(this, "Política guardada exitosamente.");
+        //javax.swing.JOptionPane.showMessageDialog(this, "Política guardada exitosamente.");
     }//GEN-LAST:event_savePolicyButtonActionPerformed
 
     private void saveCycleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveCycleButtonActionPerformed
