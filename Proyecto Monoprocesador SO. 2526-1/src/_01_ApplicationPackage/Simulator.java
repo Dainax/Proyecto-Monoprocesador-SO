@@ -194,17 +194,17 @@ public double calculateThroughput() {
         
         int productivecycles = this.getOperatingSystem().getCpu().getProductiveCycles();
         int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
-        double productivePercentage = productivecycles/cyclecounter;
-        return productivePercentage;
         
+        if (cyclecounter == 0) return 0;
+        return (double) productivecycles / cyclecounter;
     }
     public double getAverageWaitingTime (){
         
-        int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
+        int finishedProcess = this.getOperatingSystem().getTerminatedQueue().GetSize();
         int totalWaitingTime = this.getOperatingSystem().getTotalWaitingTime();
 
-        if (cyclecounter == 0) return 0;
-        return (double) totalWaitingTime / cyclecounter;
+        if (finishedProcess == 0) return 0;
+        return (double) totalWaitingTime / finishedProcess;
     }
     
             
