@@ -26,9 +26,9 @@ public class OperatingSystem extends Thread {
     private RealTimeClock clock;
 
     // Colas del sistema
-    private SimpleList<Process1> readyQueue;
-    private SimpleList<Process1> blockedQueue;
-    private SimpleList<Process1> terminatedQueue;
+    private SimpleList<Process> readyQueue;
+    private SimpleList<Process> blockedQueue;
+    private SimpleList<Process> terminatedQueue;
 
     // Para sincronización
     private final Object osMonitor = new Object();
@@ -37,15 +37,18 @@ public class OperatingSystem extends Thread {
     // Para acceder a la cola de nuevos y a las de suspendidos
     // El SO accede al DMA, para simular que estas estan en almacenamiento 
     // a largo plazo
+    // Funcion para ver si una politica es expulsiva ()
+    // Expulsivas: RR por quantum, SRT por evaluar procesos desbloqueados
+    // No expulsivas: FIFO, SPN HRRN, Prioridades por evaluar procesos desbloqueados
     //          --------------- Metodos ---------------
     public OperatingSystem(PolicyType currentPolicy, long duration) {
         this.cpu = new CPU(this);
         this.dma = new DMA(this);
         this.mp = new MainMemory(this);
         this.scheduler = new Scheduler(this, currentPolicy);
-        this.readyQueue = new SimpleList<Process1>();
-        this.blockedQueue = new SimpleList<Process1>();
-        this.terminatedQueue = new SimpleList<Process1>();
+        this.readyQueue = new SimpleList<Process>();
+        this.blockedQueue = new SimpleList<Process>();
+        this.terminatedQueue = new SimpleList<Process>();
         this.clock = new RealTimeClock(this.cpu, this.dma, duration);
     }
 
@@ -89,13 +92,20 @@ public class OperatingSystem extends Thread {
                         break;
                     }
 
-                    // Lógica de planificación de Corto Plazo
+                    // Planificación de Corto Plazo
                     // Intentar planificar si la CPU está libre y hay procesos listos
                     if (cpu.getCurrentProcess() == null && !readyQueue.isEmpty()) {
                         this.dispatchProcess();
                     }
 
-                    // A medio y a largo
+                    // Planificacion a medio
+                    // Swap out: Verificar si la cola de listos esta vacia -> Traer procesos listos suspendidos
+                    // Se puede verificar cual es el tipo de procesos para traer un prcoeso CPU
+                    // Cuando la cola de listos este vacia no hay procesos para ejecutar en MP y se necesita suspender y traer listos
+                    // Swap int
+                    //Planificacion a largo plazo
+                    this.getScheduler().manageAdmission();
+
                     // Incluir aca la logica revision de interrupciones
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -106,24 +116,26 @@ public class OperatingSystem extends Thread {
         System.out.println("SO: Hilo del Sistema Operativo detenido.");
     }
 
-    public void reset(){
+    public void reset() {
     }
-    
-    public void createRandomProcesses(int n){}
-    
-    public void loadConfigFromJSON(File f){}
-    
+
+    public void createRandomProcesses(int n) {
+    }
+
+    public void loadConfigFromJSON(File f) {
+    }
+
     public void newProcess(String name, int totalInstructions, ProcessType type, int cyclesToGenerateInterruption, int cyclesToManageInterruption) {
 
         // Verifico y obtengo la dirección base usando las instrucciones totales como tamaño
         int baseDirection = this.mp.isSpaceAvailable(totalInstructions);
 
-        Process1 newProcess;
+        Process newProcess;
 
         // Si no hay espacio en memoria
         if (baseDirection == -1) {
             System.out.println("No hay espacio contiguo suficiente (" + totalInstructions + " unidades) en la Memoria Principal para el proceso " + name + ". Proceso no admitido en el sistema. Enviando a cola de nuevos");
-            newProcess = new Process1(
+            newProcess = new Process(
                     name,
                     totalInstructions,
                     type,
@@ -137,7 +149,7 @@ public class OperatingSystem extends Thread {
             // Si hay espacio
         } else {
             //Crear el objeto Process con la dirección base encontrada
-            newProcess = new Process1(
+            newProcess = new Process(
                     name,
                     totalInstructions,
                     type,
@@ -163,7 +175,7 @@ public class OperatingSystem extends Thread {
     public void dispatchProcess() {
 
         // Escoger uno nuevo con el planificador
-        Process1 nextProcess = scheduler.selectNextProcess();
+        Process nextProcess = scheduler.selectNextProcess();
 
         if (nextProcess != null) {
             // Setea el quantum segun la politica
@@ -183,7 +195,7 @@ public class OperatingSystem extends Thread {
      *
      * @param preemptedProcess El proceso a desalojar.
      */
-    public void handlePreemption(Process1 preemptedProcess) {
+    public void handlePreemption(Process preemptedProcess) {
 
         preemptedProcess.setState(ProcessState.READY);
         this.getReadyQueue().insertLast(preemptedProcess);
@@ -193,7 +205,7 @@ public class OperatingSystem extends Thread {
     }
 
     public void manageIORequest() {
-        Process1 processToSet = this.getCpu().getCurrentProcess();
+        Process processToSet = this.getCpu().getCurrentProcess();
         processToSet.setState(ProcessState.BLOCKED); // Cambio el estado
 
         // Si el DMA esta desocupado le seteo el proceso
@@ -209,7 +221,7 @@ public class OperatingSystem extends Thread {
         }
     }
 
-    public void manageIOInterruptionByDMA(Process1 terminatedIOProcess) {
+    public void manageIOInterruptionByDMA(Process terminatedIOProcess) {
         terminatedIOProcess.setExceptionManaged(true); // Indico que se manejo la E/S al proceso
         this.getBlockedQueue().delNodewithVal(terminatedIOProcess); // Quito de la cola de bloqueados
         this.getReadyQueue().insertLast(terminatedIOProcess); // Lo agrego a la cola de listos
@@ -220,37 +232,26 @@ public class OperatingSystem extends Thread {
             this.getDma().setBusy(false);
         } else {
             // Si hay alguien en la cola de bloqueado del sistema operativo lo agarro
-            Process1 nextProcessForIO = (Process1) this.getBlockedQueue().GetpFirst().GetData();
+            Process nextProcessForIO = (Process) this.getBlockedQueue().GetpFirst().GetData();
             this.getDma().setCurrentProcess(nextProcessForIO); // Envio al DMA al proceso
             this.getDma().receiveTick(); // Le indico al DMA que continue
         }
-        
-        if (this.scheduler.getCurrentPolicy() == PolicyType.ROUND_ROBIN || this.scheduler.getCurrentPolicy() == PolicyType.ROUND_ROBIN) {
 
-            // Llamar al Dispatcher
+        if (this.scheduler.getCurrentPolicy() == PolicyType.ROUND_ROBIN || this.scheduler.getCurrentPolicy() == PolicyType.SRT) {
+            handlePreemption(this.getCpu().getCurrentProcess());
         }
-
-// Finalizado una operacion E/S del dma
-        /**
-         * SO debe actualizar el estado del proceso Moverlo a la cola de listo
-         * Llamar al planificador
-         */
-        // Completar operacion I/O (Terminada la ejecución DMA)
     }
 
     public void terminateProcess() {
         //          Terminacion de un proceso
         System.out.println("CPU: Proceso terminado.");
-        Process1 terminatedProcess = this.getCpu().getCurrentProcess(); // Cambio el estado
+        Process terminatedProcess = this.getCpu().getCurrentProcess(); // Cambio el estado
         terminatedProcess.setState(ProcessState.TERMINATED);
         this.getTerminatedQueue().insertLast(terminatedProcess); //Mando el proceso a listos
         this.getCpu().setCurrentProcess(null, -1);// Libera CPU
 
     }
 
-    // Funcion para ver si una politica es expulsiva ()
-    // Expulsivas: RR por quantum, SRT por evaluar procesos desbloqueados
-    // No expulsivas: FIFO, SPN HRRN, Prioridades por evaluar procesos desbloqueados
     // Getters y Setters
     public CPU getCpu() {
         return cpu;
@@ -268,6 +269,14 @@ public class OperatingSystem extends Thread {
         this.dma = dma;
     }
 
+    public MainMemory getMp() {
+        return mp;
+    }
+
+    public void setMp(MainMemory mp) {
+        this.mp = mp;
+    }
+
     public Scheduler getScheduler() {
         return scheduler;
     }
@@ -276,27 +285,27 @@ public class OperatingSystem extends Thread {
         this.scheduler = scheduler;
     }
 
-    public SimpleList<Process1> getBlockedQueue() {
+    public SimpleList<Process> getBlockedQueue() {
         return blockedQueue;
     }
 
-    public void setBlockedQueue(SimpleList<Process1> blockedQueue) {
+    public void setBlockedQueue(SimpleList<Process> blockedQueue) {
         this.blockedQueue = blockedQueue;
     }
 
-    public SimpleList<Process1> getReadyQueue() {
+    public SimpleList<Process> getReadyQueue() {
         return readyQueue;
     }
 
-    public void setReadyQueue(SimpleList<Process1> readyQueue) {
+    public void setReadyQueue(SimpleList<Process> readyQueue) {
         this.readyQueue = readyQueue;
     }
 
-    public SimpleList<Process1> getTerminatedQueue() {
+    public SimpleList<Process> getTerminatedQueue() {
         return terminatedQueue;
     }
 
-    public void setTerminatedQueue(SimpleList<Process1> terminatedQueue) {
+    public void setTerminatedQueue(SimpleList<Process> terminatedQueue) {
         this.terminatedQueue = terminatedQueue;
     }
 

@@ -257,8 +257,203 @@ public class Scheduler {
     }
 
     // ---------- Planificacion a mediano plazo ----------
+    public Process selectProcessToSuspend() {
+
+        SimpleList<Process> blockedProcesses = this.osReference.getBlockedQueue();
+
+        // Si hay procesos bloqueados empezamos por ellos
+        if (!blockedProcesses.isEmpty()) {
+
+            Process bestBlockedCandidate = null;
+
+            int minPriorityBlocked = 1;
+            long maxManageCyclesBlocked = -1; // Usamos un tipo más grande para seguridad
+
+            // Busco el de menor prioridad y en empate mayor tiempo I/O
+            for (int i = 0; i < blockedProcesses.GetSize(); i++) {
+                
+                // Revisar que SimpleList.GetValInIndex(i) funciona
+                
+                Process p = (Process) blockedProcesses.GetValInIndex(i).GetData();
+
+                if (p == null) {
+                    continue;
+                }
+
+                // Suspender al bloqueado de menor prioridad (número más alto) 
+                if (p.getPPriority() > minPriorityBlocked) {
+                    minPriorityBlocked = p.getPPriority();
+                    maxManageCyclesBlocked = p.getCyclesToManageException();
+                    bestBlockedCandidate = p;
+                } // y si hay empate seleccionar mayor tiempo de manejo de E/S
+                else if (p.getPPriority() == minPriorityBlocked) {
+                    if (p.getCyclesToManageException() > maxManageCyclesBlocked) {
+                        maxManageCyclesBlocked = p.getCyclesToManageException();
+                        bestBlockedCandidate = p;
+                    }
+                }
+            }
+
+            return bestBlockedCandidate;
+        }
+
+        SimpleList<Process> readyProcesses = this.osReference.getReadyQueue();
+
+        // Si no hay procesos bloqueados pero si listos de mucho menor prioridad que el primer proceso en la cola de nuevos
+        // Suspender al proceso listo de menor prioridad, si hay empate suspender al mas largo (totalInstruction mayor)
+        if (!readyProcesses.isEmpty() && !this.osReference.getDma().getNewProcesses().isEmpty()) {
+            
+            Process bestReadyCandidate = null;
+            
+            Process firstNew = (Process) this.osReference.getDma().getNewProcesses().GetpFirst().GetData();
+            int minPriorityReady = 1;
+            int maxSizeReady = -1;
+
+            // Condición compleja: "Listos de mucho menor prioridad que el primer proceso en la cola de nuevos"
+            // Definimos "mucho menor" como una prioridad numéricamente más alta (peor)
+            for (int i = 0; i < readyProcesses.GetSize(); i++) {
+                Process p = (Process) readyProcesses.GetValInIndex(i).GetData();
+
+                if (p == null) {
+                    continue;
+                }
+
+                // Verificar que la prioridad del proceso READY sea PEOR (mayor número) que la del primer NEW
+                if (p.getPPriority() > firstNew.getPPriority()) {
+
+                    // Suspender al proceso listo de menor prioridad (número más alto)
+                    if (p.getPPriority() > minPriorityReady) { // Nota: Usamos > para encontrar el peor (mayor número)
+                        minPriorityReady = p.getPPriority();
+                        maxSizeReady = p.getTotalInstructions();
+                        bestReadyCandidate = p;
+                    } // Empate: suspender al más largo (totalInstruction mayor)
+                    else if (p.getPPriority() == minPriorityReady) {
+                        if (p.getTotalInstructions() > maxSizeReady) {
+                            maxSizeReady = p.getTotalInstructions();
+                            bestReadyCandidate = p;
+                        }
+                    }
+                }
+            }
+
+            return bestReadyCandidate;
+        }
+
+        return null; // Si no hay procesos que cumplan los criterios de suspensión
+    }
+
+    public void manageSwapping() {
+
+        final int multiprogramingLimit = 10;
+
+        // Lógica de swap out 
+        Process processToSuspend = null;
+
+        SimpleList<Process> readyProcesses = this.osReference.getReadyQueue();
+        SimpleList<Process> blockedProcesses = this.osReference.getBlockedQueue();
+
+        // Reviso si la cola de listos esta vacia, si lo esta debo sacar un proceso de bloqueado a bloqueado suspendido
+        if (readyProcesses.isEmpty() && !blockedProcesses.isEmpty()) {
+            // Suspender el Bloqueado de menor prioridad
+            processToSuspend = selectProcessToSuspend();
+        } // Si la politica es RR el rendimiento se degrada al tener muchos procesos
+        // Ademas si se tienen muchos procesos CPU no se esta usando el DMA
+        // Por lo que si la politica es Round Robin y no se tienen procesos bloqueados pero si muchos listos se saca a un proceso que espera el CPU
+        else if (this.getCurrentPolicy() == PolicyType.ROUND_ROBIN
+                && blockedProcesses.isEmpty()
+                && readyProcesses.GetSize() > multiprogramingLimit) {
+            // Suspender el Listo de menor prioridad
+            processToSuspend = selectProcessToSuspend();
+        }
+
+        // Ejecutar el SWAP OUT si se encontró un candidato
+        if (processToSuspend != null) {
+
+            // El proceso debe estar en listo o bloqueado para ser Suspendido
+            if (processToSuspend.getPState() == ProcessState.BLOCKED) {
+                
+                blockedProcesses.delNodewithVal(processToSuspend);
+                processToSuspend.setState(ProcessState.BLOCKED_SUSPENDED);
+                this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions()); //Se debe liberar la memoria del proceso
+                
+                this.osReference.getDma().getBlockedSuspendedProcesses().insertLast(processToSuspend);
+                System.out.println("PID " + processToSuspend.getPID() + " movido a bloqueados suspendidos.");
+
+            } else if (processToSuspend.getPState() == ProcessState.READY) {
+                
+                readyProcesses.delNodewithVal(processToSuspend);
+                processToSuspend.setState(ProcessState.READY_SUSPENDED);
+                this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions());
+                
+                this.osReference.getDma().getReadySuspendedProcesses().insertLast(processToSuspend);
+                System.out.println("SO (MTS): SWAP OUT. PID " + processToSuspend.getPID() + " movido a READY_SUSPENDED.");
+            }
+        }
+
+        // Lógica de swap in. Prioridad: Traer procesos que terminaron su I/O y están Listos/Suspendidos
+        SimpleList<Process> readySuspendedQueue = this.osReference.getDma().getReadySuspendedProcesses();
+
+        if (!this.osReference.getDma().getReadySuspendedProcesses().isEmpty()) {
+            Process pToSwapIn = (Process) readySuspendedQueue.GetpFirst().GetData(); // Usando FIFO
+
+            // Verificar si hay espacio en la Memoria Principal
+            int baseDirection = this.osReference.getMp().isSpaceAvailable(pToSwapIn.getTotalInstructions());
+
+            if (baseDirection != -1) {
+                readySuspendedQueue.delNodewithVal(pToSwapIn);
+                pToSwapIn.setState(ProcessState.READY);
+                readyProcesses.insertLast(pToSwapIn);
+                this.osReference.getMp().allocate(baseDirection, pToSwapIn.getTotalInstructions()); //️ Asignar espacio en la memoria
+                pToSwapIn.setBaseDirection(baseDirection);
+                System.out.println("SO (MTS): SWAP IN (PID " + pToSwapIn.getPID() + ") de READY_SUSPENDED a READY.");
+
+            }
+        }
+    }
+
     // ---------- Planificacion a largo plazo ----------
-    // Admision de procesos de nuevo al sistema
+    /**
+     * Admision de procesos de nuevo al sistema
+     *
+     * @return
+     */
+    public void manageAdmission() {
+        // Admite un proceso si hay 25% de espacio en MP y el sistema no esta full de procesos
+        if (this.osReference.getMp().admiteNewProcess()) {
+
+            System.out.println("Planificador a largo plazo");
+            // Utilizara simplemente el FIFO
+            Process newProcessToMP = (Process) this.osReference.getDma().getNewProcesses().GetpFirst().GetData();
+
+            // Si hay espacio suficiente en memoria principal
+            int baseDirection = this.osReference.getMp().isSpaceAvailable(newProcessToMP.getTotalInstructions());
+
+            // Si no hay espacio en memoria
+            if (baseDirection == -1) {
+                System.out.println("No hay espacio contiguo suficiente (" + newProcessToMP.getTotalInstructions() + " unidades) en la Memoria Principal para planificarlo desde el Largo plazo.");
+                // Si no hay espacio no se hace nada
+
+                // Considerar la cola de listo suspendidos. Por ahora solo listo por simplicidad 
+                // Si hay espacio
+            } else {
+                newProcessToMP.setBaseDirection(baseDirection);
+                // Coloco el proceso en listo
+                newProcessToMP.setState(ProcessState.READY);
+
+                // Muevo el proceso de la cola de nuevo a la cola de listos
+                this.osReference.getReadyQueue().insertLast(newProcessToMP);
+                this.osReference.getDma().getNewProcesses().delNodewithVal(newProcessToMP);
+
+                // Asignar el espacio en la memoria principal (Actualiza el array memorySlots)
+                this.osReference.getMp().allocate(baseDirection, newProcessToMP.getTotalInstructions());
+
+                // Notificar al planificador
+                this.setIsOrdered(false);
+                System.out.println("Proceso " + newProcessToMP.getPName() + " admitido en la Memoria Principal. Enviando a cola de listos");
+            }
+        }
+    }
+
     // Getters y Setters
     public PolicyType getCurrentPolicy() {
         return currentPolicy;

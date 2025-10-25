@@ -29,7 +29,8 @@ public class Process1 extends Thread {
     private int baseDirection;
 
     /**
-     * ----- Planificación ----- FCFS:First-Come-First-Served o FIFO se usara el
+     * ----- Planificación ----- 
+     * FCFS:First-Come-First-Served o FIFO se usara el
      * id del proceso Para SPN shortest process next se usara el que tenga el
      * menor totalInstruction Para SRT shortest remaining time se usara el que
      * tenga el menor remainingInstruction

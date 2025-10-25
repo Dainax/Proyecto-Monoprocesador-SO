@@ -15,7 +15,10 @@ import _04_OperatingSystem.Process1;
  */
 public class MainMemory {
 
-    private final int MEMORY_SIZE = 128; // 128 para almacenar mas, 20 o 64 para probar suspendidos
+    // En el diseño consideramos que el SO tiene una parte de la memoria principal que nunca se 
+    // coloca a disposicion de los procesos, ya que es reservada para el sistema.
+    
+    private final int MEMORY_SIZE = 128; // 128 para almacenar procesos
     private boolean[] memorySlots; // true = ocupado, false = libre
     
     // Para poder referenciar los metodos del SO
@@ -90,6 +93,19 @@ public class MainMemory {
         for (int i = base; i < base + size; i++) {
             memorySlots[i] = false;
         }
+    }
+    
+    public boolean admiteNewProcess(){
+        // Si la memoria esta 25% libre y no hay muchos procesos en el sistema
+        boolean admiteNewProcess = true;
+        int spaceToVerify = (int) (this.MEMORY_SIZE*0.25);
+        
+        // Si no hay 25% de espacio continuo en la memoria
+        if (this.isSpaceAvailable(spaceToVerify)==-1 || this.osReference.getReadyQueue().GetSize()>8){
+            admiteNewProcess = false; // Indico que esta no admite mas procesos
+        }
+        
+        return admiteNewProcess;
     }
 }
 

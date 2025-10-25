@@ -81,10 +81,13 @@ public class DMA extends Thread {
 
                         if (this.remainingCycles == 0) {
                             System.out.println("Proceso E/S terminado");
-                            // Para darselo al Sistema operativo
-                            Process1 terminatedProcess = this.currentProcess;
-                            
+                            // Para darselo al Sistema operativo                            
                             // Invocar al sistema operativo para terminar el proceso
+                            
+                            Process terminatedProcess = this.currentProcess;
+                            this.currentProcess = null;
+                            // Invocar al sistema operativo para terminar E/S
+                            this.osReference.manageIOInterruptionByDMA(terminatedProcess);
                             
                         }
                     }
@@ -143,6 +146,20 @@ public class DMA extends Thread {
         this.busy = true;
     }
 
+     public SimpleList getNewProcesses() {
+        return newProcesses;
+    }
+    
+    public SimpleList getReadySuspendedProcesses() {
+        return readySuspendedProcesses;
+    }
+
+    public SimpleList getBlockedSuspendedProcesses() {
+        return blockedSuspendedProcesses;
+    }
+    
+    
+
     public boolean isBusy() {
         return busy;
     }
@@ -150,7 +167,4 @@ public class DMA extends Thread {
     public void setBusy(boolean busy) {
         this.busy = busy;
     }
-    
-    
-    
 }

@@ -5,8 +5,8 @@
 package _03_LowLevelAbstractions;
 
 import _04_OperatingSystem.OperatingSystem;
-import _04_OperatingSystem.Process1;
 import _04_OperatingSystem.ProcessState;
+import _04_OperatingSystem.Process;
 import _04_OperatingSystem.ProcessType;
 
 /**
