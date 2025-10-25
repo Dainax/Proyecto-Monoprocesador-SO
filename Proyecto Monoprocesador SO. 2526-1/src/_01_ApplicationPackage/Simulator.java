@@ -198,5 +198,14 @@ public double calculateThroughput() {
         return productivePercentage;
         
     }
+    public double getAverageWaitingTime (){
+        
+        int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
+        int totalWaitingTime = this.getOperatingSystem().getTotalWaitingTime();
+
+        if (cyclecounter == 0) return 0;
+        return (double) totalWaitingTime / cyclecounter;
+    }
+    
             
 }
