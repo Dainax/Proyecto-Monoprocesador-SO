@@ -158,9 +158,9 @@ public class OperatingSystem extends Thread {
             String name;
             // Nombre 
             if (type == ProcessType.CPU_BOUND) {
-                name = "CPU-" + i + ". Inst:" + instructions;
+                name = "P-" + i + ".Inst:" + instructions;
             } else {
-                name = "I/O-" + i + ". Inst:" + instructions;
+                name = "IO-" + i + ".Inst:" + instructions;
             }
 
             int cyclesToGenerateInterruption = -1;
