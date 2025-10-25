@@ -26,6 +26,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 public class SimulationPanel extends javax.swing.JPanel {
 
     private Simulator simulator;
+    private javax.swing.Timer clockTimer;
 
     public void setSimulator(Simulator simulator) {
         this.simulator = simulator;
@@ -102,6 +103,13 @@ public class SimulationPanel extends javax.swing.JPanel {
         terminatedPanel = new JPanel();
         terminatedPanel.setLayout(new BoxLayout(terminatedPanel, BoxLayout.Y_AXIS));
         scrollTerminated.setViewportView(terminatedPanel);
+    }
+
+    public void resetClockUI() {
+        if (clockTimer != null) {
+            clockTimer.stop();
+            cycleWatchTime.setText("Ciclo: 0");
+        }
     }
 
     //Validación de Datos para la creación de un proceso
@@ -191,15 +199,6 @@ public class SimulationPanel extends javax.swing.JPanel {
             }
         } catch (Exception ignored) {
         }
-    }
-
-    // Actualiza reloj en pantalla
-    public void updateClock(long cycleCount) {
-        try {
-            cycleWatchTime.setText(String.valueOf(cycleCount));
-        } catch (Exception ignored) {
-        }
-
     }
 
     //Actualiza las colas
@@ -810,21 +809,43 @@ public class SimulationPanel extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startSimulationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startSimulationActionPerformed
-        if (simulator == null) {
-            JOptionPane.showMessageDialog(this, "El simulador no está inicializado.");
-            return;
-        }
-
         if (startSimulation.isSelected()) {
-            // 🔹 Iniciar simulación
-            startSimulation.setText("Pausar Simulación");
-            simulator.startSimulation();
+            // Cuando el toggle está presionado
+            startSimulation.setText("Pausar simulación");
+            simulator.toggleSimulation(); // Inicia la simulación
         } else {
-            // 🔹 Pausar simulación
-            startSimulation.setText("Iniciar Simulación");
-            simulator.pauseSimulation();
+            // Cuando se suelta el toggle
+            startSimulation.setText("Iniciar simulación");
+            simulator.toggleSimulation(); // Pausa la simulación
         }
     }//GEN-LAST:event_startSimulationActionPerformed
+
+    public void initClockTimer(Simulator simulator) {
+        if (clockTimer != null && clockTimer.isRunning()) {
+            clockTimer.stop();
+        }
+
+        clockTimer = new javax.swing.Timer(200, e -> {
+            long cycles = simulator.getOperatingSystem().getClock().getTotalCyclesElapsed();
+            cycleWatchTime.setText(String.valueOf(cycles));
+        });
+        clockTimer.start();
+    }
+
+// Pausar el temporizador visual del reloj
+    public void pauseClockUI() {
+        if (clockTimer != null && clockTimer.isRunning()) {
+            clockTimer.stop();
+        }
+    }
+
+// Reanudar el temporizador visual del reloj
+    public void resumeClockUI() {
+        if (clockTimer != null && !clockTimer.isRunning()) {
+            clockTimer.start();
+        }
+    }
+
 
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
         validateAndCreateProcess();
