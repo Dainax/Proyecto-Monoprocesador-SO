@@ -81,9 +81,11 @@ public class DMA extends Thread {
 
                         if (this.remainingCycles == 0) {
                             System.out.println("Proceso E/S terminado");
+
                             // Para darselo al Sistema operativo                            
                             // Invocar al sistema operativo para terminar el proceso
-                            
+
+                            // Para darselo al Sistema operativo
                             Process terminatedProcess = this.currentProcess;
                             this.currentProcess = null;
                             // Invocar al sistema operativo para terminar E/S
