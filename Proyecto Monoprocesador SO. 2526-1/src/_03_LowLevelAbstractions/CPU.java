@@ -58,7 +58,15 @@ public class CPU extends Thread {
     }
 
     /**
-     * Detiene el hilo de CPU y lo saca de la espera (wait).
+     * Hace que el CPU reanude su operacion
+     */
+    public void playCPU() {
+        this.isProcessRunning = true;
+        this.receiveTick();
+    }
+    
+    /**
+     * Detiene la ejecucion del CPU 
      */
     public void stopCPU() {
         this.isProcessRunning = false;

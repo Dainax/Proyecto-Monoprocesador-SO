@@ -51,6 +51,25 @@ public class DMA extends Thread {
         this.busy = false;
         this.osReference = osReference;
     }
+    
+    /**
+     * Hace que el DMA reanude su operacion
+     */
+    public void playDMA() {
+        this.isRunning = true;
+        this.receiveTick();
+    }
+    
+    /**
+     * Detiene la ejecucion del DMA 
+     */
+    public void stopDMA() {
+        this.isRunning = false;
+        // Despertar a la CPU para que salga del wait() y termine el hilo.
+        synchronized (syncMonitor) {
+            syncMonitor.notify();
+        }
+    }
 
     // ----- Sincronización -----
     /**
