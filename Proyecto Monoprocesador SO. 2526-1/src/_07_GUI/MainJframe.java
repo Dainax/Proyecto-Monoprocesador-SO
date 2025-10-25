@@ -42,7 +42,9 @@ public class MainJframe extends javax.swing.JFrame {
 
         // Crear Simulador y conectar
         simulador = new Simulator((SimulationPanel) simulationPanel, so.getScheduler().getCurrentPolicy(), defaultCycleDuration);
-        simulationPanel.setSimulator(simulador); // para que panel invoque acciones sobre el simulador
+        simulationPanel.setSimulator(simulador); 
+        configPanel.setSimulator(simulador);
+
 
         
         //Configurar el contenedor central
@@ -76,7 +78,13 @@ public class MainJframe extends javax.swing.JFrame {
 
     public void switchToPanel(String panelName) {
         cardLayout.show(content, panelName);  
+        if ("config".equals(panelName) && configPanel != null) {
+        configPanel.refreshConfig();
     }
+    }
+    
+    
+
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
