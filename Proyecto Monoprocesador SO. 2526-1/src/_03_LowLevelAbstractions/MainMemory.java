@@ -7,7 +7,7 @@ package _03_LowLevelAbstractions;
 import _02_DataStructures.SimpleNode;
 import _02_DataStructures.SimpleList;
 import _04_OperatingSystem.OperatingSystem;
-import _04_OperatingSystem.Process;
+import _04_OperatingSystem.Process1;
 
 /**
  *
@@ -41,8 +41,8 @@ public class MainMemory {
             if (size > MEMORY_SIZE){
                     return -1;
                 }
-            for (SimpleNode<Process> node = this.osReference.getReadyQueue().GetpFirst(); node != null; node = node.GetNxt()) {
-                Process p = node.GetData();
+            for (SimpleNode<Process1> node = this.osReference.getReadyQueue().GetpFirst(); node != null; node = node.GetNxt()) {
+                Process1 p = node.GetData();
                 int pBase = p.getBaseDirection();
                 int pLimit = p.getLimitDirection();
                 if (!(newLimit < pBase || base > pLimit)) {

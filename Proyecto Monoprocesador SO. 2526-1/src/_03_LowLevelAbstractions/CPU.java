@@ -5,7 +5,7 @@
 package _03_LowLevelAbstractions;
 
 import _04_OperatingSystem.OperatingSystem;
-import _04_OperatingSystem.Process;
+import _04_OperatingSystem.Process1;
 import _04_OperatingSystem.ProcessState;
 import _04_OperatingSystem.ProcessType;
 
@@ -27,7 +27,7 @@ public class CPU extends Thread {
 
     // Proceso que se está ejecutando
     // Si es null, el SO está en control.
-    private Process currentProcess;
+    private Process1 currentProcess;
     private String currentProcessName;
 
     // Monitor para la sincronizacion para usar wait() y notify()
@@ -78,7 +78,7 @@ public class CPU extends Thread {
         while (isProcessRunning) {
             synchronized (syncMonitor) {
                 try {
-                    if (currentProcess != null && currentProcess.getState() == Process.State.NEW) {
+                    if (currentProcess != null && currentProcess.getState() == Process1.State.NEW) {
                         currentProcess.start();
                     }
 
@@ -193,7 +193,7 @@ public class CPU extends Thread {
         this.remainingCycles = remainingCycles;
     }
 
-    public void setCurrentProcess(Process process, int quantum) {
+    public void setCurrentProcess(Process1 process, int quantum) {
         this.currentProcess = process;
         // Al cargar un proceso, actualizamos los registros de la CPU con los del PCB
         if (process != null) {
@@ -203,7 +203,7 @@ public class CPU extends Thread {
         } 
     }
 
-    public Process getCurrentProcess() {
+    public Process1 getCurrentProcess() {
         return currentProcess;
     }
 

@@ -25,14 +25,6 @@ public class OperatingSystem extends Thread {
     private Scheduler scheduler;
     private RealTimeClock clock;
 
-    public RealTimeClock getClock() {
-        return clock;
-    }
-
-    public void setClock(RealTimeClock clock) {
-        this.clock = clock;
-    }
-
     // Colas del sistema
     private SimpleList<Process1> readyQueue;
     private SimpleList<Process1> blockedQueue;
@@ -310,6 +302,10 @@ public class OperatingSystem extends Thread {
 
     public void notifyNewProcessArrival(Scheduler scheduler) {
         scheduler.setIsOrdered(false);
+    }
+    
+     public RealTimeClock getClock() {
+        return clock;
     }
 
 }

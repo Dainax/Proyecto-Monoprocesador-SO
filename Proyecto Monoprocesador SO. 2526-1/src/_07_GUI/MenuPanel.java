@@ -17,7 +17,7 @@ public class MenuPanel extends javax.swing.JPanel {
     
     private int x;
     private int y;
-    private Main mainFrame;
+    private MainJframe mainFrame;
 
     public MenuPanel() {
         initComponents();
@@ -27,7 +27,7 @@ public class MenuPanel extends javax.swing.JPanel {
         
     }
     
-    public void setMainFrame(Main mainFrame){
+    public void setMainFrame(MainJframe mainFrame){
         this.mainFrame=mainFrame;
     }
 
@@ -36,7 +36,6 @@ public class MenuPanel extends javax.swing.JPanel {
       listMenu1.addItem(new Model_Menu("CpuIcon1-white","Simulación", Model_Menu.MenuType.MENU));
       listMenu1.addItem(new Model_Menu("SettingIcon1","Configuración", Model_Menu.MenuType.MENU));
       listMenu1.addItem(new Model_Menu("GraphicsIcon1","Gráficos", Model_Menu.MenuType.MENU));   
-      listMenu1.addItem(new Model_Menu("StadisticsIcon1","Estadísticas", Model_Menu.MenuType.MENU));
     
       
       //Listener para los cambios de pantalla con los botones
@@ -47,7 +46,6 @@ public class MenuPanel extends javax.swing.JPanel {
                       case 0 -> mainFrame.switchToPanel("simulation");
                       case 1 -> mainFrame.switchToPanel("config");
                       case 2 -> mainFrame.switchToPanel("graphics");
-                      case 3 -> mainFrame.switchToPanel("stats");
                   }
               }
       });

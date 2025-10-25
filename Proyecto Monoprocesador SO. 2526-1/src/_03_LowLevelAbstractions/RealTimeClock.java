@@ -24,14 +24,16 @@ public class RealTimeClock extends Thread {
     private volatile boolean isRunning;
     private final CPU cpuTarget; // Referencia al hilo CPU que debe notificar
     private final DMA dmaTarget; // Referencia al hilo CPU que debe notificar
-    
+    private Runnable onTickListener;// callback externo
+
     /**
      * Constructor que acepta un manejador de ticks y, opcionalmente, una
      * duración inicial.
      *
      * @param cpuTarget Objeto cpu a notificar
      * @param dmaTarget Objeto dma a notificar
-     * @param duration Duración indicada del ciclo en ms. Usará 1000ms por defecto
+     * @param duration Duración indicada del ciclo en ms. Usará 1000ms por
+     * defecto
      */
     public RealTimeClock(CPU cpuTarget, DMA dmaTarget, long duration) {
         this.cpuTarget = cpuTarget;
@@ -55,14 +57,16 @@ public class RealTimeClock extends Thread {
                 // Espera el tiempo. Lee el valor volatile
                 long duration = this.clockDuration;
                 Thread.sleep(duration);
-                
+
                 long currentCycle = totalCyclesElapsed.incrementAndGet();
                 System.out.println("Ciclo:" + currentCycle);  // COMENTAR LUEGO DE FINALIZAR
-                
+
                 // Sincronizar al CPU y al DMA
                 this.cpuTarget.receiveTick();
                 this.dmaTarget.receiveTick();
-                
+                if (onTickListener != null) {
+                    onTickListener.run(); // notifica al simulador
+                }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 this.isRunning = false;
@@ -95,17 +99,22 @@ public class RealTimeClock extends Thread {
 
     /**
      * Devuelve el valor actual del contador de ciclos.
-     * @return 
+     *
+     * @return
      */
     public long getTotalCyclesElapsed() {
         return this.totalCyclesElapsed.get();
     }
 
     /**
-     *  
-     * @return 
+     *
+     * @return
      */
     public long getClockDuration() {
         return this.clockDuration;
+    }
+
+    public void setOnTickListener(Runnable listener) {
+        this.onTickListener = listener;
     }
 }
