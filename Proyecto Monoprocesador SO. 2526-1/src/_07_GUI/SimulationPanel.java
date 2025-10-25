@@ -7,12 +7,14 @@ import _03_LowLevelAbstractions.CPU;
 import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process1;
 import _04_OperatingSystem.ProcessType;
+import java.awt.Dimension;
 import java.io.File;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -32,6 +34,7 @@ public class SimulationPanel extends javax.swing.JPanel {
     public SimulationPanel() {
         initComponents();
 
+        uniformScrollPaneSizes();
         ///////////////INPUTS DE CREAR PROCESOS///////////////////////////////////////////////    
         // Configuración spinners
         instructionsSpinner.setModel(new SpinnerNumberModel(1, 1, 1000, 1));  // Min 1, Max 1000, Step 1
@@ -172,10 +175,20 @@ public class SimulationPanel extends javax.swing.JPanel {
         // Ejemplo: ajusta los nombres a tus labels
         try {
             if (cpu.getCurrentProcess() != null) {
-                nameProcessRunning.setText(cpu.getCurrentProcess().getName());
+                nameProcessRunning.setText(cpu.getCurrentProcess().getPName());
+                typeProcessRunning.setText(cpu.getCurrentProcess().getType().toString());
+                //modeProcessRunning.setText(cpu.getCurrentProcess().getMode());
+                marProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getMAR()));
+                pcProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getPC()));
+                idProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getPID()));
 
             } else {
-                nameProcessRunning.setText("Idle");
+                nameProcessRunning.setText("...");
+                typeProcessRunning.setText("...");
+                modeProcessRunning.setText("...");
+                marProcessRunning.setText("...");
+                pcProcessRunning.setText("...");
+                idProcessRunning.setText("...");
             }
         } catch (Exception ignored) {
         }
@@ -448,16 +461,16 @@ public class SimulationPanel extends javax.swing.JPanel {
                                     .addComponent(label5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(cyclesSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(18, 18, 18)
-                                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(instructionsSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addGroup(newProcessPanelLayout.createSequentialGroup()
-                                        .addComponent(cpuBoundRadio, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                        .addGap(20, 20, 20)
-                                        .addComponent(ioBoundRadio, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                        .addComponent(cpuBoundRadio, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(ioBoundRadio, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
                                     .addComponent(ioTimeSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 168, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(nameField))))
-                        .addGap(0, 55, Short.MAX_VALUE))))
+                                    .addComponent(nameField, javax.swing.GroupLayout.PREFERRED_SIZE, 199, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addGap(0, 16, Short.MAX_VALUE))))
         );
         newProcessPanelLayout.setVerticalGroup(
             newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -542,37 +555,37 @@ public class SimulationPanel extends javax.swing.JPanel {
         typeProcessRunning.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         typeProcessRunning.setForeground(new java.awt.Color(255, 255, 255));
         typeProcessRunning.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        typeProcessRunning.setText("N/A");
+        typeProcessRunning.setText("...");
 
         modeProcessRunning.setBackground(new java.awt.Color(255, 255, 255));
         modeProcessRunning.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         modeProcessRunning.setForeground(new java.awt.Color(255, 255, 255));
         modeProcessRunning.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        modeProcessRunning.setText("N/A");
+        modeProcessRunning.setText("...");
 
         marProcessRunning.setBackground(new java.awt.Color(255, 255, 255));
         marProcessRunning.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         marProcessRunning.setForeground(new java.awt.Color(255, 255, 255));
         marProcessRunning.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        marProcessRunning.setText("N/A");
+        marProcessRunning.setText("...");
 
         pcProcessRunning.setBackground(new java.awt.Color(255, 255, 255));
         pcProcessRunning.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         pcProcessRunning.setForeground(new java.awt.Color(255, 255, 255));
         pcProcessRunning.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        pcProcessRunning.setText("N/A");
+        pcProcessRunning.setText("...");
 
         idProcessRunning.setBackground(new java.awt.Color(255, 255, 255));
         idProcessRunning.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         idProcessRunning.setForeground(new java.awt.Color(255, 255, 255));
         idProcessRunning.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        idProcessRunning.setText("N/A");
+        idProcessRunning.setText("...");
 
         nameProcessRunning.setBackground(new java.awt.Color(255, 255, 255));
         nameProcessRunning.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         nameProcessRunning.setForeground(new java.awt.Color(255, 255, 255));
         nameProcessRunning.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        nameProcessRunning.setText("N/A");
+        nameProcessRunning.setText("...");
 
         javax.swing.GroupLayout cpuPanelLayout = new javax.swing.GroupLayout(cpuPanel);
         cpuPanel.setLayout(cpuPanelLayout);
@@ -600,7 +613,7 @@ public class SimulationPanel extends javax.swing.JPanel {
                     .addGroup(cpuPanelLayout.createSequentialGroup()
                         .addGap(97, 97, 97)
                         .addComponent(jLabel7)))
-                .addContainerGap(86, Short.MAX_VALUE))
+                .addContainerGap(96, Short.MAX_VALUE))
         );
         cpuPanelLayout.setVerticalGroup(
             cpuPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -663,7 +676,7 @@ public class SimulationPanel extends javax.swing.JPanel {
         blockedPanel.setLayout(new javax.swing.BoxLayout(blockedPanel, javax.swing.BoxLayout.LINE_AXIS));
         scrollBlocked.setViewportView(blockedPanel);
 
-        jPanel1.add(scrollBlocked, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, 120, 290));
+        jPanel1.add(scrollBlocked, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, 130, 290));
 
         jLabel20.setBackground(new java.awt.Color(255, 255, 255));
         jLabel20.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -675,7 +688,7 @@ public class SimulationPanel extends javax.swing.JPanel {
         suspendedReadyPanel.setLayout(new javax.swing.BoxLayout(suspendedReadyPanel, javax.swing.BoxLayout.LINE_AXIS));
         scrollReadyS.setViewportView(suspendedReadyPanel);
 
-        jPanel1.add(scrollReadyS, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 360, 118, 288));
+        jPanel1.add(scrollReadyS, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 360, 130, 288));
 
         jLabel25.setBackground(new java.awt.Color(255, 255, 255));
         jLabel25.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -687,7 +700,7 @@ public class SimulationPanel extends javax.swing.JPanel {
         suspendedBlockedPanel.setLayout(new javax.swing.BoxLayout(suspendedBlockedPanel, javax.swing.BoxLayout.LINE_AXIS));
         scrollBlockedS.setViewportView(suspendedBlockedPanel);
 
-        jPanel1.add(scrollBlockedS, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 360, 120, 290));
+        jPanel1.add(scrollBlockedS, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 360, 130, 290));
 
         jLabel26.setBackground(new java.awt.Color(255, 255, 255));
         jLabel26.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -699,19 +712,19 @@ public class SimulationPanel extends javax.swing.JPanel {
         newPanel.setLayout(new javax.swing.BoxLayout(newPanel, javax.swing.BoxLayout.LINE_AXIS));
         scrollNew.setViewportView(newPanel);
 
-        jPanel1.add(scrollNew, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 360, 120, 290));
+        jPanel1.add(scrollNew, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 360, 130, 290));
 
         jLabel23.setBackground(new java.awt.Color(255, 255, 255));
         jLabel23.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel23.setForeground(new java.awt.Color(255, 255, 255));
         jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel23.setText(" Cola Terminated");
-        jPanel1.add(jLabel23, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 330, -1, -1));
+        jPanel1.add(jLabel23, new org.netbeans.lib.awtextra.AbsoluteConstraints(560, 330, -1, -1));
 
         terminatedPanel.setLayout(new javax.swing.BoxLayout(terminatedPanel, javax.swing.BoxLayout.LINE_AXIS));
         scrollTerminated.setViewportView(terminatedPanel);
 
-        jPanel1.add(scrollTerminated, new org.netbeans.lib.awtextra.AbsoluteConstraints(570, 360, 120, 290));
+        jPanel1.add(scrollTerminated, new org.netbeans.lib.awtextra.AbsoluteConstraints(570, 360, 130, 290));
 
         jLabel5.setBackground(new java.awt.Color(255, 255, 255));
         jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
@@ -864,6 +877,20 @@ public class SimulationPanel extends javax.swing.JPanel {
             }
         }
     }//GEN-LAST:event_uploadSimulationActionPerformed
+
+    private void uniformScrollPaneSizes() {
+        Dimension size = new Dimension(130, 250); // ajusta ancho y alto a tu gusto
+
+        JScrollPane[] scrolls = {
+            scrollNew, scrollReady, scrollBlocked, scrollReadyS, scrollBlockedS, scrollTerminated
+        };
+
+        for (JScrollPane scroll : scrolls) {
+            scroll.setPreferredSize(size);
+            scroll.setMinimumSize(size);
+            scroll.setMaximumSize(size);
+        }
+    }
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -78,7 +78,7 @@ public class Simulator {
     }
 
     public void createProcess(Process1 p) {
-        so.newProcess(p.getName(), p.getTotalInstructions(), p.getType(), p.getCyclesToGenerateException(), p.getCyclesToManageException());
+        so.newProcess(p.getPName(), p.getTotalInstructions(), p.getType(), p.getCyclesToGenerateException(), p.getCyclesToManageException());
         simulationPanel.updateQueues(so);
         System.out.println("Llamando a updateQueues() después de crear proceso");
     }
@@ -97,7 +97,7 @@ public class Simulator {
             // Carga procesos iniciales
             List<Process1> processes = data.getProcesses();
             for (Process1 p : processes) {
-                so.newProcess(p.getName(), p.getTotalInstructions(), p.getType(), p.getCyclesToGenerateException(), p.getCyclesToManageException());
+                so.newProcess(p.getPName(), p.getTotalInstructions(), p.getType(), p.getCyclesToGenerateException(), p.getCyclesToManageException());
             }
             updateUI();
 
