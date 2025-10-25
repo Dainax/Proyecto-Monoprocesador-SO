@@ -23,6 +23,7 @@ public class CPU extends Thread {
     // Contadores de ciclo CPU para planificacion
     private int cycleCounter;
     private int remainingCycles;
+    private int productiveCycles; // Ciclos que el cpu ejecuta codigo productivo
 
     // Proceso que se está ejecutando
     // Si es null, el SO está en control.
@@ -46,6 +47,7 @@ public class CPU extends Thread {
         this.cycleCounter = 0;
         this.remainingCycles = -1;
         this.osReference = osReference;
+        this.productiveCycles=0;
         setName("Hilo del CPU");
     }
 
@@ -102,8 +104,9 @@ public class CPU extends Thread {
                         System.out.println("\n[Ciclo " + this.cycleCounter + "] Ejecutando PID " + currentProcess.getPID()
                                 + " (Quantum Restante: " + (remainingCycles > 0 ? remainingCycles : "N/A") + ")");
 
-                        this.PC++; // Incrementa el contador global de ciclos de CPU 
-                        this.MAR++; // Incrementa el contador global de ciclos de CPU 
+                        this.PC++; // Incrementa el contador PC
+                        this.MAR++; // Incrementa el contador MAR
+                        this.productiveCycles++; // Ciclo productivo
 
                         this.osReference.getScheduler().updateHRRNMetrics(this.osReference.getReadyQueue());
 
@@ -140,7 +143,9 @@ public class CPU extends Thread {
                         // Politica RR
                         if (remainingCycles == 0) {
                             System.out.println("CPU: Quantum de tiempo excedido.");
-                            this.osReference.handlePreemption(this.currentProcess);
+                            if (this.currentProcess != null) {
+                                this.osReference.handlePreemption(this.currentProcess);
+                            }
                         }
 
                         // Si es null se ejecutara el SO
@@ -196,6 +201,10 @@ public class CPU extends Thread {
 
     public void setRemainingCycles(int remainingCycles) {
         this.remainingCycles = remainingCycles;
+    }
+
+    public int getProductiveCycles() {
+        return productiveCycles;
     }
 
     public void setCurrentProcess(Process1 process, int quantum) {
