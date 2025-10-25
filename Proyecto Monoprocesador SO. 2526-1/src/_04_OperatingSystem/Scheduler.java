@@ -6,7 +6,7 @@ package _04_OperatingSystem;
 
 import _02_DataStructures.SimpleList;
 import _02_DataStructures.SimpleNode;
-import _04_OperatingSystem.Process;
+import _04_OperatingSystem.Process1;
 
 /**
  *
@@ -42,9 +42,9 @@ public class Scheduler {
      *
      * @return proceso a darle el control del CPU
      */
-    public Process selectNextProcess() {
+    public Process1 selectNextProcess() {
         // Obtener la Cola de Listos del SO
-        SimpleList<Process> readyProcesses = osReference.getReadyQueue(); // Asume que el OS tiene este getter
+        SimpleList<Process1> readyProcesses = osReference.getReadyQueue(); // Asume que el OS tiene este getter
 
         if (readyProcesses == null || readyProcesses.isEmpty()) {
             return null;
@@ -57,7 +57,7 @@ public class Scheduler {
         }
 
         // Tomo el proceso. La cola debe estar ordenada segun el algoritmo de ordenamiento
-        Process nextProcess = (Process) readyProcesses.GetpFirst().GetData();
+        Process1 nextProcess = (Process1) readyProcesses.GetpFirst().GetData();
 
         // Cambio su estado y lo elimino de la cola
         nextProcess.setState(ProcessState.RUNNING);
@@ -72,7 +72,7 @@ public class Scheduler {
      * el caso
      */
     public void sortReadyQueue() {
-        SimpleList<Process> readyProcesses = osReference.getReadyQueue();
+        SimpleList<Process1> readyProcesses = osReference.getReadyQueue();
         if (readyProcesses.GetSize() <= 1) {
             this.isOrdered = true;
             return;
@@ -144,13 +144,13 @@ public class Scheduler {
      */
     private void ordenateWithBubbleSort(PolicyType policy) {
         // Obtengo la lista del SO
-        SimpleList<Process> readyProcesses = osReference.getReadyQueue();
+        SimpleList<Process1> readyProcesses = osReference.getReadyQueue();
         int size = readyProcesses.GetSize();
 
         // Hago un arreglo temporal
-        Process[] processArray = new Process[size];
+        Process1[] processArray = new Process1[size];
 
-        SimpleNode<Process> current = readyProcesses.GetpFirst();
+        SimpleNode<Process1> current = readyProcesses.GetpFirst();
         int index = 0;
         while (current != null) {
             processArray[index] = current.GetData();
@@ -164,7 +164,7 @@ public class Scheduler {
         // Vuelvo a llenar la cola de listos
         readyProcesses.SetpFirst(null);
         readyProcesses.SetpLast(null);
-        for (Process p : processArray) {
+        for (Process1 p : processArray) {
             readyProcesses.insertLast(p);
         }
     }
@@ -172,19 +172,19 @@ public class Scheduler {
     /**
      * Ordena un array de procesos usando Bubble Sort usando dos metodos
      */
-    private void bubbleSort(Process[] processes, PolicyType policy) {
+    private void bubbleSort(Process1[] processes, PolicyType policy) {
         int n = processes.length;
         // Pasadas a todo el arreglo
         for (int i = 0; i < n - 1; i++) {
             // Iteracion por cada elemento 
             for (int j = 0; j < n - i - 1; j++) {
-                Process a = processes[j];
-                Process b = processes[j + 1];
+                Process1 a = processes[j];
+                Process1 b = processes[j + 1];
 
                 // Si b es mejor que a (es decir, a no está en el orden correcto respecto a b) 
                 // los intercambiamos.
                 if (!isABetterThanB(a, b, policy)) {
-                    Process temp = a;
+                    Process1 temp = a;
                     processes[j] = b;
                     processes[j + 1] = temp;
                 }
@@ -196,7 +196,7 @@ public class Scheduler {
      * Determina si el Proceso 'a' debe ir antes que el Proceso 'b' para
      * organizar la lista
      */
-    private boolean isABetterThanB(Process a, Process b, PolicyType policy) {
+    private boolean isABetterThanB(Process1 a, Process1 b, PolicyType policy) {
         double valA = getComparisonValue(a, policy);
         double valB = getComparisonValue(b, policy);
 
@@ -215,7 +215,7 @@ public class Scheduler {
     /**
      * Devuelve el valor numérico clave para la comparación según la política.
      */
-    private double getComparisonValue(Process p, PolicyType policy) {
+    private double getComparisonValue(Process1 p, PolicyType policy) {
         switch (policy) {
             case Priority:
                 return p.getPPriority();
@@ -236,10 +236,10 @@ public class Scheduler {
     /**
      * Actualiza el tiempo de espera y recalcula la Tasa de Respuesta (HRRN).
      */
-    public void updateHRRNMetrics(SimpleList<Process> list) {
+    public void updateHRRNMetrics(SimpleList<Process1> list) {
         SimpleNode current = list.GetpFirst();
         while (current != null) {
-            Process p = (Process) current.GetData();
+            Process1 p = (Process1) current.GetData();
 
             // Aumentar el tiempo de espera (necesario para SRT/HRRN)
             p.setCyclesWaitingCPU(p.getCyclesWaitingCPU() + 1);

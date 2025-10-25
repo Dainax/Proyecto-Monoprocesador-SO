@@ -6,7 +6,7 @@ package _03_LowLevelAbstractions;
 
 import _02_DataStructures.SimpleList;
 import _04_OperatingSystem.OperatingSystem;
-import _04_OperatingSystem.Process;
+import _04_OperatingSystem.Process1;
 
 /**
  *
@@ -21,7 +21,7 @@ public class DMA extends Thread {
 
     // Proceso al que se le esta manejando su E/S
     // Si es null, no se esta gestionando la E/S de ningun proceso
-    private volatile Process currentProcess;
+    private volatile Process1 currentProcess;
 
     // Cola de nuevos
     private SimpleList newProcesses; 
@@ -82,7 +82,7 @@ public class DMA extends Thread {
                         if (this.remainingCycles == 0) {
                             System.out.println("Proceso E/S terminado");
                             // Para darselo al Sistema operativo
-                            Process terminatedProcess = this.currentProcess;
+                            Process1 terminatedProcess = this.currentProcess;
                             
                             // Invocar al sistema operativo para terminar el proceso
                             
@@ -95,16 +95,16 @@ public class DMA extends Thread {
         }
     }
     
-    public void addNewProcess(Process newProcess){
+    public void addNewProcess(Process1 newProcess){
         this.newProcesses.insertLast(newProcess);
     }
 
     // Estas 6 funciones de readysuspended y blockedSuspended hay que probarlas
-    public void addReadySuspendedProcess(Process newRSProcess) {
+    public void addReadySuspendedProcess(Process1 newRSProcess) {
         this.readySuspendedProcesses.insertLast(newRSProcess);
     }
 
-    public void addBlockedSuspendedProcess(Process newRSProcess) {
+    public void addBlockedSuspendedProcess(Process1 newRSProcess) {
         this.readySuspendedProcesses.insertLast(newRSProcess);
     }
 
@@ -133,11 +133,11 @@ public class DMA extends Thread {
         this.remainingCycles = remainingCycles;
     }
 
-    public Process getCurrentProcess() {
+    public Process1 getCurrentProcess() {
         return currentProcess;
     }
 
-    public void setCurrentProcess(Process process) {
+    public void setCurrentProcess(Process1 process) {
         this.currentProcess = process;
         this.remainingCycles = process.getCyclesToManageException();
         this.busy = true;

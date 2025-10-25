@@ -1,43 +1,60 @@
 package _07_GUI;
 
+import _01_ApplicationPackage.Simulator;
+import _04_OperatingSystem.OperatingSystem;
+import _04_OperatingSystem.PolicyType;
+import static _04_OperatingSystem.PolicyType.Priority;
 import java.awt.CardLayout;
 import java.awt.Image;
 import javax.swing.ImageIcon;
-import javax.swing.JPanel;
 
 /**
  *
  * @author Danaz
  */
-public class Main extends javax.swing.JFrame {
+public class MainJframe extends javax.swing.JFrame {
 
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Main.class.getName());
-
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainJframe.class.getName());
+    private Simulator simulador;
     private CardLayout cardLayout;
-    private JPanel simulationPanel, configPanel, graphicsPanel, statsPanel;
+    private SimulationPanel simulationPanel;
+    private ConfigPanel configPanel;
+    private GraphicsPanel graphicsPanel;
 
-    public Main() {
+    public MainJframe() {
         initComponents();
         setTitle("Simulacion Monoprocesador");
         this.setLocationRelativeTo(null);
         this.setResizable(false);
-        menuPanel1.initMoving(Main.this);
+        menuPanel1.initMoving(MainJframe.this);
 
-        cardLayout = new CardLayout();
-        content.setLayout(cardLayout);
-
+        // Configuración por defecto
+        PolicyType defaultPolicy = Priority; 
+        long defaultCycleDuration = 1000; // 1 ms o ajustable luego
+        
+        // Crear el OS
+        OperatingSystem so = new OperatingSystem(defaultPolicy, defaultCycleDuration);
+        
+        //Crear Paneles
         simulationPanel = new SimulationPanel();
         configPanel = new ConfigPanel();
         graphicsPanel = new GraphicsPanel();
-        statsPanel = new StatsPanel();
 
+        // Crear Simulador y conectar
+        simulador = new Simulator((SimulationPanel) simulationPanel, so.getScheduler().getCurrentPolicy(), defaultCycleDuration);
+        simulationPanel.setSimulator(simulador); // para que panel invoque acciones sobre el simulador
+
+        
+        //Configurar el contenedor central
+        cardLayout = new CardLayout();
+        content.setLayout(cardLayout);
         content.add(simulationPanel, "simulation");
         content.add(configPanel, "config");
         content.add(graphicsPanel, "graphics");
-        content.add(statsPanel, "stats");
 
         cardLayout.show(content, "simulation");
 
+        // Conectar menú lateral con este frame
         menuPanel1.setMainFrame(this);
 
         //Imagen de la aplicacion
@@ -52,13 +69,13 @@ public class Main extends javax.swing.JFrame {
 
         } catch (NullPointerException e) {
             System.err.println("No se encontró el archivo de imagen en la ruta: " + rutaIcono);
-           
+
         }
 
     }
 
     public void switchToPanel(String panelName) {
-        cardLayout.show(content, panelName);  // Changed 'content' to 'jPanel1'
+        cardLayout.show(content, panelName);  
     }
 
     @SuppressWarnings("unchecked")
@@ -128,7 +145,7 @@ public class Main extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new Main().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new MainJframe().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

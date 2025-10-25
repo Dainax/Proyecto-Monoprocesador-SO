@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @author DiegoM
  */
-public class Process extends Thread {
+public class Process1 extends Thread {
 
     // ---------- Atributos ----------
     // 
@@ -65,7 +65,7 @@ public class Process extends Thread {
      * @param cyclesToManageInterruption
      * @param baseDirection Direccion de la memoria principal donde inicia el proceso (Usar metodos de la clase MP)
      */
-    public Process(String name, int totalInstructions, ProcessType type, int cyclesToGenerateInterruption, int cyclesToManageInterruption, int baseDirection) {
+    public Process1(String name, int totalInstructions, ProcessType type, int cyclesToGenerateInterruption, int cyclesToManageInterruption, int baseDirection) {
         this.PID = PID_COUNTER.getAndIncrement();
         this.PC = 0;
         this.MAR = baseDirection;
@@ -290,6 +290,8 @@ public class Process extends Thread {
         return this.PID == pid;
     }
 
+    
+    
     public String toString() {
         // Calcular el Response Rate solo para la impresión si aún no se ha hecho
         double currentRR = this.responseRate;

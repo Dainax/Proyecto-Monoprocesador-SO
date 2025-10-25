@@ -1,11 +1,21 @@
 package _07_GUI;
 
-import java.awt.HeadlessException;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import _01_ApplicationPackage.Simulator;
+import _02_DataStructures.SimpleList;
+import _02_DataStructures.SimpleNode;
+import _03_LowLevelAbstractions.CPU;
+import _04_OperatingSystem.OperatingSystem;
+import _04_OperatingSystem.Process1;
+import _04_OperatingSystem.ProcessType;
+import java.io.File;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
@@ -13,12 +23,19 @@ import javax.swing.SpinnerNumberModel;
  */
 public class SimulationPanel extends javax.swing.JPanel {
 
+    private Simulator simulator;
+
+    public void setSimulator(Simulator simulator) {
+        this.simulator = simulator;
+    }
+
     public SimulationPanel() {
         initComponents();
 
+        ///////////////INPUTS DE CREAR PROCESOS///////////////////////////////////////////////    
         // Configuración spinners
         instructionsSpinner.setModel(new SpinnerNumberModel(1, 1, 1000, 1));  // Min 1, Max 1000, Step 1
-        cyclesSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));  // Min 0, no max ESTO DEPENDE DEL INSTRUCTION
+        cyclesSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 1));  // Min 0, no max ESTO DEPENDE DEL INSTRUCTION
         ioTimeSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));  // Min 0, no max
 
         // Sincroniza dinámicamente el máximo de cyclesSpinner con instructionsSpinner
@@ -55,66 +72,237 @@ public class SimulationPanel extends javax.swing.JPanel {
             ioTimeSpinner.setEnabled(true);
         });
 
-        // Add listener for submit button
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                validateAndCreateProcess();
-            }
-        });
+        ///////////////////////////////////////////////////////////////////////
+
+   // === CONFIGURAR PANELES INTERNOS PARA CADA SCROLL ===
+
+        newPanel = new JPanel();
+        newPanel.setLayout(new BoxLayout(newPanel, BoxLayout.Y_AXIS));
+        scrollNew.setViewportView(newPanel);
+
+        readyPanel = new JPanel();
+        readyPanel.setLayout(new BoxLayout(readyPanel, BoxLayout.Y_AXIS));
+        scrollReady.setViewportView(readyPanel);
+
+        blockedPanel = new JPanel();
+        blockedPanel.setLayout(new BoxLayout(blockedPanel, BoxLayout.Y_AXIS));
+        scrollBlocked.setViewportView(blockedPanel);
+
+        suspendedReadyPanel = new JPanel();
+        suspendedReadyPanel.setLayout(new BoxLayout(suspendedReadyPanel, BoxLayout.Y_AXIS));
+        scrollReadyS.setViewportView(suspendedReadyPanel);
+
+        suspendedBlockedPanel = new JPanel();
+        suspendedBlockedPanel.setLayout(new BoxLayout(suspendedBlockedPanel, BoxLayout.Y_AXIS));
+        scrollBlockedS.setViewportView(suspendedBlockedPanel);
+
+        terminatedPanel = new JPanel();
+        terminatedPanel.setLayout(new BoxLayout(terminatedPanel, BoxLayout.Y_AXIS));
+        scrollTerminated.setViewportView(terminatedPanel);
     }
 
+    //Validación de Datos para la creación de un proceso
     private void validateAndCreateProcess() {
-        // Get values
+        // Obtener valores de los campos
         String name = nameField.getText().trim();
         int instructions = (Integer) instructionsSpinner.getValue();
         boolean isCpuBound = cpuBoundRadio.isSelected();
         boolean isIoBound = ioBoundRadio.isSelected();
-        int cycles = (Integer) cyclesSpinner.getValue();
-        int ioTime = (Integer) ioTimeSpinner.getValue();
+        ProcessType typeBound;
+        int cycles;
+        int ioTime;
 
-        // Validación de atributos vacios
+        // 🔹 Validar nombre
         if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El nombre del proceso no puede ser vacío.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "El nombre del proceso no puede estar vacío.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
+        // 🔹 Validar selección de tipo
         if (!isCpuBound && !isIoBound) {
-            JOptionPane.showMessageDialog(this, "Por favor selecciona CPU Bound o I/O Bound.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Debe seleccionar si el proceso es CPU Bound o I/O Bound.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        // Validación instrucciones 1-1000
+
+        // 🔹 Validar rango de instrucciones
         if (instructions < 1 || instructions > 1000) {
-            JOptionPane.showMessageDialog(this, "Número de instrucción debe estar entre 1 y 1000.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "El número de instrucciones debe estar entre 1 y 1000.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        // Otra validación de mutua exclusión de tipo de proceso
-        if (isCpuBound && isIoBound) {
-            JOptionPane.showMessageDialog(this, "Proceso no puede ser CPU Bound y I/O Bound a la vez.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        //Validaciones extras
+
+        // 🔹 Asignar tipo y atributos según selección
         if (isCpuBound) {
-            if (cycles != 0) {
-                JOptionPane.showMessageDialog(this, "Cycles for interruption should not be set for CPU Bound processes.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (ioTime != 0) {
-                JOptionPane.showMessageDialog(this, "I/O time should not be set for CPU Bound processes.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+            typeBound = ProcessType.CPU_BOUND;
+            cycles = -1;  // ignorar spinner
+            ioTime = -1;  // ignorar spinner
+        } else { // IO Bound
+            typeBound = ProcessType.IO_BOUND;
+            cycles = (Integer) cyclesSpinner.getValue();
+            ioTime = (Integer) ioTimeSpinner.getValue();
+
+            // Validar que los valores de IO tengan sentido
+            if (cycles < 1 || ioTime < 1) {
+                JOptionPane.showMessageDialog(this, "Los valores de ciclos e I/O deben ser mayores que 0 para procesos I/O Bound.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
 
-        // Pasó las validaciones, entonces llama al SO
+        // 🔹 Crear el proceso y enviarlo al simulador
         try {
-            //SO.createProcess(name, instructions, isCpuBound, cycles, ioTime);  // Adjust to your actual method
-            JOptionPane.showMessageDialog(this, "Proceso creado exitosamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            Process1 process = new Process1(name, instructions, typeBound, cycles, ioTime, -1);
+            simulator.createProcess(process);
+            JOptionPane.showMessageDialog(this, "Proceso creado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
 
-            // Limpieza de los inputs
+            // Limpiar los campos
             resetFields();
 
-        } catch (HeadlessException ex) {
-            JOptionPane.showMessageDialog(this, "Error creando el Proceso: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error al crear el proceso: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
+    }
+
+    /////// Funciones para mostrar en Pantalla///////////////
+    
+    //Aca van los otros datos de la cpu
+    public void updateCPU(CPU cpu) {
+        if (cpu == null) {
+            return;
+        }
+        // Ejemplo: ajusta los nombres a tus labels
+        try {
+            if (cpu.getCurrentProcess() != null) {
+                nameProcessRunning.setText(cpu.getCurrentProcess().getName());
+
+            } else {
+                nameProcessRunning.setText("Idle");
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    // Actualiza reloj en pantalla
+    public void updateClock(long cycleCount) {
+        try {
+            cycleWatchTime.setText(String.valueOf(cycleCount));
+        } catch (Exception ignored) {
+        }
+
+    }
+
+    //Actualiza las colas
+    public void updateQueues(OperatingSystem so) {
+        if (so == null) {
+            return;
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            // Limpia todos los paneles
+            newPanel.removeAll();
+            readyPanel.removeAll();
+            blockedPanel.removeAll();
+            suspendedReadyPanel.removeAll();
+            suspendedBlockedPanel.removeAll();
+            terminatedPanel.removeAll();
+
+            // 🔹 Nuevos
+            SimpleList<Process1> list = so.getReadyQueue();
+            SimpleNode<Process1> node = (list == null) ? null : list.GetpFirst();
+            while (node != null) {
+                PCBPanel pcb = new PCBPanel(node.GetData());
+                newPanel.add(pcb);
+                node = node.GetNxt();
+            }
+
+            // 🔹 Listos
+            list = so.getReadyQueue();
+            node = (list == null) ? null : list.GetpFirst();
+            while (node != null) {
+                PCBPanel pcb = new PCBPanel(node.GetData());
+                readyPanel.add(pcb);
+                node = node.GetNxt();
+            }
+
+            // 🔹 Bloqueados
+            list = so.getBlockedQueue();
+            node = (list == null) ? null : list.GetpFirst();
+            while (node != null) {
+                PCBPanel pcb = new PCBPanel(node.GetData());
+                blockedPanel.add(pcb);
+                node = node.GetNxt();
+            }
+
+            // 🔹 Suspendidos Listos
+            list = so.getReadyQueue();
+            node = (list == null) ? null : list.GetpFirst();
+            while (node != null) {
+                PCBPanel pcb = new PCBPanel(node.GetData());
+                suspendedReadyPanel.add(pcb);
+                node = node.GetNxt();
+            }
+
+            // 🔹 Suspendidos Bloqueados
+            list = so.getReadyQueue();
+            node = (list == null) ? null : list.GetpFirst();
+            while (node != null) {
+                PCBPanel pcb = new PCBPanel(node.GetData());
+                suspendedBlockedPanel.add(pcb);
+                node = node.GetNxt();
+            }
+
+            // 🔹 Terminados
+            list = so.getTerminatedQueue();
+            node = (list == null) ? null : list.GetpFirst();
+            while (node != null) {
+                PCBPanel pcb = new PCBPanel(node.GetData());
+                terminatedPanel.add(pcb);
+                node = node.GetNxt();
+            }
+
+            // 🔹 Refrescar todo
+            newPanel.revalidate();
+            newPanel.repaint();
+            readyPanel.revalidate();
+            readyPanel.repaint();
+            blockedPanel.revalidate();
+            blockedPanel.repaint();
+            suspendedReadyPanel.revalidate();
+            suspendedReadyPanel.repaint();
+            suspendedBlockedPanel.revalidate();
+            suspendedBlockedPanel.repaint();
+            terminatedPanel.revalidate();
+            terminatedPanel.repaint();
+
+            this.revalidate();
+            this.repaint();
+        });
+    }
+
+    //Reinicia todo en pantalla
+    public void resetView() {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            cycleWatchTime.setText("0");
+            nameProcessRunning.setText("Idle");
+            // vacía paneles
+            scrollNew.removeAll();
+            scrollReady.removeAll();
+            scrollBlocked.removeAll();
+            scrollReadyS.removeAll();
+            scrollBlockedS.removeAll();
+            scrollTerminated.removeAll();
+            scrollNew.revalidate();
+            scrollNew.repaint();
+            scrollReady.revalidate();
+            scrollReady.repaint();
+            scrollBlocked.revalidate();
+            scrollBlocked.repaint();
+            scrollReadyS.revalidate();
+            scrollReadyS.repaint();
+            scrollBlockedS.revalidate();
+            scrollBlockedS.repaint();
+            scrollTerminated.revalidate();
+            scrollTerminated.repaint();
+        });
     }
 
     private void resetFields() {
@@ -132,21 +320,21 @@ public class SimulationPanel extends javax.swing.JPanel {
 
         buttonGroup1 = new javax.swing.ButtonGroup();
         jPanel1 = new javax.swing.JPanel();
-        jPanel2 = new javax.swing.JPanel();
-        label2 = new java.awt.Label();
-        label4 = new java.awt.Label();
+        newProcessPanel = new javax.swing.JPanel();
         cpuBoundRadio = new javax.swing.JRadioButton();
         ioBoundRadio = new javax.swing.JRadioButton();
-        jLabel2 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
         cyclesSpinner = new javax.swing.JSpinner();
         ioTimeSpinner = new javax.swing.JSpinner();
         instructionsSpinner = new javax.swing.JSpinner();
         nameField = new javax.swing.JTextField();
         submitButton = new javax.swing.JButton();
+        label2 = new java.awt.Label();
+        label4 = new java.awt.Label();
         label5 = new java.awt.Label();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
         jLabel19 = new javax.swing.JLabel();
-        jPanel3 = new javax.swing.JPanel();
+        cpuPanel = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
@@ -161,54 +349,44 @@ public class SimulationPanel extends javax.swing.JPanel {
         idProcessRunning = new javax.swing.JLabel();
         nameProcessRunning = new javax.swing.JLabel();
         CPUphoto = new javax.swing.JLabel();
-        cycleWatchTime = new javax.swing.JLabel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel20 = new javax.swing.JLabel();
         jLabel22 = new javax.swing.JLabel();
-        jLabel23 = new javax.swing.JLabel();
+        scrollReady = new javax.swing.JScrollPane();
+        readyPanel = new javax.swing.JPanel();
         jLabel24 = new javax.swing.JLabel();
+        scrollBlocked = new javax.swing.JScrollPane();
+        blockedPanel = new javax.swing.JPanel();
+        jLabel20 = new javax.swing.JLabel();
+        scrollReadyS = new javax.swing.JScrollPane();
+        suspendedReadyPanel = new javax.swing.JPanel();
         jLabel25 = new javax.swing.JLabel();
+        scrollBlockedS = new javax.swing.JScrollPane();
+        suspendedBlockedPanel = new javax.swing.JPanel();
         jLabel26 = new javax.swing.JLabel();
-        readySList = new javax.swing.JScrollPane();
-        newList = new javax.swing.JScrollPane();
-        blokedSList = new javax.swing.JScrollPane();
-        readyList = new javax.swing.JScrollPane();
-        finishedList = new javax.swing.JScrollPane();
-        blockedList = new javax.swing.JScrollPane();
+        scrollNew = new javax.swing.JScrollPane();
+        newPanel = new javax.swing.JPanel();
+        jLabel23 = new javax.swing.JLabel();
+        scrollTerminated = new javax.swing.JScrollPane();
+        terminatedPanel = new javax.swing.JPanel();
+        jLabel5 = new javax.swing.JLabel();
+        cycleWatchTime = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
         plannerLog = new javax.swing.JLabel();
-        jToggleButton2 = new javax.swing.JToggleButton();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
+        startSimulation = new javax.swing.JToggleButton();
+        uploadSimulation = new javax.swing.JButton();
+        resetSimulation = new javax.swing.JButton();
+        generate20Process = new javax.swing.JButton();
 
         jPanel1.setBackground(new java.awt.Color(13, 84, 141));
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jPanel2.setBackground(new java.awt.Color(0, 0, 70));
-        jPanel2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
+        newProcessPanel.setBackground(new java.awt.Color(0, 0, 70));
+        newProcessPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        label2.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
-        label2.setForeground(new java.awt.Color(255, 255, 255));
-        label2.setText("Tipo de Proceso:");
-
-        label4.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
-        label4.setForeground(new java.awt.Color(255, 255, 255));
-        label4.setText("N° de Intrucciones:");
-
-        cpuBoundRadio.setForeground(new java.awt.Color(255, 255, 255));
+        cpuBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         cpuBoundRadio.setText("CPU Bound");
 
-        ioBoundRadio.setForeground(new java.awt.Color(255, 255, 255));
+        ioBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         ioBoundRadio.setText("I/O Bound");
-
-        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel2.setText("<html>Cantidad de ciclos<br> para la interrupción I/O:</html>");
-        jLabel2.setToolTipText("");
-
-        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel3.setText("<html>Cantidad de ciclos de duración<br>de la interrupción I/O:</html>  ");
-        jLabel3.setToolTipText("");
 
         nameField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -223,9 +401,25 @@ public class SimulationPanel extends javax.swing.JPanel {
             }
         });
 
+        label2.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
+        label2.setForeground(new java.awt.Color(255, 255, 255));
+        label2.setText("Tipo de Proceso:");
+
+        label4.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
+        label4.setForeground(new java.awt.Color(255, 255, 255));
+        label4.setText("N° de Intrucciones:");
+
         label5.setFont(new java.awt.Font("Dialog", 0, 14)); // NOI18N
         label5.setForeground(new java.awt.Color(255, 255, 255));
         label5.setText("Nombre del Proceso:");
+
+        jLabel2.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel2.setText("<html>Cantidad de ciclos<br> para la interrupción I/O:</html>");
+        jLabel2.setToolTipText("");
+
+        jLabel3.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel3.setText("<html>Cantidad de ciclos de duración<br>de la interrupción I/O:</html>  ");
+        jLabel3.setToolTipText("");
 
         jLabel19.setBackground(new java.awt.Color(255, 255, 255));
         jLabel19.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
@@ -233,31 +427,31 @@ public class SimulationPanel extends javax.swing.JPanel {
         jLabel19.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel19.setText("Nuevo Proceso");
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        javax.swing.GroupLayout newProcessPanelLayout = new javax.swing.GroupLayout(newProcessPanel);
+        newProcessPanel.setLayout(newProcessPanelLayout);
+        newProcessPanelLayout.setHorizontalGroup(
+            newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(newProcessPanelLayout.createSequentialGroup()
                 .addGap(25, 25, 25)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(newProcessPanelLayout.createSequentialGroup()
                         .addComponent(jLabel19)
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(newProcessPanelLayout.createSequentialGroup()
+                        .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(submitButton, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(newProcessPanelLayout.createSequentialGroup()
+                                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(label2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(label4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(label5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(cyclesSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 150, javax.swing.GroupLayout.PREFERRED_SIZE))
                                 .addGap(18, 18, 18)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                                     .addComponent(instructionsSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
                                     .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addGroup(jPanel2Layout.createSequentialGroup()
+                                    .addGroup(newProcessPanelLayout.createSequentialGroup()
                                         .addComponent(cpuBoundRadio, javax.swing.GroupLayout.PREFERRED_SIZE, 90, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGap(20, 20, 20)
                                         .addComponent(ioBoundRadio, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -265,32 +459,32 @@ public class SimulationPanel extends javax.swing.JPanel {
                                     .addComponent(nameField))))
                         .addGap(0, 55, Short.MAX_VALUE))))
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
+        newProcessPanelLayout.setVerticalGroup(
+            newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(newProcessPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel19)
                 .addGap(6, 6, 6)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(label5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(nameField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(9, 9, 9)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(label4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(instructionsSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(8, 8, 8)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(newProcessPanelLayout.createSequentialGroup()
                         .addGap(1, 1, 1)
                         .addComponent(label2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(cpuBoundRadio)
                     .addComponent(ioBoundRadio))
                 .addGap(2, 2, 2)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(newProcessPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cyclesSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(ioTimeSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
@@ -298,9 +492,9 @@ public class SimulationPanel extends javax.swing.JPanel {
                 .addContainerGap(36, Short.MAX_VALUE))
         );
 
-        jPanel1.add(jPanel2, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 20, 440, 280));
+        jPanel1.add(newProcessPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 20, 440, 280));
 
-        jPanel3.setOpaque(false);
+        cpuPanel.setOpaque(false);
 
         jLabel6.setBackground(new java.awt.Color(255, 255, 255));
         jLabel6.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -380,15 +574,15 @@ public class SimulationPanel extends javax.swing.JPanel {
         nameProcessRunning.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         nameProcessRunning.setText("N/A");
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
+        javax.swing.GroupLayout cpuPanelLayout = new javax.swing.GroupLayout(cpuPanel);
+        cpuPanel.setLayout(cpuPanelLayout);
+        cpuPanelLayout.setHorizontalGroup(
+            cpuPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(cpuPanelLayout.createSequentialGroup()
+                .addGroup(cpuPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(cpuPanelLayout.createSequentialGroup()
                         .addGap(60, 60, 60)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(cpuPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -396,26 +590,26 @@ public class SimulationPanel extends javax.swing.JPanel {
                             .addComponent(jLabel11, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel12, javax.swing.GroupLayout.Alignment.TRAILING))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(cpuPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(pcProcessRunning)
                             .addComponent(modeProcessRunning)
                             .addComponent(nameProcessRunning)
                             .addComponent(typeProcessRunning)
                             .addComponent(marProcessRunning)
                             .addComponent(idProcessRunning)))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
+                    .addGroup(cpuPanelLayout.createSequentialGroup()
                         .addGap(97, 97, 97)
                         .addComponent(jLabel7)))
                 .addContainerGap(86, Short.MAX_VALUE))
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        cpuPanelLayout.setVerticalGroup(
+            cpuPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(cpuPanelLayout.createSequentialGroup()
                 .addGap(15, 15, 15)
                 .addComponent(jLabel7)
                 .addGap(18, 18, 18)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGroup(cpuPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(cpuPanelLayout.createSequentialGroup()
                         .addComponent(jLabel8)
                         .addGap(10, 10, 10)
                         .addComponent(jLabel9)
@@ -427,7 +621,7 @@ public class SimulationPanel extends javax.swing.JPanel {
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabel12))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
+                    .addGroup(cpuPanelLayout.createSequentialGroup()
                         .addComponent(nameProcessRunning)
                         .addGap(10, 10, 10)
                         .addComponent(idProcessRunning)
@@ -442,31 +636,10 @@ public class SimulationPanel extends javax.swing.JPanel {
                 .addContainerGap(45, Short.MAX_VALUE))
         );
 
-        jPanel1.add(jPanel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 240, 280));
+        jPanel1.add(cpuPanel, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 240, 280));
 
         CPUphoto.setIcon(new javax.swing.ImageIcon(getClass().getResource("/_08_SourcesGUI/cpu_texture.png"))); // NOI18N
         jPanel1.add(CPUphoto, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 20, 240, 280));
-
-        cycleWatchTime.setBackground(new java.awt.Color(255, 255, 255));
-        cycleWatchTime.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        cycleWatchTime.setForeground(new java.awt.Color(255, 255, 255));
-        cycleWatchTime.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        cycleWatchTime.setText("0");
-        jPanel1.add(cycleWatchTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 540, 240, -1));
-
-        jLabel5.setBackground(new java.awt.Color(255, 255, 255));
-        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel5.setText("Ciclo de Reloj Global");
-        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 500, 240, -1));
-
-        jLabel20.setBackground(new java.awt.Color(255, 255, 255));
-        jLabel20.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel20.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel20.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel20.setText("Cola Ready S.");
-        jPanel1.add(jLabel20, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 330, -1, -1));
 
         jLabel22.setBackground(new java.awt.Color(255, 255, 255));
         jLabel22.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -475,12 +648,10 @@ public class SimulationPanel extends javax.swing.JPanel {
         jLabel22.setText("Cola Ready");
         jPanel1.add(jLabel22, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 20, -1, -1));
 
-        jLabel23.setBackground(new java.awt.Color(255, 255, 255));
-        jLabel23.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel23.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel23.setText("Cola Finished ");
-        jPanel1.add(jLabel23, new org.netbeans.lib.awtextra.AbsoluteConstraints(570, 330, -1, -1));
+        readyPanel.setLayout(new javax.swing.BoxLayout(readyPanel, javax.swing.BoxLayout.LINE_AXIS));
+        scrollReady.setViewportView(readyPanel);
+
+        jPanel1.add(scrollReady, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 50, 150, 250));
 
         jLabel24.setBackground(new java.awt.Color(255, 255, 255));
         jLabel24.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -489,6 +660,23 @@ public class SimulationPanel extends javax.swing.JPanel {
         jLabel24.setText("Cola Blocked");
         jPanel1.add(jLabel24, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 330, -1, -1));
 
+        blockedPanel.setLayout(new javax.swing.BoxLayout(blockedPanel, javax.swing.BoxLayout.LINE_AXIS));
+        scrollBlocked.setViewportView(blockedPanel);
+
+        jPanel1.add(scrollBlocked, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, 120, 290));
+
+        jLabel20.setBackground(new java.awt.Color(255, 255, 255));
+        jLabel20.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel20.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel20.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel20.setText("Cola Ready S.");
+        jPanel1.add(jLabel20, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 330, -1, -1));
+
+        suspendedReadyPanel.setLayout(new javax.swing.BoxLayout(suspendedReadyPanel, javax.swing.BoxLayout.LINE_AXIS));
+        scrollReadyS.setViewportView(suspendedReadyPanel);
+
+        jPanel1.add(scrollReadyS, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 360, 118, 288));
+
         jLabel25.setBackground(new java.awt.Color(255, 255, 255));
         jLabel25.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel25.setForeground(new java.awt.Color(255, 255, 255));
@@ -496,18 +684,48 @@ public class SimulationPanel extends javax.swing.JPanel {
         jLabel25.setText("Cola Blocked S.");
         jPanel1.add(jLabel25, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 330, -1, -1));
 
+        suspendedBlockedPanel.setLayout(new javax.swing.BoxLayout(suspendedBlockedPanel, javax.swing.BoxLayout.LINE_AXIS));
+        scrollBlockedS.setViewportView(suspendedBlockedPanel);
+
+        jPanel1.add(scrollBlockedS, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 360, 120, 290));
+
         jLabel26.setBackground(new java.awt.Color(255, 255, 255));
         jLabel26.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel26.setForeground(new java.awt.Color(255, 255, 255));
         jLabel26.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel26.setText("Cola New");
         jPanel1.add(jLabel26, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 330, -1, -1));
-        jPanel1.add(readySList, new org.netbeans.lib.awtextra.AbsoluteConstraints(150, 360, 118, 288));
-        jPanel1.add(newList, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 360, 120, 290));
-        jPanel1.add(blokedSList, new org.netbeans.lib.awtextra.AbsoluteConstraints(290, 360, 120, 290));
-        jPanel1.add(readyList, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 50, 150, 250));
-        jPanel1.add(finishedList, new org.netbeans.lib.awtextra.AbsoluteConstraints(570, 360, 120, 290));
-        jPanel1.add(blockedList, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 360, 120, 290));
+
+        newPanel.setLayout(new javax.swing.BoxLayout(newPanel, javax.swing.BoxLayout.LINE_AXIS));
+        scrollNew.setViewportView(newPanel);
+
+        jPanel1.add(scrollNew, new org.netbeans.lib.awtextra.AbsoluteConstraints(430, 360, 120, 290));
+
+        jLabel23.setBackground(new java.awt.Color(255, 255, 255));
+        jLabel23.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel23.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel23.setText(" Cola Terminated");
+        jPanel1.add(jLabel23, new org.netbeans.lib.awtextra.AbsoluteConstraints(550, 330, -1, -1));
+
+        terminatedPanel.setLayout(new javax.swing.BoxLayout(terminatedPanel, javax.swing.BoxLayout.LINE_AXIS));
+        scrollTerminated.setViewportView(terminatedPanel);
+
+        jPanel1.add(scrollTerminated, new org.netbeans.lib.awtextra.AbsoluteConstraints(570, 360, 120, 290));
+
+        jLabel5.setBackground(new java.awt.Color(255, 255, 255));
+        jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel5.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel5.setText("Ciclo de Reloj Global");
+        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 500, 240, -1));
+
+        cycleWatchTime.setBackground(new java.awt.Color(255, 255, 255));
+        cycleWatchTime.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        cycleWatchTime.setForeground(new java.awt.Color(255, 255, 255));
+        cycleWatchTime.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        cycleWatchTime.setText("0");
+        jPanel1.add(cycleWatchTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 540, 240, -1));
 
         jLabel13.setBackground(new java.awt.Color(255, 255, 255));
         jLabel13.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
@@ -523,34 +741,49 @@ public class SimulationPanel extends javax.swing.JPanel {
         plannerLog.setText("...");
         jPanel1.add(plannerLog, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 610, 230, 30));
 
-        jToggleButton2.setBackground(new java.awt.Color(0, 0, 70));
-        jToggleButton2.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
-        jToggleButton2.setForeground(new java.awt.Color(255, 255, 255));
-        jToggleButton2.setText("Iniciar Simulación");
-        jToggleButton2.addActionListener(new java.awt.event.ActionListener() {
+        startSimulation.setBackground(new java.awt.Color(0, 0, 70));
+        startSimulation.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
+        startSimulation.setForeground(new java.awt.Color(255, 255, 255));
+        startSimulation.setText("Iniciar Simulación");
+        startSimulation.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jToggleButton2ActionPerformed(evt);
+                startSimulationActionPerformed(evt);
             }
         });
-        jPanel1.add(jToggleButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 320, 240, 40));
+        jPanel1.add(startSimulation, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 320, 240, 40));
 
-        jButton1.setBackground(new java.awt.Color(0, 0, 70));
-        jButton1.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
-        jButton1.setForeground(new java.awt.Color(255, 255, 255));
-        jButton1.setText("Precargar una simulación");
-        jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 450, 240, 30));
+        uploadSimulation.setBackground(new java.awt.Color(0, 0, 70));
+        uploadSimulation.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
+        uploadSimulation.setForeground(new java.awt.Color(255, 255, 255));
+        uploadSimulation.setText("Precargar una simulación");
+        uploadSimulation.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                uploadSimulationActionPerformed(evt);
+            }
+        });
+        jPanel1.add(uploadSimulation, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 450, 240, 30));
 
-        jButton2.setBackground(new java.awt.Color(0, 0, 70));
-        jButton2.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
-        jButton2.setForeground(new java.awt.Color(255, 255, 255));
-        jButton2.setText("Reiniciar Simulación");
-        jPanel1.add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 370, 240, 30));
+        resetSimulation.setBackground(new java.awt.Color(0, 0, 70));
+        resetSimulation.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
+        resetSimulation.setForeground(new java.awt.Color(255, 255, 255));
+        resetSimulation.setText("Reiniciar Simulación");
+        resetSimulation.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                resetSimulationActionPerformed(evt);
+            }
+        });
+        jPanel1.add(resetSimulation, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 370, 240, 30));
 
-        jButton3.setBackground(new java.awt.Color(0, 0, 70));
-        jButton3.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
-        jButton3.setForeground(new java.awt.Color(255, 255, 255));
-        jButton3.setText("Generación automática 20 procesos");
-        jPanel1.add(jButton3, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 410, 240, 30));
+        generate20Process.setBackground(new java.awt.Color(0, 0, 70));
+        generate20Process.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
+        generate20Process.setForeground(new java.awt.Color(255, 255, 255));
+        generate20Process.setText("Generación automática 20 procesos");
+        generate20Process.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                generate20ProcessActionPerformed(evt);
+            }
+        });
+        jPanel1.add(generate20Process, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 410, 240, 30));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -564,35 +797,88 @@ public class SimulationPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jToggleButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jToggleButton2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jToggleButton2ActionPerformed
+    private void startSimulationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startSimulationActionPerformed
+        if (simulator == null) {
+            JOptionPane.showMessageDialog(this, "El simulador no está inicializado.");
+            return;
+        }
+
+        if (startSimulation.isSelected()) {
+            // 🔹 Iniciar simulación
+            startSimulation.setText("Pausar Simulación");
+            simulator.startSimulation();
+        } else {
+            // 🔹 Pausar simulación
+            startSimulation.setText("Iniciar Simulación");
+            simulator.pauseSimulation();
+        }
+    }//GEN-LAST:event_startSimulationActionPerformed
 
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
-        // TODO add your handling code here:
+        validateAndCreateProcess();
+        //ACA HAY UN ERROR QUE NO ENTIENDO 
+        // Limpieza de los inputs
+        resetFields();
     }//GEN-LAST:event_submitButtonActionPerformed
 
     private void nameFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nameFieldActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_nameFieldActionPerformed
 
+    private void resetSimulationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_resetSimulationActionPerformed
+        if (simulator == null) {
+            JOptionPane.showMessageDialog(this, "El simulador no está inicializado.");
+            return;
+        }
+
+        simulator.resetSimulation();
+        startSimulation.setText("Iniciar Simulación");
+        startSimulation.setSelected(false);
+    }//GEN-LAST:event_resetSimulationActionPerformed
+
+    private void generate20ProcessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generate20ProcessActionPerformed
+        if (simulator == null) {
+            JOptionPane.showMessageDialog(this, "El simulador no está inicializado.");
+            return;
+        }
+
+        simulator.createRandomProcesses(20);
+        JOptionPane.showMessageDialog(this, "Se generaron 20 procesos aleatorios.");
+
+    }//GEN-LAST:event_generate20ProcessActionPerformed
+
+    private void uploadSimulationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadSimulationActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Seleccionar archivo de simulación (.json)");
+        chooser.setFileFilter(new FileNameExtensionFilter("Archivos JSON", "json"));
+
+        int result = chooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = chooser.getSelectedFile();
+            try {
+                simulator.loadFromJSON(file);
+                JOptionPane.showMessageDialog(this, "Simulación precargada correctamente.");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Error al cargar el archivo JSON: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_uploadSimulationActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel CPUphoto;
-    private javax.swing.JScrollPane blockedList;
-    private javax.swing.JScrollPane blokedSList;
+    private javax.swing.JPanel blockedPanel;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JRadioButton cpuBoundRadio;
+    private javax.swing.JPanel cpuPanel;
     private javax.swing.JLabel cycleWatchTime;
     private javax.swing.JSpinner cyclesSpinner;
-    private javax.swing.JScrollPane finishedList;
+    private javax.swing.JButton generate20Process;
     private javax.swing.JLabel idProcessRunning;
     private javax.swing.JSpinner instructionsSpinner;
     private javax.swing.JRadioButton ioBoundRadio;
     private javax.swing.JSpinner ioTimeSpinner;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
@@ -612,9 +898,6 @@ public class SimulationPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JToggleButton jToggleButton2;
     private java.awt.Label label2;
     private java.awt.Label label4;
     private java.awt.Label label5;
@@ -622,12 +905,24 @@ public class SimulationPanel extends javax.swing.JPanel {
     private javax.swing.JLabel modeProcessRunning;
     private javax.swing.JTextField nameField;
     private javax.swing.JLabel nameProcessRunning;
-    private javax.swing.JScrollPane newList;
+    private javax.swing.JPanel newPanel;
+    private javax.swing.JPanel newProcessPanel;
     private javax.swing.JLabel pcProcessRunning;
     private javax.swing.JLabel plannerLog;
-    private javax.swing.JScrollPane readyList;
-    private javax.swing.JScrollPane readySList;
+    private javax.swing.JPanel readyPanel;
+    private javax.swing.JButton resetSimulation;
+    private javax.swing.JScrollPane scrollBlocked;
+    private javax.swing.JScrollPane scrollBlockedS;
+    private javax.swing.JScrollPane scrollNew;
+    private javax.swing.JScrollPane scrollReady;
+    private javax.swing.JScrollPane scrollReadyS;
+    private javax.swing.JScrollPane scrollTerminated;
+    private javax.swing.JToggleButton startSimulation;
     private javax.swing.JButton submitButton;
+    private javax.swing.JPanel suspendedBlockedPanel;
+    private javax.swing.JPanel suspendedReadyPanel;
+    private javax.swing.JPanel terminatedPanel;
     private javax.swing.JLabel typeProcessRunning;
+    private javax.swing.JButton uploadSimulation;
     // End of variables declaration//GEN-END:variables
 }
