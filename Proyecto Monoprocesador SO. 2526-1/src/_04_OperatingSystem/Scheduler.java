@@ -104,6 +104,7 @@ public class Scheduler {
                 break;
         }
         System.out.println("Cola de listos reordenada con política " + currentPolicy);
+        this.isOrdered = true;
     }
 
     private void sortPriority() {
@@ -353,7 +354,7 @@ public class Scheduler {
         // Se puede verificar cual es el tipo de procesos para traer un proceso CPU
         // Cuando la cola de listos este vacia no hay procesos para ejecutar en MP y se necesita suspender y traer listos
         // Reviso si la cola de listos esta vacia, si lo esta debo sacar un proceso de bloqueado a bloqueado suspendido
-        if (blockedProcesses.GetSize()>2) {
+        if (blockedProcesses.GetSize() > 2) {
             // Suspender el Bloqueado de menor prioridad
             processToSuspend = selectProcessToSuspend();
         } // Si la politica es RR el rendimiento se degrada al tener muchos procesos
@@ -395,12 +396,14 @@ public class Scheduler {
                 System.out.println("SO (MTS): SWAP OUT. PID " + processToSuspend.getPID() + " movido a READY_SUSPENDED.");
             }
         }
-        
+
         // Lógica de swap in. Prioridad: Traer procesos que terminaron su I/O y están Listos/Suspendidos
         // Verificar si la cola de listos esta vacia -> Traer procesos listos suspendidos si hay memoria
         SimpleList<Process1> readySuspendedQueue = this.osReference.getDma().getReadySuspendedProcesses();
+        SimpleList<Process1> blockedSuspendedQueue = this.osReference.getDma().getBlockedSuspendedProcesses();
+        
 
-        if (!this.osReference.getDma().getReadySuspendedProcesses().isEmpty()) {
+        if (!readySuspendedQueue.isEmpty()) {
             Process1 pToSwapIn = (Process1) readySuspendedQueue.GetpFirst().GetData(); // Usando FIFO
 
             // Verificar si hay espacio en la Memoria Principal
@@ -412,9 +415,27 @@ public class Scheduler {
                 readyProcesses.insertLast(pToSwapIn);
                 this.osReference.getMp().allocate(baseDirection, pToSwapIn.getTotalInstructions()); //️ Asignar espacio en la memoria
                 pToSwapIn.setBaseDirection(baseDirection);
-                System.out.println("SO (MTS): SWAP IN (PID " + pToSwapIn.getPID() + ") de READY_SUSPENDED a READY.");
+                System.out.println("SWAP IN (PID " + pToSwapIn.getPID() + ") de listo suspendido a listo.");
 
             }
+        } // Si la cola de listos suspendidos esta vacia y hay procesos en bloqueados 
+        // suspendidos estos deberian pasar a la MP
+        else if (blockedSuspendedQueue.GetSize()>3) {
+            Process1 pToSwapIn = (Process1) blockedSuspendedQueue.GetpFirst().GetData(); // Usando FIFO
+
+            // Verificar si hay espacio en la Memoria Principal
+            int baseDirection = this.osReference.getMp().isSpaceAvailable(pToSwapIn.getTotalInstructions());
+
+            if (baseDirection != -1) {
+                blockedSuspendedQueue.delNodewithVal(pToSwapIn);
+                pToSwapIn.setPState(ProcessState.BLOCKED);
+                blockedProcesses.insertLast(pToSwapIn);
+                this.osReference.getMp().allocate(baseDirection, pToSwapIn.getTotalInstructions()); //️ Asignar espacio en la memoria
+                pToSwapIn.setBaseDirection(baseDirection);
+                System.out.println("SWAP IN (PID " + pToSwapIn.getPID() + ") de Bloqueado suspendido a bloqueado.");
+
+            }
+
         }
     }
 
@@ -476,6 +497,10 @@ public class Scheduler {
 
     public int getQuantum() {
         return quantum;
+    }
+
+    public boolean isIsOrdered() {
+        return isOrdered;
     }
 
     public void setIsOrdered(boolean isOrdered) {

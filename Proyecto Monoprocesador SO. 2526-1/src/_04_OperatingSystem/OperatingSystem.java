@@ -97,6 +97,10 @@ public class OperatingSystem extends Thread {
             synchronized (osMonitor) {
                 try {
 
+                    if (!this.getScheduler().isIsOrdered()) {
+                        this.scheduler.sortReadyQueue();
+                    }
+
                     // Simula que se esta ejecutando el proceso del sistema
                     if (readyQueue.isEmpty() || cpu.getCurrentProcess() != null) {
                         // Solo espera si no hay trabajo pendiente para planificar
@@ -162,13 +166,13 @@ public class OperatingSystem extends Thread {
                 if (instructions <= 1) {
                     cyclesToGenerateInterruption = 1;
                 } else {
-                    cyclesToGenerateInterruption = RANDOM.nextInt(instructions) + 1; // 1..instructions
+                    cyclesToGenerateInterruption = RANDOM.nextInt(20) + 1;
                 }
                 // Tiempo de servicio de E/S (DMA) 
                 cyclesToManageInterruption = RANDOM.nextInt(cyclesToGenerateInterruption);
             } else {
                 // CPU bound: no generación de E/S
-                cyclesToGenerateInterruption = -1; // nunca igualará al PC
+                cyclesToGenerateInterruption = -1;
                 cyclesToManageInterruption = 0;
             }
 
@@ -282,10 +286,13 @@ public class OperatingSystem extends Thread {
         // Si esta en la cola de bloqueados
         if (terminatedIOProcess.getPState() == ProcessState.BLOCKED) {
             this.getBlockedQueue().delNodewithVal(terminatedIOProcess); // Quito de la cola de bloqueados
+            terminatedIOProcess.setPState(ProcessState.READY); // Cambio su estado
             this.getReadyQueue().insertLast(terminatedIOProcess); // Lo agrego a la cola de listos
+
         } // Esta en la cola de bloqueados suspendidos
         else {
             this.getDma().delBlockedSuspendedProcess(terminatedIOProcess.getPID()); // Lo quito de la cola de bloqueados suspendidos
+            terminatedIOProcess.setPState(ProcessState.READY_SUSPENDED); // Cambio su estado
             this.getDma().addReadySuspendedProcess(terminatedIOProcess); // Lo agrego a la cola de listos suspendidos
         }
 
