@@ -190,5 +190,13 @@ public double calculateThroughput() {
     if (elapsed == 0) return 0;
     return (double) completed / elapsed;
 }
-    
+    public double getCPUProductivePercentage () {
+        
+        int productivecycles = this.getOperatingSystem().getCpu().getProductiveCycles();
+        int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
+        double productivePercentage = productivecycles/cyclecounter;
+        return productivePercentage;
+        
+    }
+            
 }
