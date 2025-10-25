@@ -207,7 +207,7 @@ public class Process1 extends Thread {
         return state;
     }
 
-    public void setState(ProcessState state) {
+    public void setPState(ProcessState state) {
         this.state = state;
     }
 

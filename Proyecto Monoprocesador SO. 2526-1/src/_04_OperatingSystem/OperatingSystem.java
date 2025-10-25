@@ -26,9 +26,9 @@ public class OperatingSystem extends Thread {
     private RealTimeClock clock;
 
     // Colas del sistema
-    private SimpleList<Process> readyQueue;
-    private SimpleList<Process> blockedQueue;
-    private SimpleList<Process> terminatedQueue;
+    private SimpleList<Process1> readyQueue;
+    private SimpleList<Process1> blockedQueue;
+    private SimpleList<Process1> terminatedQueue;
 
     // Para sincronización
     private final Object osMonitor = new Object();
@@ -46,9 +46,9 @@ public class OperatingSystem extends Thread {
         this.dma = new DMA(this);
         this.mp = new MainMemory(this);
         this.scheduler = new Scheduler(this, currentPolicy);
-        this.readyQueue = new SimpleList<Process>();
-        this.blockedQueue = new SimpleList<Process>();
-        this.terminatedQueue = new SimpleList<Process>();
+        this.readyQueue = new SimpleList<Process1>();
+        this.blockedQueue = new SimpleList<Process1>();
+        this.terminatedQueue = new SimpleList<Process1>();
         this.clock = new RealTimeClock(this.cpu, this.dma, duration);
     }
 
@@ -130,12 +130,12 @@ public class OperatingSystem extends Thread {
         // Verifico y obtengo la dirección base usando las instrucciones totales como tamaño
         int baseDirection = this.mp.isSpaceAvailable(totalInstructions);
 
-        Process newProcess;
+        Process1 newProcess;
 
         // Si no hay espacio en memoria
         if (baseDirection == -1) {
             System.out.println("No hay espacio contiguo suficiente (" + totalInstructions + " unidades) en la Memoria Principal para el proceso " + name + ". Proceso no admitido en el sistema. Enviando a cola de nuevos");
-            newProcess = new Process(
+            newProcess = new Process1(
                     name,
                     totalInstructions,
                     type,
@@ -149,7 +149,7 @@ public class OperatingSystem extends Thread {
             // Si hay espacio
         } else {
             //Crear el objeto Process con la dirección base encontrada
-            newProcess = new Process(
+            newProcess = new Process1(
                     name,
                     totalInstructions,
                     type,
@@ -158,7 +158,7 @@ public class OperatingSystem extends Thread {
                     baseDirection
             );
             // Coloco el proceso en listo
-            newProcess.setState(ProcessState.READY);
+            newProcess.setPState(ProcessState.READY);
 
             //Agregar a la cola de listos 
             this.readyQueue.insertLast(newProcess);
@@ -175,14 +175,14 @@ public class OperatingSystem extends Thread {
     public void dispatchProcess() {
 
         // Escoger uno nuevo con el planificador
-        Process nextProcess = scheduler.selectNextProcess();
+        Process1 nextProcess = scheduler.selectNextProcess();
 
         if (nextProcess != null) {
             // Setea el quantum segun la politica
             int quantum = (this.scheduler.getCurrentPolicy() == PolicyType.ROUND_ROBIN) ? scheduler.getQuantum() : -1;
 
             cpu.setCurrentProcess(nextProcess, quantum);
-            nextProcess.setState(ProcessState.RUNNING); // Nuevo estado
+            nextProcess.setPState(ProcessState.RUNNING); // Nuevo estado
 
             System.out.println("SO: Despachando proceso PID " + nextProcess.getPID() + ".");
         } else {
@@ -195,9 +195,9 @@ public class OperatingSystem extends Thread {
      *
      * @param preemptedProcess El proceso a desalojar.
      */
-    public void handlePreemption(Process preemptedProcess) {
+    public void handlePreemption(Process1 preemptedProcess) {
 
-        preemptedProcess.setState(ProcessState.READY);
+        preemptedProcess.setPState(ProcessState.READY);
         this.getReadyQueue().insertLast(preemptedProcess);
         this.getCpu().setCurrentProcess(null, -1);
         System.out.println("SO: Desalojo de PID " + preemptedProcess.getPID() + ". Movido a READY.");
@@ -205,8 +205,8 @@ public class OperatingSystem extends Thread {
     }
 
     public void manageIORequest() {
-        Process processToSet = this.getCpu().getCurrentProcess();
-        processToSet.setState(ProcessState.BLOCKED); // Cambio el estado
+        Process1 processToSet = this.getCpu().getCurrentProcess();
+        processToSet.setPState(ProcessState.BLOCKED); // Cambio el estado
 
         // Si el DMA esta desocupado le seteo el proceso
         if (this.getDma().isBusy() == false) {
@@ -221,7 +221,7 @@ public class OperatingSystem extends Thread {
         }
     }
 
-    public void manageIOInterruptionByDMA(Process terminatedIOProcess) {
+    public void manageIOInterruptionByDMA(Process1 terminatedIOProcess) {
         terminatedIOProcess.setExceptionManaged(true); // Indico que se manejo la E/S al proceso
         this.getBlockedQueue().delNodewithVal(terminatedIOProcess); // Quito de la cola de bloqueados
         this.getReadyQueue().insertLast(terminatedIOProcess); // Lo agrego a la cola de listos
@@ -232,7 +232,7 @@ public class OperatingSystem extends Thread {
             this.getDma().setBusy(false);
         } else {
             // Si hay alguien en la cola de bloqueado del sistema operativo lo agarro
-            Process nextProcessForIO = (Process) this.getBlockedQueue().GetpFirst().GetData();
+            Process1 nextProcessForIO = (Process1) this.getBlockedQueue().GetpFirst().GetData();
             this.getDma().setCurrentProcess(nextProcessForIO); // Envio al DMA al proceso
             this.getDma().receiveTick(); // Le indico al DMA que continue
         }
@@ -245,8 +245,8 @@ public class OperatingSystem extends Thread {
     public void terminateProcess() {
         //          Terminacion de un proceso
         System.out.println("CPU: Proceso terminado.");
-        Process terminatedProcess = this.getCpu().getCurrentProcess(); // Cambio el estado
-        terminatedProcess.setState(ProcessState.TERMINATED);
+        Process1 terminatedProcess = this.getCpu().getCurrentProcess(); // Cambio el estado
+        terminatedProcess.setPState(ProcessState.TERMINATED);
         this.getTerminatedQueue().insertLast(terminatedProcess); //Mando el proceso a listos
         this.getCpu().setCurrentProcess(null, -1);// Libera CPU
 
@@ -285,27 +285,27 @@ public class OperatingSystem extends Thread {
         this.scheduler = scheduler;
     }
 
-    public SimpleList<Process> getBlockedQueue() {
+    public SimpleList<Process1> getBlockedQueue() {
         return blockedQueue;
     }
 
-    public void setBlockedQueue(SimpleList<Process> blockedQueue) {
+    public void setBlockedQueue(SimpleList<Process1> blockedQueue) {
         this.blockedQueue = blockedQueue;
     }
 
-    public SimpleList<Process> getReadyQueue() {
+    public SimpleList<Process1> getReadyQueue() {
         return readyQueue;
     }
 
-    public void setReadyQueue(SimpleList<Process> readyQueue) {
+    public void setReadyQueue(SimpleList<Process1> readyQueue) {
         this.readyQueue = readyQueue;
     }
 
-    public SimpleList<Process> getTerminatedQueue() {
+    public SimpleList<Process1> getTerminatedQueue() {
         return terminatedQueue;
     }
 
-    public void setTerminatedQueue(SimpleList<Process> terminatedQueue) {
+    public void setTerminatedQueue(SimpleList<Process1> terminatedQueue) {
         this.terminatedQueue = terminatedQueue;
     }
 

@@ -60,7 +60,7 @@ public class Scheduler {
         Process1 nextProcess = (Process1) readyProcesses.GetpFirst().GetData();
 
         // Cambio su estado y lo elimino de la cola
-        nextProcess.setState(ProcessState.RUNNING);
+        nextProcess.setPState(ProcessState.RUNNING);
         this.osReference.getReadyQueue().delNodewithVal(nextProcess);
 
         System.out.println("Seleccionado el proceso " + nextProcess.getPID() + " para ejecutarse");
@@ -257,14 +257,14 @@ public class Scheduler {
     }
 
     // ---------- Planificacion a mediano plazo ----------
-    public Process selectProcessToSuspend() {
+    public Process1 selectProcessToSuspend() {
 
-        SimpleList<Process> blockedProcesses = this.osReference.getBlockedQueue();
+        SimpleList<Process1> blockedProcesses = this.osReference.getBlockedQueue();
 
         // Si hay procesos bloqueados empezamos por ellos
         if (!blockedProcesses.isEmpty()) {
 
-            Process bestBlockedCandidate = null;
+            Process1 bestBlockedCandidate = null;
 
             int minPriorityBlocked = 1;
             long maxManageCyclesBlocked = -1; // Usamos un tipo más grande para seguridad
@@ -274,7 +274,7 @@ public class Scheduler {
                 
                 // Revisar que SimpleList.GetValInIndex(i) funciona
                 
-                Process p = (Process) blockedProcesses.GetValInIndex(i).GetData();
+                Process1 p = (Process1) blockedProcesses.GetValInIndex(i).GetData();
 
                 if (p == null) {
                     continue;
@@ -297,22 +297,22 @@ public class Scheduler {
             return bestBlockedCandidate;
         }
 
-        SimpleList<Process> readyProcesses = this.osReference.getReadyQueue();
+        SimpleList<Process1> readyProcesses = this.osReference.getReadyQueue();
 
         // Si no hay procesos bloqueados pero si listos de mucho menor prioridad que el primer proceso en la cola de nuevos
         // Suspender al proceso listo de menor prioridad, si hay empate suspender al mas largo (totalInstruction mayor)
         if (!readyProcesses.isEmpty() && !this.osReference.getDma().getNewProcesses().isEmpty()) {
             
-            Process bestReadyCandidate = null;
+            Process1 bestReadyCandidate = null;
             
-            Process firstNew = (Process) this.osReference.getDma().getNewProcesses().GetpFirst().GetData();
+            Process1 firstNew = (Process1) this.osReference.getDma().getNewProcesses().GetpFirst().GetData();
             int minPriorityReady = 1;
             int maxSizeReady = -1;
 
             // Condición compleja: "Listos de mucho menor prioridad que el primer proceso en la cola de nuevos"
             // Definimos "mucho menor" como una prioridad numéricamente más alta (peor)
             for (int i = 0; i < readyProcesses.GetSize(); i++) {
-                Process p = (Process) readyProcesses.GetValInIndex(i).GetData();
+                Process1 p = (Process1) readyProcesses.GetValInIndex(i).GetData();
 
                 if (p == null) {
                     continue;
@@ -347,10 +347,10 @@ public class Scheduler {
         final int multiprogramingLimit = 10;
 
         // Lógica de swap out 
-        Process processToSuspend = null;
+        Process1 processToSuspend = null;
 
-        SimpleList<Process> readyProcesses = this.osReference.getReadyQueue();
-        SimpleList<Process> blockedProcesses = this.osReference.getBlockedQueue();
+        SimpleList<Process1> readyProcesses = this.osReference.getReadyQueue();
+        SimpleList<Process1> blockedProcesses = this.osReference.getBlockedQueue();
 
         // Reviso si la cola de listos esta vacia, si lo esta debo sacar un proceso de bloqueado a bloqueado suspendido
         if (readyProcesses.isEmpty() && !blockedProcesses.isEmpty()) {
@@ -373,7 +373,7 @@ public class Scheduler {
             if (processToSuspend.getPState() == ProcessState.BLOCKED) {
                 
                 blockedProcesses.delNodewithVal(processToSuspend);
-                processToSuspend.setState(ProcessState.BLOCKED_SUSPENDED);
+                processToSuspend.setPState(ProcessState.BLOCKED_SUSPENDED);
                 this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions()); //Se debe liberar la memoria del proceso
                 
                 this.osReference.getDma().getBlockedSuspendedProcesses().insertLast(processToSuspend);
@@ -382,7 +382,7 @@ public class Scheduler {
             } else if (processToSuspend.getPState() == ProcessState.READY) {
                 
                 readyProcesses.delNodewithVal(processToSuspend);
-                processToSuspend.setState(ProcessState.READY_SUSPENDED);
+                processToSuspend.setPState(ProcessState.READY_SUSPENDED);
                 this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions());
                 
                 this.osReference.getDma().getReadySuspendedProcesses().insertLast(processToSuspend);
@@ -391,17 +391,17 @@ public class Scheduler {
         }
 
         // Lógica de swap in. Prioridad: Traer procesos que terminaron su I/O y están Listos/Suspendidos
-        SimpleList<Process> readySuspendedQueue = this.osReference.getDma().getReadySuspendedProcesses();
+        SimpleList<Process1> readySuspendedQueue = this.osReference.getDma().getReadySuspendedProcesses();
 
         if (!this.osReference.getDma().getReadySuspendedProcesses().isEmpty()) {
-            Process pToSwapIn = (Process) readySuspendedQueue.GetpFirst().GetData(); // Usando FIFO
+            Process1 pToSwapIn = (Process1) readySuspendedQueue.GetpFirst().GetData(); // Usando FIFO
 
             // Verificar si hay espacio en la Memoria Principal
             int baseDirection = this.osReference.getMp().isSpaceAvailable(pToSwapIn.getTotalInstructions());
 
             if (baseDirection != -1) {
                 readySuspendedQueue.delNodewithVal(pToSwapIn);
-                pToSwapIn.setState(ProcessState.READY);
+                pToSwapIn.setPState(ProcessState.READY);
                 readyProcesses.insertLast(pToSwapIn);
                 this.osReference.getMp().allocate(baseDirection, pToSwapIn.getTotalInstructions()); //️ Asignar espacio en la memoria
                 pToSwapIn.setBaseDirection(baseDirection);
@@ -423,7 +423,7 @@ public class Scheduler {
 
             System.out.println("Planificador a largo plazo");
             // Utilizara simplemente el FIFO
-            Process newProcessToMP = (Process) this.osReference.getDma().getNewProcesses().GetpFirst().GetData();
+            Process1 newProcessToMP = (Process1) this.osReference.getDma().getNewProcesses().GetpFirst().GetData();
 
             // Si hay espacio suficiente en memoria principal
             int baseDirection = this.osReference.getMp().isSpaceAvailable(newProcessToMP.getTotalInstructions());
@@ -438,7 +438,7 @@ public class Scheduler {
             } else {
                 newProcessToMP.setBaseDirection(baseDirection);
                 // Coloco el proceso en listo
-                newProcessToMP.setState(ProcessState.READY);
+                newProcessToMP.setPState(ProcessState.READY);
 
                 // Muevo el proceso de la cola de nuevo a la cola de listos
                 this.osReference.getReadyQueue().insertLast(newProcessToMP);
