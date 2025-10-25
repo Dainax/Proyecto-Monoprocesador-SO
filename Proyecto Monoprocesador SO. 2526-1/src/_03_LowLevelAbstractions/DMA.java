@@ -107,7 +107,6 @@ public class DMA extends Thread {
                             Process1 terminatedProcess = this.currentProcess;
                             // Invocar al sistema operativo para terminar E/S
                             this.osReference.manageIOInterruptionByDMA(terminatedProcess);
-                            this.currentProcess = null;
 
                         }
                     }

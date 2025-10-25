@@ -44,6 +44,10 @@ public class OperatingSystem extends Thread {
     // Funcion para ver si una politica es expulsiva ()
     // Expulsivas: RR por quantum, SRT por evaluar procesos desbloqueados
     // No expulsivas: FIFO, SPN HRRN, Prioridades por evaluar procesos desbloqueados
+    
+    // Apoyos para las estadisticas
+    int totalWaitingTime;
+    
     //          --------------- Metodos ---------------
     public OperatingSystem(PolicyType currentPolicy, long duration) {
         this.cpu = new CPU(this);
@@ -54,6 +58,8 @@ public class OperatingSystem extends Thread {
         this.blockedQueue = new SimpleList<Process1>();
         this.terminatedQueue = new SimpleList<Process1>();
         this.clock = new RealTimeClock(this.cpu, this.dma, duration);
+        this.totalWaitingTime = 0;
+        
     }
 
     // Método para que otros hilos (como la CPU) notifiquen al SO
@@ -318,6 +324,7 @@ public class OperatingSystem extends Thread {
         Process1 terminatedProcess = this.getCpu().getCurrentProcess(); // Cambio el estado
         terminatedProcess.setPState(ProcessState.TERMINATED);
         terminatedProcess.setMAR(-1);
+        this.totalWaitingTime = this.totalWaitingTime + terminatedProcess.getCyclesWaitingCPU();
         this.getTerminatedQueue().insertLast(terminatedProcess); //Mando el proceso a listos
         this.getCpu().setCurrentProcess(null, -1);// Libera CPU
 
@@ -388,4 +395,7 @@ public class OperatingSystem extends Thread {
         return clock;
     }
 
+    public int getTotalWaitingTime() {
+        return totalWaitingTime;
+    }
 }
