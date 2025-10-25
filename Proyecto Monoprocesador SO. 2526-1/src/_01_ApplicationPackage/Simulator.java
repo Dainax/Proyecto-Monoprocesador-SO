@@ -159,6 +159,10 @@ public class Simulator {
         this.simulationPanel = panel;
     }
 
+    public SimulationPanel getSimulationPanel() {
+        return this.simulationPanel;
+    }
+
     // Clase auxiliar para deserializar JSON
     private static class SimulationData {
 

@@ -325,6 +325,32 @@ public class SimulationPanel extends javax.swing.JPanel {
         ioBoundRadio.setSelected(false);
     }
 
+    public void initClockTimer(Simulator simulator) {
+        if (clockTimer != null && clockTimer.isRunning()) {
+            clockTimer.stop();
+        }
+
+        clockTimer = new javax.swing.Timer(200, e -> {
+            long cycles = simulator.getOperatingSystem().getClock().getTotalCyclesElapsed();
+            cycleWatchTime.setText(String.valueOf(cycles));
+        });
+        clockTimer.start();
+    }
+
+// Pausar el temporizador visual del reloj
+    public void pauseClockUI() {
+        if (clockTimer != null && clockTimer.isRunning()) {
+            clockTimer.stop();
+        }
+    }
+
+// Reanudar el temporizador visual del reloj
+    public void resumeClockUI() {
+        if (clockTimer != null && !clockTimer.isRunning()) {
+            clockTimer.start();
+        }
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -819,32 +845,6 @@ public class SimulationPanel extends javax.swing.JPanel {
             simulator.toggleSimulation(); // Pausa la simulación
         }
     }//GEN-LAST:event_startSimulationActionPerformed
-
-    public void initClockTimer(Simulator simulator) {
-        if (clockTimer != null && clockTimer.isRunning()) {
-            clockTimer.stop();
-        }
-
-        clockTimer = new javax.swing.Timer(200, e -> {
-            long cycles = simulator.getOperatingSystem().getClock().getTotalCyclesElapsed();
-            cycleWatchTime.setText(String.valueOf(cycles));
-        });
-        clockTimer.start();
-    }
-
-// Pausar el temporizador visual del reloj
-    public void pauseClockUI() {
-        if (clockTimer != null && clockTimer.isRunning()) {
-            clockTimer.stop();
-        }
-    }
-
-// Reanudar el temporizador visual del reloj
-    public void resumeClockUI() {
-        if (clockTimer != null && !clockTimer.isRunning()) {
-            clockTimer.start();
-        }
-    }
 
 
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
