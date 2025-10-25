@@ -177,5 +177,18 @@ public class Simulator {
             return processes;
         }
     }
+        public int getCompletedProcessesCount() {
+    return this.getOperatingSystem().getTerminatedQueue().GetSize(); // Número de procesos terminados
+}
+        public long getElapsedTime() {
+    return this.getOperatingSystem().getClock().getTotalCyclesElapsed(); // o tiempo en milisegundos
+}
+public double calculateThroughput() {
+    int completed = getCompletedProcessesCount();
+    long elapsed = getElapsedTime(); // tiempo en ticks
 
+    if (elapsed == 0) return 0;
+    return (double) completed / elapsed;
+}
+    
 }
