@@ -7,9 +7,7 @@ import _03_LowLevelAbstractions.CPU;
 import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process1;
 import _04_OperatingSystem.ProcessType;
-import java.awt.Color;
 import java.io.File;
-import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
@@ -384,10 +382,10 @@ public class SimulationPanel extends javax.swing.JPanel {
         newProcessPanel.setBackground(new java.awt.Color(0, 0, 70));
         newProcessPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        cpuBoundRadio.setForeground(new java.awt.Color(255, 255, 255));
+        cpuBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         cpuBoundRadio.setText("CPU Bound");
 
-        ioBoundRadio.setForeground(new java.awt.Color(255, 255, 255));
+        ioBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         ioBoundRadio.setText("I/O Bound");
 
         nameField.addActionListener(new java.awt.event.ActionListener() {

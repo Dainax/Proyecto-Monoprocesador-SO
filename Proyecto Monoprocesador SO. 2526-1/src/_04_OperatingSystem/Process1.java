@@ -290,6 +290,8 @@ public class Process1 extends Thread {
         return this.PID == pid;
     }
 
+    
+    
     public String toString() {
         // Calcular el Response Rate solo para la impresión si aún no se ha hecho
         double currentRR = this.responseRate;
