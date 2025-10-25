@@ -172,10 +172,10 @@ public class OperatingSystem extends Thread {
                 if (instructions <= 1) {
                     cyclesToGenerateInterruption = 1;
                 } else {
-                    cyclesToGenerateInterruption = RANDOM.nextInt(20) + 1;
+                    cyclesToGenerateInterruption = RANDOM.nextInt(10) + 1;
                 }
                 // Tiempo de servicio de E/S (DMA) 
-                cyclesToManageInterruption = RANDOM.nextInt(cyclesToGenerateInterruption);
+                cyclesToManageInterruption = RANDOM.nextInt(5);
             } else {
                 // CPU bound: no generación de E/S
                 cyclesToGenerateInterruption = -1;
@@ -324,6 +324,7 @@ public class OperatingSystem extends Thread {
         Process1 terminatedProcess = this.getCpu().getCurrentProcess(); // Cambio el estado
         terminatedProcess.setPState(ProcessState.TERMINATED);
         terminatedProcess.setMAR(-1);
+        terminatedProcess.setFinishCycle(this.cpu.getCycleCounter());
         this.totalWaitingTime = this.totalWaitingTime + terminatedProcess.getCyclesWaitingCPU();
         this.getTerminatedQueue().insertLast(terminatedProcess); //Mando el proceso a listos
         this.getCpu().setCurrentProcess(null, -1);// Libera CPU

@@ -38,6 +38,8 @@ public class Process1 extends Thread {
     private int priority; // Prioridad del 1 al 5 aleatoria
     private int cyclesWaitingCPU;
     private double responseRate; //Tasa de respuesta al proceso para la politica HRRN (ver formula)
+    private int arriveCycle; // Ciclo de llegada a la cola de listos
+    private int finishCycle; // Ciclo de terminacion del proceso
 
     /**
      * Para comunicar el resultado de la ejecución a la CPU true: El proceso
@@ -83,6 +85,8 @@ public class Process1 extends Thread {
         this.responseRate = 0;
         this.baseDirection = baseDirection;
         this.executedSuccessfully = true;
+        this.arriveCycle = -1;
+        this.finishCycle = -1;
     }
 
     // Metodo para despertar al hilo por un ciclo
@@ -302,5 +306,21 @@ public class Process1 extends Thread {
                 "P%s | PID=%d | I_Total=%d | I_Restantes=%d | Prio=%d | Wait=%d | RR=%.2f",
                 name, PID, totalInstructions, remainingInstructions, priority, cyclesWaitingCPU, currentRR
         );
+    }
+
+    public int getArriveCycle() {
+        return arriveCycle;
+    }
+
+    public void setArriveCycle(int arriveCycle) {
+        this.arriveCycle = arriveCycle;
+    }
+
+    public int getFinishCycle() {
+        return finishCycle;
+    }
+
+    public void setFinishCycle(int finishCycle) {
+        this.finishCycle = finishCycle;
     }
 }

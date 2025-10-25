@@ -28,7 +28,7 @@ public class CPU extends Thread {
     // Proceso que se está ejecutando
     // Si es null, el SO está en control.
     private Process1 currentProcess;
-    private String currentProcessName;
+    private String currentMode;
 
     // Monitor para la sincronizacion para usar wait() y notify()
     private final Object syncMonitor = new Object();
@@ -101,6 +101,7 @@ public class CPU extends Thread {
 
                     // Si hay un proceso se ejecutara 
                     if (currentProcess != null) {
+                        this.currentMode = "Modo usuario";
                         System.out.println("\n[Ciclo " + this.cycleCounter + "] Ejecutando PID " + currentProcess.getPID()
                                 + " (Quantum Restante: " + (remainingCycles > 0 ? remainingCycles : "N/A") + ")");
 
@@ -127,15 +128,18 @@ public class CPU extends Thread {
                             // CPU bound solo indicara que no quiere continuar si termino
                             if (currentProcess.getType() == ProcessType.CPU_BOUND) {
                                 // Funcion de terminacion de un proceso por el SO
+                                this.currentMode = "Modo kernel";
                                 this.osReference.terminateProcess();
 
                             } // Si el proceso ya hizo todas sus instrucciones y ya se manejo su E/S significa que ya termino
                             else if (currentProcess.getPC() == currentProcess.getTotalInstructions() && currentProcess.isExceptionManaged() == true) {
                                 // Funcion de terminacion del proceso
+                                this.currentMode = "Modo kernel";
                                 this.osReference.terminateProcess();
                             } // Si el proceso no ha terminado sus instrucciones pero "no quiere continuar" es que necesita una operacion E/S
                             else {
                                 System.out.println("CPU: Proceso requiere E/S. Desalojo y Notifico a SO.");
+                                this.currentMode = "Modo kernel";
                                 this.osReference.manageIORequest();
                             }
                         }
@@ -144,13 +148,14 @@ public class CPU extends Thread {
                         if (remainingCycles == 0) {
                             System.out.println("CPU: Quantum de tiempo excedido.");
                             if (this.currentProcess != null) {
+                                this.currentMode = "Modo kernel";
                                 this.osReference.handlePreemption(this.currentProcess);
                             }
                         }
 
                         // Si es null se ejecutara el SO
                     } else {
-                        this.currentProcessName = "Sistema Operativo";
+                        this.currentMode = "Modo kernel";
                         this.osReference.notifyOS();
                     }
 
@@ -221,4 +226,7 @@ public class CPU extends Thread {
         return currentProcess;
     }
 
+    public String getCurrentMode() {
+        return currentMode;
+    }
 }
