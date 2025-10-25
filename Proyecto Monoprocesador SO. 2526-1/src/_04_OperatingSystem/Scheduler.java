@@ -468,6 +468,7 @@ public class Scheduler {
                 newProcessToMP.setMAR(baseDirection);
 
                 newProcessToMP.setPState(ProcessState.READY); // Coloco el proceso en listo
+                newProcessToMP.setArriveCycle(this.osReference.getCpu().getCycleCounter());
 
                 this.osReference.getReadyQueue().insertLast(newProcessToMP); // Muevo el proceso de la cola de nuevo a la cola de listos
                 this.osReference.getDma().getNewProcesses().delNodewithVal(newProcessToMP);
