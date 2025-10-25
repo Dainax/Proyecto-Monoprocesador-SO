@@ -152,8 +152,7 @@ public class SimulationPanel extends javax.swing.JPanel {
 
         // 🔹 Crear el proceso y enviarlo al simulador
         try {
-            Process1 process = new Process1(name, instructions, typeBound, cycles, ioTime, -1);
-            simulator.createProcess(process);
+            simulator.createProcess(name, instructions, typeBound, cycles, ioTime);
             JOptionPane.showMessageDialog(this, "Proceso creado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
 
             // Limpiar los campos

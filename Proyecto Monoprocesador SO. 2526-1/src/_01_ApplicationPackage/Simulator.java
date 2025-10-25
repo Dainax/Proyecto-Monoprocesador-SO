@@ -77,12 +77,12 @@ public class Simulator {
         simulationPanel.resetView(); // método opcional para limpiar colas y CPU
     }
 
-    public void createProcess(Process1 p) {
-        so.newProcess(p.getPName(), p.getTotalInstructions(), p.getType(), p.getCyclesToGenerateException(), p.getCyclesToManageException());
+    public void createProcess(String name, int totalInstructions, ProcessType type, int cyclesToGenerateInterruption, int cyclesToManageInterruption) {
+        so.newProcess(name, totalInstructions, type, cyclesToGenerateInterruption, cyclesToManageInterruption);
         simulationPanel.updateQueues(so);
         System.out.println("Llamando a updateQueues() después de crear proceso");
     }
-    
+
     /**
      * Carga una configuración inicial y procesos desde un archivo JSON
      */
