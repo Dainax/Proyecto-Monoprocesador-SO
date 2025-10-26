@@ -956,6 +956,7 @@ public class SimulationPanel extends javax.swing.JPanel {
         simulator.resetSimulation();
         startSimulation.setText("Iniciar Simulación");
         startSimulation.setSelected(false);
+        resetView();
     }//GEN-LAST:event_resetSimulationActionPerformed
 
     private void generate20ProcessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_generate20ProcessActionPerformed

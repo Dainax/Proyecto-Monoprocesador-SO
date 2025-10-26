@@ -82,7 +82,7 @@ public class Simulator {
         }
     }
 
-    ///HAY QUE HACER LA FUNCIÓN DE RESET EN SO
+
     /**
      * Reinicia todo el sistema y la interfaz
      */

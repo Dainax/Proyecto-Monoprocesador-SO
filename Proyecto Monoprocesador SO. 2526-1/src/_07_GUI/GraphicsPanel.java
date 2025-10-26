@@ -3,21 +3,9 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
 package _07_GUI;
-import _01_ApplicationPackage.Simulator;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.GridLayout;
-import java.lang.String; 
-import javax.swing.JLabel;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.time.Millisecond;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
+import java.lang.String; 
+
 import _01_ApplicationPackage.Simulator;
 import _04_OperatingSystem.PolicyType;
 
@@ -210,7 +198,7 @@ private static class PolicyCharts {
         Fairness.setText(String.format("Equidad: %.2f", fairness));
         try {
             long cycles = simulator.getOperatingSystem().getClock().getTotalCyclesElapsed();
-            Clockcycles.setText(String.format("%d", cycles));
+            Clockcycles.setText("Ciclos Totales de Reloj: "+String.format("%d", cycles));
         } catch (Exception ex) {
             // ignore
         }
@@ -301,10 +289,10 @@ public void stopRefreshing() {
         jPanel3.setBackground(new java.awt.Color(13, 84, 141));
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        Clockcycles.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        Clockcycles.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         Clockcycles.setForeground(new java.awt.Color(255, 255, 255));
-        Clockcycles.setText("Ciclos totales de reloj");
-        jPanel3.add(Clockcycles, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 620, 290, -1));
+        Clockcycles.setText("Ciclos Totales de Reloj");
+        jPanel3.add(Clockcycles, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 610, 290, -1));
 
         chartContainer.setBackground(new java.awt.Color(0, 0, 70));
 
@@ -319,16 +307,16 @@ public void stopRefreshing() {
             .addGap(0, 570, Short.MAX_VALUE)
         );
 
-        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 90, 610, 570));
+        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 90, 610, 570));
 
-        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 30)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel1.setText("Métricas generales del sistema");
-        jPanel3.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, 350, -1));
+        jLabel1.setText("<html>Métricas Generales<br> del Sistema</html>");
+        jPanel3.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 10, 350, -1));
 
         jPanel5.setBackground(new java.awt.Color(0, 0, 70));
 
-        Throughput.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        Throughput.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         Throughput.setForeground(new java.awt.Color(255, 255, 255));
         Throughput.setText("Throughtput");
 
@@ -384,11 +372,11 @@ public void stopRefreshing() {
                 .addContainerGap(15, Short.MAX_VALUE))
         );
 
-        jPanel3.add(jPanel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 340, 360, 90));
+        jPanel3.add(jPanel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 330, 360, 90));
 
         jPanel7.setBackground(new java.awt.Color(0, 0, 70));
 
-        CpuUtilization.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        CpuUtilization.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         CpuUtilization.setForeground(new java.awt.Color(255, 255, 255));
         CpuUtilization.setText("CPU utilization");
 
@@ -409,11 +397,11 @@ public void stopRefreshing() {
                 .addGap(14, 14, 14))
         );
 
-        jPanel3.add(jPanel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 450, 360, 90));
+        jPanel3.add(jPanel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 430, 360, 90));
 
         jPanel8.setBackground(new java.awt.Color(0, 0, 70));
 
-        Fairness.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        Fairness.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         Fairness.setForeground(new java.awt.Color(255, 255, 255));
         Fairness.setText("Fairness");
 
@@ -442,7 +430,7 @@ public void stopRefreshing() {
         jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(255, 255, 255));
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel7.setText("Medidas de Rendimiento por planificación");
+        jLabel7.setText("Medidas de Rendimiento Por Planificación");
 
         javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
         jPanel9.setLayout(jPanel9Layout);
@@ -461,23 +449,17 @@ public void stopRefreshing() {
                 .addContainerGap(34, Short.MAX_VALUE))
         );
 
-        jPanel3.add(jPanel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 0, 610, -1));
+        jPanel3.add(jPanel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(380, 0, 610, -1));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(91, 91, 91))
+            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 686, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -488,7 +470,7 @@ public void stopRefreshing() {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
