@@ -5,7 +5,6 @@
 package _03_LowLevelAbstractions;
 
 import _02_DataStructures.SimpleNode;
-import _02_DataStructures.SimpleList;
 import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process1;
 

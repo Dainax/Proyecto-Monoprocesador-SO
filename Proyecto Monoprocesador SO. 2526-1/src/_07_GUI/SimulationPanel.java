@@ -310,31 +310,36 @@ public class SimulationPanel extends javax.swing.JPanel {
     }
 
     //Reinicia todo en pantalla
-    public void resetView() {
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            cycleWatchTime.setText("0");
-            nameProcessRunning.setText("Idle");
-            // vacía paneles
-            scrollNew.removeAll();
-            scrollReady.removeAll();
-            scrollBlocked.removeAll();
-            scrollReadyS.removeAll();
-            scrollBlockedS.removeAll();
-            scrollTerminated.removeAll();
-            scrollNew.revalidate();
-            scrollNew.repaint();
-            scrollReady.revalidate();
-            scrollReady.repaint();
-            scrollBlocked.revalidate();
-            scrollBlocked.repaint();
-            scrollReadyS.revalidate();
-            scrollReadyS.repaint();
-            scrollBlockedS.revalidate();
-            scrollBlockedS.repaint();
-            scrollTerminated.revalidate();
-            scrollTerminated.repaint();
-        });
-    }
+    // Reinicia todo en pantalla
+public void resetView() {
+    SwingUtilities.invokeLater(() -> {
+        cycleWatchTime.setText("0");
+        nameProcessRunning.setText("Idle");
+
+        // 🔹 Limpia los paneles (NO los scrolls)
+        newPanel.removeAll();
+        readyPanel.removeAll();
+        blockedPanel.removeAll();
+        suspendedReadyPanel.removeAll();
+        suspendedBlockedPanel.removeAll();
+        terminatedPanel.removeAll();
+
+        // 🔹 Refresca visualmente
+        newPanel.revalidate();
+        newPanel.repaint();
+        readyPanel.revalidate();
+        readyPanel.repaint();
+        blockedPanel.revalidate();
+        blockedPanel.repaint();
+        suspendedReadyPanel.revalidate();
+        suspendedReadyPanel.repaint();
+        suspendedBlockedPanel.revalidate();
+        suspendedBlockedPanel.repaint();
+        terminatedPanel.revalidate();
+        terminatedPanel.repaint();
+    });
+}
+
 
     private void resetFields() {
         nameField.setText("");
@@ -992,6 +997,7 @@ public class SimulationPanel extends javax.swing.JPanel {
         }
 
         simulator.createRandomProcesses(20);
+       
         JOptionPane.showMessageDialog(this, "Se generaron 20 procesos aleatorios.");
 
     }//GEN-LAST:event_generate20ProcessActionPerformed

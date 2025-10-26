@@ -15,7 +15,6 @@ import com.google.gson.Gson;
 import _02_DataStructures.SimpleList;
 import _02_DataStructures.SimpleNode;
 
-
 /**
  *
  * @author Danaz
@@ -74,7 +73,7 @@ public class Simulator {
             running = false;
             so.stopOS();
             simulationPanel.pauseClockUI();
-            
+
         } else {
             running = true;
             so.startOS();
@@ -82,49 +81,53 @@ public class Simulator {
         }
     }
 
-
     /**
      * Reinicia todo el sistema y la interfaz
      */
     public void resetSimulation() {
-        // Primero, intentar detener/ducir completamente la instancia actual del SO
+        // 1️⃣ Apagar correctamente la instancia actual del sistema operativo
         if (so != null) {
-            // Marcar como no en ejecución y solicitar apagado completo
             try {
                 so.shutdownOS();
             } catch (Exception ignored) {
             }
 
-            // Esperar a que los hilos terminen (SO, CPU, DMA, Clock)
+            // Esperar a que los hilos terminen
             try {
-                so.join(2000); // espera hasta 2s
+                so.join(2000);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
 
             try {
-                if (so.getCpu() != null) so.getCpu().join(2000);
+                if (so.getCpu() != null) {
+                    so.getCpu().join(2000);
+                }
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
 
             try {
-                if (so.getDma() != null) so.getDma().join(2000);
+                if (so.getDma() != null) {
+                    so.getDma().join(2000);
+                }
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
 
             try {
-                if (so.getClock() != null) so.getClock().join(2000);
+                if (so.getClock() != null) {
+                    so.getClock().join(2000);
+                }
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
         }
 
-        // Crear una nueva instancia del SO con la configuración original
+        // 2️⃣ Crear un nuevo SO con la configuración original
         this.so = new OperatingSystem(PolicyType.FIFO, 1000);
 
-        // Reenlazar el listener del reloj a la UI
+        // 3️⃣ Reenlazar el listener del reloj al panel (¡clave!)
         this.so.getClock().setOnTickListener(() -> {
             SwingUtilities.invokeLater(() -> {
                 simulationPanel.updateCPU(so.getCpu());
@@ -132,9 +135,15 @@ public class Simulator {
             });
         });
 
+        // 4️⃣ Refrescar manualmente la vista una vez, para limpiar todo visualmente
+        SwingUtilities.invokeLater(() -> {
+            simulationPanel.resetView();
+            simulationPanel.updateCPU(so.getCpu());
+            simulationPanel.updateQueues(so);
+        });
+
+        // 5️⃣ Marcar como detenido
         running = false;
-        // Limpiar la vista
-        //simulationPanel.resetView();
     }
 
     public void createProcess(String name, int totalInstructions, ProcessType type, int cyclesToGenerateInterruption, int cyclesToManageInterruption) {
@@ -229,50 +238,63 @@ public class Simulator {
             return processes;
         }
     }
-        public int getCompletedProcessesCount() {
-    return this.getOperatingSystem().getTerminatedQueue().GetSize(); // Número de procesos terminados
-}
-        public long getElapsedTime() {
-    return this.getOperatingSystem().getClock().getTotalCyclesElapsed(); 
-}
-public double calculateThroughput() {
-    int completed = getCompletedProcessesCount();
-    long elapsed = getElapsedTime(); // tiempo en ticks
 
-    if (elapsed == 0) return 0;
-    return (double) completed / elapsed;
-}
-    public double getCPUProductivePercentage () {
-        
+    public int getCompletedProcessesCount() {
+        return this.getOperatingSystem().getTerminatedQueue().GetSize(); // Número de procesos terminados
+    }
+
+    public long getElapsedTime() {
+        return this.getOperatingSystem().getClock().getTotalCyclesElapsed();
+    }
+
+    public double calculateThroughput() {
+        int completed = getCompletedProcessesCount();
+        long elapsed = getElapsedTime(); // tiempo en ticks
+
+        if (elapsed == 0) {
+            return 0;
+        }
+        return (double) completed / elapsed;
+    }
+
+    public double getCPUProductivePercentage() {
+
         int productivecycles = this.getOperatingSystem().getCpu().getProductiveCycles();
         long cyclecounter = this.getOperatingSystem().getClock().getTotalCyclesElapsed();
-        
-        if (cyclecounter == 0) return -1;
+
+        if (cyclecounter == 0) {
+            return -1;
+        }
         return ((double) productivecycles / cyclecounter) * 100.0;
 
     }
-    public double getAverageWaitingTime (){
-        
+
+    public double getAverageWaitingTime() {
+
         int finishedProcess = this.getOperatingSystem().getTerminatedQueue().GetSize();
         int totalWaitingTime = this.getOperatingSystem().getTotalWaitingTime();
 
-        if (finishedProcess == 0) return 0;
-        return (double) totalWaitingTime / finishedProcess ;
+        if (finishedProcess == 0) {
+            return 0;
+        }
+        return (double) totalWaitingTime / finishedProcess;
     }
-    
-    public double getTotalFairness () {
-       SimpleList<Process1> terminated = this.getOperatingSystem().getTerminatedQueue();
-       if (terminated.isEmpty()) return 1.0;
-       
-       double sum = 1;
-       
-       SimpleNode<Process1> node = terminated.GetpFirst();
-       while (node != null){
-           Process1 p = node.GetData();
-           sum += p.calculateSlowdown();
-           node = node.GetNxt();
-       }
-       
-       return sum / terminated.GetSize();
-    }        
+
+    public double getTotalFairness() {
+        SimpleList<Process1> terminated = this.getOperatingSystem().getTerminatedQueue();
+        if (terminated.isEmpty()) {
+            return 1.0;
+        }
+
+        double sum = 1;
+
+        SimpleNode<Process1> node = terminated.GetpFirst();
+        while (node != null) {
+            Process1 p = node.GetData();
+            sum += p.calculateSlowdown();
+            node = node.GetNxt();
+        }
+
+        return sum / terminated.GetSize();
+    }
 }
