@@ -375,28 +375,28 @@ public class SimulationPanel extends javax.swing.JPanel {
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
 
-                // 🔹 Duración del reloj
+                //  Duración del reloj
                 if (line.startsWith("\"clockDurationMs\"")) {
                     String value = line.split(":")[1].replace(",", "").trim();
                     clockDuration = Long.parseLong(value);
                     simulator.getOperatingSystem().getClock().setClockDuration(clockDuration);
 
-                } // 🔹 Detectar inicio de proceso
+                } //  Detectar inicio de proceso
                 else if (line.equals("{")) {
                     current = new SimpleProcess();
-                } // 🔹 Detectar fin de proceso
+                } //  Detectar fin de proceso
                 else if (line.equals("},")) {
                     if (current != null) {
                         processList.insertLast(current);
                     }
                     current = null;
-                } // 🔹 Último proceso
+                } //  Último proceso
                 else if (line.equals("}")) {
                     if (current != null) {
                         processList.insertLast(current);
                     }
                     current = null;
-                } // 🔹 Atributos del proceso
+                } //  Atributos del proceso
                 else if (current != null) {
                     if (line.contains("\"name\"")) {
                         current.setName(extractJsonValue(line));
@@ -412,7 +412,7 @@ public class SimulationPanel extends javax.swing.JPanel {
                 }
             }
 
-            // 🔹 Aplicar configuración cargada
+            //  Aplicar configuración cargada
             simulator.getOperatingSystem().getClock().setClockDuration(clockDuration);
 
             SimpleNode<SimpleProcess> node = processList.GetpFirst();
