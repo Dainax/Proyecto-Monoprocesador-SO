@@ -451,7 +451,7 @@ public class Scheduler {
         // Cada 10 ciclos, intentar mover 1 proceso de NEW a READY_SUSPENDED (si existe)
         int currentCycle = this.osReference.getCpu().getCycleCounter();
 
-        if (currentCycle-lastAdmissionCycle>10 && currentCycle != lastAdmissionCycle) {
+        if (currentCycle-lastAdmissionCycle>30 && currentCycle != lastAdmissionCycle) {
             lastAdmissionCycle = currentCycle;
             // Tomar el primer proceso de la cola de nuevos y moverlo a ready suspended
             SimpleList<Process1> newQueue = this.osReference.getDma().getNewProcesses();
