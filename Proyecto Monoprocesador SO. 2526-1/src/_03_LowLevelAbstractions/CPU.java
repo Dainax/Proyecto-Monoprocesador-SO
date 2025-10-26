@@ -47,7 +47,7 @@ public class CPU extends Thread {
         this.cycleCounter = 0;
         this.remainingCycles = -1;
         this.osReference = osReference;
-        this.productiveCycles=0;
+        this.productiveCycles = 0;
         setName("Hilo del CPU");
     }
 
@@ -112,7 +112,9 @@ public class CPU extends Thread {
                         this.osReference.getScheduler().updateHRRNMetrics(this.osReference.getReadyQueue());
 
                         // Proceso de Usuario
-                        currentProcess.executeOneCycle(); // Ejecutar una instrucción del proceso
+                        if (currentProcess != null) {
+                            currentProcess.executeOneCycle(); // Ejecutar una instrucción del proceso
+                        }
 
                         // Lee el resultado de la ejecucion
                         boolean processWantsToContinue = currentProcess.didExecuteSuccessfully();
