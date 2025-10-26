@@ -89,7 +89,7 @@ private static class PolicyCharts {
             "CPU Utilization (" + policy + ")", "Tiempo", "CPU %", cpuDataset, false, true, false);
         XYPlot cpuPlot = cpuChart.getXYPlot();
         cpuPlot.getRangeAxis().setRange(0, 100);
-        cpuPlot.getDomainAxis().setFixedAutoRange(180000.0);
+        cpuPlot.getDomainAxis().setFixedAutoRange(300000.0);
         XYLineAndShapeRenderer cpuRenderer = new XYLineAndShapeRenderer();
         cpuRenderer.setSeriesPaint(0, Color.RED);
         cpuRenderer.setSeriesShapesVisible(0, false);
@@ -102,7 +102,7 @@ private static class PolicyCharts {
             "Average Waiting Time (" + policy + ")", "Tiempo", "Ciclos", waitDataset, false, true, false);
         XYPlot waitPlot = waitChart.getXYPlot();
         waitPlot.getRangeAxis().setRange(0, 200);
-        waitPlot.getDomainAxis().setFixedAutoRange(180000.0);
+        waitPlot.getDomainAxis().setFixedAutoRange(300000.0);
         XYLineAndShapeRenderer waitRenderer = new XYLineAndShapeRenderer();
         waitRenderer.setSeriesPaint(0, Color.BLUE);
         waitRenderer.setSeriesShapesVisible(0, false);
@@ -115,7 +115,7 @@ private static class PolicyCharts {
             "Throughput (" + policy + ")", "Tiempo", "Procesos/s", thrDataset, false, true, false);
         XYPlot thrPlot = thrChart.getXYPlot();
         thrPlot.getRangeAxis().setRange(0, 0.1);
-        thrPlot.getDomainAxis().setFixedAutoRange(180000.0);
+        thrPlot.getDomainAxis().setFixedAutoRange(300000.0);
         XYLineAndShapeRenderer thrRenderer = new XYLineAndShapeRenderer();
         thrRenderer.setSeriesPaint(0, Color.GREEN.darker());
         thrRenderer.setSeriesShapesVisible(0, false);
@@ -128,7 +128,7 @@ private static class PolicyCharts {
             "Fairness (" + policy + ")", "Tiempo", "Valor", fairDataset, false, true, false);
         XYPlot fairPlot = fairChart.getXYPlot();
         fairPlot.getRangeAxis().setRange(0, 100);
-        fairPlot.getDomainAxis().setFixedAutoRange(180000.0);
+        fairPlot.getDomainAxis().setFixedAutoRange(300000.0);
         XYLineAndShapeRenderer fairRenderer = new XYLineAndShapeRenderer();
         fairRenderer.setSeriesPaint(0, Color.ORANGE);
         fairRenderer.setSeriesShapesVisible(0, false);
@@ -204,10 +204,10 @@ private static class PolicyCharts {
     }
     
    private void updateLabels(double cpu, double avgWait, double throughput, double fairness) {
-        CpuUtilization.setText(String.format("%.2f%%", cpu));
-        AverageWaitTime.setText(String.format("Avg Response Time: %.2f ciclos", avgWait));
+        CpuUtilization.setText(String.format("Productividad del CPU: %.2f%%", cpu));
+        AverageWaitTime.setText(String.format("Tiempo promedio de espera: %.2f ciclos", avgWait));
         Throughput.setText(String.format("Throughput: %.2f", throughput));
-        Fairness.setText(String.format("Fairness: %.2f", fairness));
+        Fairness.setText(String.format("Equidad: %.2f", fairness));
         try {
             long cycles = simulator.getOperatingSystem().getClock().getTotalCyclesElapsed();
             Clockcycles.setText(String.format("%d", cycles));
@@ -256,69 +256,201 @@ public void stopRefreshing() {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jColorChooser1 = new javax.swing.JColorChooser();
+        jFrame1 = new javax.swing.JFrame();
+        jPanel2 = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
         jPanel3 = new javax.swing.JPanel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
-        jLabel4 = new javax.swing.JLabel();
-        jLabel7 = new javax.swing.JLabel();
-        Throughput = new javax.swing.JLabel();
-        CpuUtilization = new javax.swing.JLabel();
-        Fairness = new javax.swing.JLabel();
-        AverageWaitTime = new javax.swing.JLabel();
         Clockcycles = new javax.swing.JLabel();
         chartContainer = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
+        jPanel5 = new javax.swing.JPanel();
+        Throughput = new javax.swing.JLabel();
+        jPanel6 = new javax.swing.JPanel();
+        AverageWaitTime = new javax.swing.JLabel();
+        jPanel7 = new javax.swing.JPanel();
+        CpuUtilization = new javax.swing.JLabel();
+        jPanel8 = new javax.swing.JPanel();
+        Fairness = new javax.swing.JLabel();
+        jPanel9 = new javax.swing.JPanel();
+        jLabel7 = new javax.swing.JLabel();
+
+        javax.swing.GroupLayout jFrame1Layout = new javax.swing.GroupLayout(jFrame1.getContentPane());
+        jFrame1.getContentPane().setLayout(jFrame1Layout);
+        jFrame1Layout.setHorizontalGroup(
+            jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        jFrame1Layout.setVerticalGroup(
+            jFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+        );
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
 
         jPanel3.setBackground(new java.awt.Color(13, 84, 141));
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jLabel5.setText("Tiempo de Respuesta:");
-        jPanel3.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 270, -1, -1));
-
-        jLabel6.setText("Equidad:");
-        jPanel3.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 210, -1, -1));
-
-        jLabel4.setText("Utilización del Procesador:");
-        jPanel3.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 330, -1, -1));
-
-        jLabel7.setBackground(new java.awt.Color(255, 255, 255));
-        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
-        jLabel7.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel7.setText("Medidas de Rendimiento");
-        jPanel3.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 320, 60));
-
-        Throughput.setText("Thoroughtput");
-        jPanel3.add(Throughput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 100, 90, -1));
-
-        CpuUtilization.setText("CPU utilization");
-        jPanel3.add(CpuUtilization, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 330, 210, 20));
-
-        Fairness.setText("Fairness");
-        jPanel3.add(Fairness, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 210, 220, -1));
-
-        AverageWaitTime.setText("WaitTime");
-        jPanel3.add(AverageWaitTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 270, 380, 20));
-
+        Clockcycles.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        Clockcycles.setForeground(new java.awt.Color(255, 255, 255));
         Clockcycles.setText("Ciclos totales de reloj");
-        jPanel3.add(Clockcycles, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 390, 210, -1));
+        jPanel3.add(Clockcycles, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 620, 290, -1));
+
+        chartContainer.setBackground(new java.awt.Color(0, 0, 70));
 
         javax.swing.GroupLayout chartContainerLayout = new javax.swing.GroupLayout(chartContainer);
         chartContainer.setLayout(chartContainerLayout);
         chartContainerLayout.setHorizontalGroup(
             chartContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 630, Short.MAX_VALUE)
+            .addGap(0, 610, Short.MAX_VALUE)
         );
         chartContainerLayout.setVerticalGroup(
             chartContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 640, Short.MAX_VALUE)
+            .addGap(0, 570, Short.MAX_VALUE)
         );
 
-        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 20, 630, 640));
+        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 90, 610, 570));
 
-        jLabel1.setText("jLabel1");
-        jPanel3.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 170, 90, -1));
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel1.setText("Métricas generales del sistema");
+        jPanel3.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 40, 350, -1));
+
+        jPanel5.setBackground(new java.awt.Color(0, 0, 70));
+
+        Throughput.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        Throughput.setForeground(new java.awt.Color(255, 255, 255));
+        Throughput.setText("Throughtput");
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(Throughput, javax.swing.GroupLayout.PREFERRED_SIZE, 278, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(76, Short.MAX_VALUE))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                .addContainerGap(22, Short.MAX_VALUE)
+                .addComponent(Throughput, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18))
+        );
+
+        jPanel3.add(jPanel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 110, 360, -1));
+
+        jPanel6.setBackground(new java.awt.Color(0, 0, 70));
+
+        AverageWaitTime.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        AverageWaitTime.setForeground(new java.awt.Color(255, 255, 255));
+        AverageWaitTime.setText("WaitTime");
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
+                .addContainerGap(14, Short.MAX_VALUE)
+                .addComponent(AverageWaitTime, javax.swing.GroupLayout.PREFERRED_SIZE, 318, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(28, 28, 28))
+        );
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addGap(15, 15, 15)
+                .addComponent(AverageWaitTime, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(15, Short.MAX_VALUE))
+        );
+
+        jPanel3.add(jPanel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 340, 360, 90));
+
+        jPanel7.setBackground(new java.awt.Color(0, 0, 70));
+
+        CpuUtilization.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        CpuUtilization.setForeground(new java.awt.Color(255, 255, 255));
+        CpuUtilization.setText("CPU utilization");
+
+        javax.swing.GroupLayout jPanel7Layout = new javax.swing.GroupLayout(jPanel7);
+        jPanel7.setLayout(jPanel7Layout);
+        jPanel7Layout.setHorizontalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel7Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(CpuUtilization, javax.swing.GroupLayout.DEFAULT_SIZE, 348, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel7Layout.setVerticalGroup(
+            jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel7Layout.createSequentialGroup()
+                .addContainerGap(16, Short.MAX_VALUE)
+                .addComponent(CpuUtilization, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(14, 14, 14))
+        );
+
+        jPanel3.add(jPanel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 450, 360, 90));
+
+        jPanel8.setBackground(new java.awt.Color(0, 0, 70));
+
+        Fairness.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        Fairness.setForeground(new java.awt.Color(255, 255, 255));
+        Fairness.setText("Fairness");
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addGap(14, 14, 14)
+                .addComponent(Fairness, javax.swing.GroupLayout.DEFAULT_SIZE, 340, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addGap(15, 15, 15)
+                .addComponent(Fairness, javax.swing.GroupLayout.PREFERRED_SIZE, 58, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(17, Short.MAX_VALUE))
+        );
+
+        jPanel3.add(jPanel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 230, 360, 90));
+
+        jPanel9.setBackground(new java.awt.Color(0, 0, 70));
+
+        jLabel7.setBackground(new java.awt.Color(255, 255, 255));
+        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel7.setForeground(new java.awt.Color(255, 255, 255));
+        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel7.setText("Medidas de Rendimiento por planificación");
+
+        javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
+        jPanel9.setLayout(jPanel9Layout);
+        jPanel9Layout.setHorizontalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel9Layout.createSequentialGroup()
+                .addGap(18, 18, 18)
+                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 573, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(19, Short.MAX_VALUE))
+        );
+        jPanel9Layout.setVerticalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel9Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(34, Short.MAX_VALUE))
+        );
+
+        jPanel3.add(jPanel9, new org.netbeans.lib.awtextra.AbsoluteConstraints(370, 0, 610, -1));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -357,12 +489,17 @@ public void stopRefreshing() {
     private javax.swing.JLabel Fairness;
     private javax.swing.JLabel Throughput;
     private javax.swing.JPanel chartContainer;
+    private javax.swing.JColorChooser jColorChooser1;
+    private javax.swing.JFrame jFrame1;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
+    private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
+    private javax.swing.JPanel jPanel9;
     // End of variables declaration//GEN-END:variables
 }
