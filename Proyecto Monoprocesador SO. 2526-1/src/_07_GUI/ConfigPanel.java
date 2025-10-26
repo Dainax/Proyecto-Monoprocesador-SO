@@ -1,13 +1,18 @@
 package _07_GUI;
 
 import _01_ApplicationPackage.Simulator;
+import _02_DataStructures.SimpleList;
+import _02_DataStructures.SimpleNode;
+import _02_DataStructures.SimpleProcess;
 import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.PolicyType;
-import java.awt.HeadlessException;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.prefs.Preferences;
+import _04_OperatingSystem.ProcessType;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
@@ -19,31 +24,24 @@ import javax.swing.SwingUtilities;
 public class ConfigPanel extends javax.swing.JPanel {
 
     private Simulator simulator;
-
-    public void setSimulator(Simulator simulator) {
-        this.simulator = simulator;
-    }
-
-    // Instancia de Preferences para persistir datos
-    private static final Preferences prefs = Preferences.userNodeForPackage(ConfigPanel.class);
-
-    // Claves para guardar los valores
-    private static final String POLICY_KEY = "policyComboBox";
-    private static final String CYCLES_KEY = "systemCyclesSpinner";
+    private SimpleList<SimpleProcess> processList = new SimpleList<>();
 
     public ConfigPanel() {
         initComponents();
 
-        // Configurar el modelo del spinner si no lo hiciste en el diseñador
+        processToJsonPane.setLayout(new BoxLayout(processToJsonPane, BoxLayout.Y_AXIS));
+        processToJsonScroll.setViewportView(processToJsonPane);
+
+        // Configurar del spinner CONFIGURACION GENERAL
         cycleSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
 
-        // Cargar los valores guardados al inicializar el panel
-        loadSavedValues();
+        // Configurar del spinner CONFIGURACION JSON
+        cyclesToJson.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
 
         // Configuración spinners
         instructionsSpinner.setModel(new SpinnerNumberModel(1, 1, 1000, 1));  // Min 1, Max 1000, Step 1
-        cyclesSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 1));  // Min 0, no max ESTO DEPENDE DEL INSTRUCTION
-        ioTimeSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));  // Min 0, no max
+        cyclesSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 1));  // Min 1, Max 1, Step 1
+        ioTimeSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));  // Min 1, Max 1000, Step 1
 
         // Sincroniza dinámicamente el máximo de cyclesSpinner con instructionsSpinner
         instructionsSpinner.addChangeListener(e -> {
@@ -79,66 +77,10 @@ public class ConfigPanel extends javax.swing.JPanel {
             ioTimeSpinner.setEnabled(true);
         });
 
-        // Add listener for submit button
-        submitButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                validateAndCreateProcess();
-            }
-        });
     }
 
-    private void validateAndCreateProcess() {
-        // Get values
-        String name = nameField.getText().trim();
-        int instructions = (Integer) instructionsSpinner.getValue();
-        boolean isCpuBound = cpuBoundRadio.isSelected();
-        boolean isIoBound = ioBoundRadio.isSelected();
-        int cycles = (Integer) cyclesSpinner.getValue();
-        int ioTime = (Integer) ioTimeSpinner.getValue();
-
-        // Validación de atributos vacios
-        if (name.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "El nombre del proceso no puede ser vacío.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        if (!isCpuBound && !isIoBound) {
-            JOptionPane.showMessageDialog(this, "Por favor selecciona CPU Bound o I/O Bound.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        // Validación instrucciones 1-1000
-        if (instructions < 1 || instructions > 1000) {
-            JOptionPane.showMessageDialog(this, "Número de instrucción debe estar entre 1 y 1000.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        // Otra validación de mutua exclusión de tipo de proceso
-        if (isCpuBound && isIoBound) {
-            JOptionPane.showMessageDialog(this, "Proceso no puede ser CPU Bound y I/O Bound a la vez.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        //Validaciones extras
-        if (isCpuBound) {
-            if (cycles != 0) {
-                JOptionPane.showMessageDialog(this, "Cycles for interruption should not be set for CPU Bound processes.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            if (ioTime != 0) {
-                JOptionPane.showMessageDialog(this, "I/O time should not be set for CPU Bound processes.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-        }
-
-        // Pasó las validaciones, entonces llama al SO
-        try {
-            //SO.createProcess(name, instructions, isCpuBound, cycles, ioTime);  // Adjust to your actual method
-            JOptionPane.showMessageDialog(this, "Proceso creado exitosamente!", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-
-            // Limpieza de los inputs
-            resetFields();
-
-        } catch (HeadlessException ex) {
-            JOptionPane.showMessageDialog(this, "Error creando el Proceso: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+    public void setSimulator(Simulator simulator) {
+        this.simulator = simulator;
     }
 
     private void resetFields() {
@@ -148,20 +90,6 @@ public class ConfigPanel extends javax.swing.JPanel {
         ioTimeSpinner.setValue(1);
         cpuBoundRadio.setSelected(false);
         ioBoundRadio.setSelected(false);
-    }
-
-    private void loadSavedValues() {
-        // Cargar el índice seleccionado del ComboBox
-        int selectedIndex = prefs.getInt(POLICY_KEY, -1);  // -1 indica que no hay nada guardado
-        if (selectedIndex == -1) {
-            // Si no hay guardado, establecer "Priority" como por defecto
-            policyComboBox.setSelectedItem("Priority");
-        } else if (selectedIndex >= 0 && selectedIndex < policyComboBox.getItemCount()) {
-            policyComboBox.setSelectedIndex(selectedIndex);
-        }
-        // Cargar el valor del Spinner (por defecto 1 si no hay guardado)
-        int cyclesValue = prefs.getInt(CYCLES_KEY, 1);
-        cycleSpinner.setValue(cyclesValue);
     }
 
     public void refreshConfig() {
@@ -180,7 +108,6 @@ public class ConfigPanel extends javax.swing.JPanel {
     }
 
     private void savePolicy() {
-        prefs.putInt(POLICY_KEY, policyComboBox.getSelectedIndex());
 
         if (simulator != null) {
             String selectedPolicyName = (String) policyComboBox.getSelectedItem();
@@ -199,9 +126,6 @@ public class ConfigPanel extends javax.swing.JPanel {
         int seconds = (Integer) cycleSpinner.getValue();
         long milliseconds = seconds * 1000L;
 
-        // Guarda el valor de segundos en las preferencias
-        prefs.putInt(CYCLES_KEY, seconds);
-
         if (simulator != null) {
             // Actualiza la duración del ciclo del reloj del sistema operativo
             simulator.getOperatingSystem().getClock().setClockDuration(milliseconds);
@@ -216,6 +140,122 @@ public class ConfigPanel extends javax.swing.JPanel {
             });
         }
     }
+
+    private void validateAndCreateSimpleProcess() {
+        String name = nameField.getText().trim();
+        int instructions = (Integer) instructionsSpinner.getValue();
+        boolean isCpuBound = cpuBoundRadio.isSelected();
+        boolean isIoBound = ioBoundRadio.isSelected();
+        ProcessType type;
+        int cycles;
+        int ioTime;
+
+        // 🔹 Validaciones
+        if (name.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre del proceso no puede estar vacío.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (!isCpuBound && !isIoBound) {
+            JOptionPane.showMessageDialog(this, "Debe seleccionar si el proceso es CPU Bound o I/O Bound.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (instructions < 1 || instructions > 1000) {
+            JOptionPane.showMessageDialog(this, "El número de instrucciones debe estar entre 1 y 1000.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (isCpuBound) {
+            type = ProcessType.CPU_BOUND;
+            cycles = -1;
+            ioTime = -1;
+        } else {
+            type = ProcessType.IO_BOUND;
+            cycles = (Integer) cyclesSpinner.getValue();
+            ioTime = (Integer) ioTimeSpinner.getValue();
+
+            if (cycles < 1 || ioTime < 1) {
+                JOptionPane.showMessageDialog(this, "Los valores de ciclos e I/O deben ser mayores que 0 para procesos I/O Bound.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+
+        // 🔹 Crear proceso y agregarlo a la lista
+        SimpleProcess process = new SimpleProcess(name, instructions, type, cycles, ioTime);
+        processList.insertLast(process);
+
+        // 🔹 Mostrar visualmente el proceso en el panel
+        SimplePCBPanel pcbPanel = new SimplePCBPanel(process.getName(), process.getType().toString(), process.getInstructions());
+        processToJsonPane.add(pcbPanel);
+
+        processToJsonPane.revalidate();
+        processToJsonPane.repaint();
+
+        // 🔹 Limpiar campos
+        resetFields();
+        processToJsonPane.revalidate();
+        processToJsonPane.repaint();
+
+        JOptionPane.showMessageDialog(this, "Proceso agregado correctamente a la lista.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void saveProcessesToJson() {
+    try {
+        // 🔹 Obtener duración del ciclo desde el spinner
+        int seconds = (Integer) cyclesToJson.getValue();
+        long clockDurationMs = seconds * 1000L;
+
+        // 🔹 Crear el archivo JSON
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Guardar configuración de simulación");
+        if (fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (!file.getName().endsWith(".json")) {
+                file = new File(file.getAbsolutePath() + ".json");
+            }
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                writer.write("{\n");
+                writer.write("  \"clockDurationMs\": " + clockDurationMs + ",\n");
+                writer.write("  \"processes\": [\n");
+
+                SimpleNode<SimpleProcess> node = processList.GetpFirst();
+                while (node != null) {
+                    SimpleProcess process = node.GetData();
+                    writer.write("    {\n");
+                    writer.write("      \"name\": \"" + process.getName() + "\",\n");
+                    writer.write("      \"instructions\": " + process.getInstructions() + ",\n");
+                    writer.write("      \"type\": \"" + process.getType() + "\",\n");
+                    writer.write("      \"cyclesForIO\": " + process.getCyclesForIO() + ",\n");
+                    writer.write("      \"ioDuration\": " + process.getIoDuration() + "\n");
+                    writer.write("    }");
+                    node = node.GetNxt();
+                    if (node != null) writer.write(",");
+                    writer.write("\n");
+                }
+
+                writer.write("  ]\n");
+                writer.write("}");
+            }
+
+            JOptionPane.showMessageDialog(this, "Configuración guardada exitosamente en JSON.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+            // 🔹 Limpiar panel de procesos
+            cyclesToJson.setValue(1);
+            processToJsonPane.removeAll();
+            processToJsonPane.revalidate();
+            processToJsonPane.repaint();
+
+            // 🔹 Reiniciar la lista de procesos en memoria
+            processList = new SimpleList<>();
+
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(this, "Error al guardar la configuración: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -250,7 +290,8 @@ public class ConfigPanel extends javax.swing.JPanel {
         jPanel7 = new javax.swing.JPanel();
         label7 = new java.awt.Label();
         cyclesToJson = new javax.swing.JSpinner();
-        processToJson = new javax.swing.JScrollPane();
+        processToJsonScroll = new javax.swing.JScrollPane();
+        processToJsonPane = new javax.swing.JPanel();
         label8 = new java.awt.Label();
         createJsonButton = new javax.swing.JButton();
 
@@ -504,7 +545,21 @@ public class ConfigPanel extends javax.swing.JPanel {
         );
 
         jPanel2.add(jPanel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 340, 240, 100));
-        jPanel2.add(processToJson, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 370, 240, 250));
+
+        javax.swing.GroupLayout processToJsonPaneLayout = new javax.swing.GroupLayout(processToJsonPane);
+        processToJsonPane.setLayout(processToJsonPaneLayout);
+        processToJsonPaneLayout.setHorizontalGroup(
+            processToJsonPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 238, Short.MAX_VALUE)
+        );
+        processToJsonPaneLayout.setVerticalGroup(
+            processToJsonPaneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 248, Short.MAX_VALUE)
+        );
+
+        processToJsonScroll.setViewportView(processToJsonPane);
+
+        jPanel2.add(processToJsonScroll, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 370, 240, 250));
 
         label8.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         label8.setForeground(new java.awt.Color(255, 255, 255));
@@ -512,6 +567,11 @@ public class ConfigPanel extends javax.swing.JPanel {
         jPanel2.add(label8, new org.netbeans.lib.awtextra.AbsoluteConstraints(470, 340, -1, -1));
 
         createJsonButton.setText("Crear JSON");
+        createJsonButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                createJsonButtonActionPerformed(evt);
+            }
+        });
         jPanel2.add(createJsonButton, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 460, 240, 40));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -542,7 +602,7 @@ public class ConfigPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_nameFieldActionPerformed
 
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
-        // TODO add your handling code here:
+        validateAndCreateSimpleProcess();
     }//GEN-LAST:event_submitButtonActionPerformed
 
     private void savePolicyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savePolicyButtonActionPerformed
@@ -606,6 +666,10 @@ public class ConfigPanel extends javax.swing.JPanel {
         javax.swing.JOptionPane.showMessageDialog(this, "Ciclos del sistema guardados exitosamente.");
     }//GEN-LAST:event_saveCycleButtonActionPerformed
 
+    private void createJsonButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_createJsonButtonActionPerformed
+        saveProcessesToJson();
+    }//GEN-LAST:event_createJsonButtonActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JRadioButton cpuBoundRadio;
@@ -635,7 +699,8 @@ public class ConfigPanel extends javax.swing.JPanel {
     private javax.swing.JTextField nameField;
     private javax.swing.JPanel planPolicy;
     private javax.swing.JComboBox<String> policyComboBox;
-    private javax.swing.JScrollPane processToJson;
+    private javax.swing.JPanel processToJsonPane;
+    private javax.swing.JScrollPane processToJsonScroll;
     private javax.swing.JButton saveCycleButton;
     private javax.swing.JButton savePolicyButton;
     private javax.swing.JButton submitButton;

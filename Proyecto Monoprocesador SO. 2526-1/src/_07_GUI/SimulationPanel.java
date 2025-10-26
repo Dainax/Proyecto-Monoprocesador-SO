@@ -3,12 +3,15 @@ package _07_GUI;
 import _01_ApplicationPackage.Simulator;
 import _02_DataStructures.SimpleList;
 import _02_DataStructures.SimpleNode;
+import _02_DataStructures.SimpleProcess;
 import _03_LowLevelAbstractions.CPU;
 import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process1;
 import _04_OperatingSystem.ProcessType;
 import java.awt.Dimension;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
@@ -17,7 +20,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  *
@@ -349,6 +351,93 @@ public class SimulationPanel extends javax.swing.JPanel {
         if (clockTimer != null && !clockTimer.isRunning()) {
             clockTimer.start();
         }
+    }
+
+    private void loadFromJson() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Cargar configuración desde JSON");
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File selectedFile = fileChooser.getSelectedFile();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(selectedFile))) {
+
+            long clockDuration = 1000;
+            SimpleList<SimpleProcess> processList = new SimpleList<>();
+
+            String line;
+            SimpleProcess current = null;
+
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+
+                // 🔹 Duración del reloj
+                if (line.startsWith("\"clockDurationMs\"")) {
+                    String value = line.split(":")[1].replace(",", "").trim();
+                    clockDuration = Long.parseLong(value);
+                    simulator.getOperatingSystem().getClock().setClockDuration(clockDuration);
+
+                } // 🔹 Detectar inicio de proceso
+                else if (line.equals("{")) {
+                    current = new SimpleProcess();
+                } // 🔹 Detectar fin de proceso
+                else if (line.equals("},")) {
+                    if (current != null) {
+                        processList.insertLast(current);
+                    }
+                    current = null;
+                } // 🔹 Último proceso
+                else if (line.equals("}")) {
+                    if (current != null) {
+                        processList.insertLast(current);
+                    }
+                    current = null;
+                } // 🔹 Atributos del proceso
+                else if (current != null) {
+                    if (line.contains("\"name\"")) {
+                        current.setName(extractJsonValue(line));
+                    } else if (line.contains("\"instructions\"")) {
+                        current.setInstructions(Integer.parseInt(extractJsonValue(line)));
+                    } else if (line.contains("\"type\"")) {
+                        current.setType(ProcessType.valueOf(extractJsonValue(line)));
+                    } else if (line.contains("\"cyclesForIO\"")) {
+                        current.setCyclesForIO(Integer.parseInt(extractJsonValue(line)));
+                    } else if (line.contains("\"ioDuration\"")) {
+                        current.setIoDuration(Integer.parseInt(extractJsonValue(line)));
+                    }
+                }
+            }
+
+            // 🔹 Aplicar configuración cargada
+            simulator.getOperatingSystem().getClock().setClockDuration(clockDuration);
+
+            SimpleNode<SimpleProcess> node = processList.GetpFirst();
+            while (node != null) {
+                SimpleProcess p = node.GetData();
+                simulator.createProcess(p.getName(), p.getInstructions(), p.getType(), p.getCyclesForIO(), p.getIoDuration());
+                node = node.GetNxt();
+            }
+
+            JOptionPane.showMessageDialog(this,
+                    "Configuración cargada correctamente desde " + selectedFile.getName(),
+                    "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                    "Error al cargar archivo JSON: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private String extractJsonValue(String line) {
+        String[] parts = line.split(":");
+        String value = parts[1].replace(",", "").replace("\"", "").trim();
+        return value;
     }
 
     @SuppressWarnings("unchecked")
@@ -839,17 +928,17 @@ public class SimulationPanel extends javax.swing.JPanel {
             // Cuando el toggle está presionado
             startSimulation.setText("Pausar simulación");
             simulator.toggleSimulation(); // Inicia la simulación
+            uploadSimulation.setEnabled(false);
         } else {
             // Cuando se suelta el toggle
             startSimulation.setText("Iniciar simulación");
             simulator.toggleSimulation(); // Pausa la simulación
+            uploadSimulation.setEnabled(true);
         }
     }//GEN-LAST:event_startSimulationActionPerformed
 
-
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
         validateAndCreateProcess();
-        //ACA HAY UN ERROR QUE NO ENTIENDO 
         // Limpieza de los inputs
         resetFields();
     }//GEN-LAST:event_submitButtonActionPerformed
@@ -881,21 +970,7 @@ public class SimulationPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_generate20ProcessActionPerformed
 
     private void uploadSimulationActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadSimulationActionPerformed
-        JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Seleccionar archivo de simulación (.json)");
-        chooser.setFileFilter(new FileNameExtensionFilter("Archivos JSON", "json"));
-
-        int result = chooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            File file = chooser.getSelectedFile();
-            try {
-                simulator.loadFromJSON(file);
-                JOptionPane.showMessageDialog(this, "Simulación precargada correctamente.");
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Error al cargar el archivo JSON: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-        }
+        loadFromJson();
     }//GEN-LAST:event_uploadSimulationActionPerformed
 
     private void uniformScrollPaneSizes() {
