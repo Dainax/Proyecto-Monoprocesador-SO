@@ -67,7 +67,7 @@ public class Simulator {
             running = false;
             so.stopOS();
             simulationPanel.pauseClockUI();
-            
+
         } else {
             running = true;
             so.startOS();
@@ -177,35 +177,46 @@ public class Simulator {
             return processes;
         }
     }
-        public int getCompletedProcessesCount() {
-    return this.getOperatingSystem().getTerminatedQueue().GetSize(); // Número de procesos terminados
-}
-        public long getElapsedTime() {
-    return this.getOperatingSystem().getClock().getTotalCyclesElapsed(); // o tiempo en milisegundos
-}
-public double calculateThroughput() {
-    int completed = getCompletedProcessesCount();
-    long elapsed = getElapsedTime(); // tiempo en ticks
 
-    if (elapsed == 0) return 0;
-    return (double) completed / elapsed;
-}
-    public double getCPUProductivePercentage () {
-        
+    public int getCompletedProcessesCount() {
+        return this.getOperatingSystem().getTerminatedQueue().GetSize(); // Número de procesos terminados
+    }
+
+    public long getElapsedTime() {
+        return this.getOperatingSystem().getClock().getTotalCyclesElapsed(); // o tiempo en milisegundos
+    }
+
+    public double calculateThroughput() {
+        int completed = getCompletedProcessesCount();
+        long elapsed = getElapsedTime(); // tiempo en ticks
+
+        if (elapsed == 0) {
+            return 0;
+        }
+        return (double) completed / elapsed;
+    }
+
+    public double getCPUProductivePercentage() {
+
         int productivecycles = this.getOperatingSystem().getCpu().getProductiveCycles();
         int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
-        double productivePercentage = productivecycles/cyclecounter;
+        double productivePercentage = productivecycles / cyclecounter;
         return productivePercentage;
-        
+
     }
-    public double getAverageWaitingTime (){
-        
+
+    public double getAverageWaitingTime() {
+
         int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
         int totalWaitingTime = this.getOperatingSystem().getTotalWaitingTime();
 
-        if (cyclecounter == 0) return 0;
+        if (cyclecounter == 0) {
+            return 0;
+        }
         return (double) totalWaitingTime / cyclecounter;
     }
-    
-            
+
+    public OperatingSystem getSo() {
+        return so;
+    }
 }

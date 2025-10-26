@@ -186,15 +186,15 @@ public class SimulationPanel extends javax.swing.JPanel {
             if (cpu.getCurrentProcess() != null) {
                 nameProcessRunning.setText(cpu.getCurrentProcess().getPName());
                 typeProcessRunning.setText(cpu.getCurrentProcess().getType().toString());
-                //modeProcessRunning.setText(cpu.getCurrentProcess().getMode());
+                modeProcessRunning.setText(simulator.getSo().getCpu().getCurrentMode());
                 marProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getMAR()));
                 pcProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getPC()));
                 idProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getPID()));
 
             } else {
-                nameProcessRunning.setText("...");
+                nameProcessRunning.setText("SO");
                 typeProcessRunning.setText("...");
-                modeProcessRunning.setText("...");
+                modeProcessRunning.setText(simulator.getSo().getCpu().getCurrentMode());
                 marProcessRunning.setText("...");
                 pcProcessRunning.setText("...");
                 idProcessRunning.setText("...");
