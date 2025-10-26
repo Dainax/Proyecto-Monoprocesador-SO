@@ -40,7 +40,7 @@ public class GraphicsPanel extends javax.swing.JPanel {
 
 }
     private void startAutoRefresh() {
-    javax.swing.Timer timer = new javax.swing.Timer(100, e -> updateLabels());
+    javax.swing.Timer timer = new javax.swing.Timer(1000, e -> updateLabels());
     timer.start();
 }
 
