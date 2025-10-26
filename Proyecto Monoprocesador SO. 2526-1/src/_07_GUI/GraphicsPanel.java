@@ -5,6 +5,7 @@
 package _07_GUI;
 import _01_ApplicationPackage.Simulator;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridLayout;
 import java.lang.String; 
 import javax.swing.JLabel;
@@ -12,6 +13,8 @@ import javax.swing.JLabel;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -58,7 +61,11 @@ public class GraphicsPanel extends javax.swing.JPanel {
         cpuDataset,
         false, true, false
     );
-    
+    XYPlot cpuPlot = cpuChart.getXYPlot();
+XYLineAndShapeRenderer cpuRenderer = new XYLineAndShapeRenderer();
+cpuRenderer.setSeriesPaint(0, Color.RED);
+cpuRenderer.setSeriesShapesVisible(0, false);
+cpuPlot.setRenderer(cpuRenderer);
     ChartPanel cpuChartPanel = new ChartPanel(cpuChart);
 
     // Avg Wait
@@ -71,6 +78,12 @@ public class GraphicsPanel extends javax.swing.JPanel {
         waitDataset,
         false, true, false
     );
+    
+    XYPlot waitPlot = waitChart.getXYPlot();
+XYLineAndShapeRenderer waitRenderer = new XYLineAndShapeRenderer();
+waitRenderer.setSeriesPaint(0, Color.BLUE);       // línea azul
+waitRenderer.setSeriesShapesVisible(0, false);
+waitPlot.setRenderer(waitRenderer);
     ChartPanel waitChartPanel = new ChartPanel(waitChart);
 
     // Throughput
@@ -83,6 +96,12 @@ public class GraphicsPanel extends javax.swing.JPanel {
         throughputDataset,
         false, true, false
     );
+    
+    XYPlot throughputPlot = throughputChart.getXYPlot();
+XYLineAndShapeRenderer throughputRenderer = new XYLineAndShapeRenderer();
+throughputRenderer.setSeriesPaint(0, Color.GREEN); // línea verde
+throughputRenderer.setSeriesShapesVisible(0, false);
+throughputPlot.setRenderer(throughputRenderer);
     ChartPanel throughputChartPanel = new ChartPanel(throughputChart);
 
     // Fairness
@@ -95,6 +114,12 @@ public class GraphicsPanel extends javax.swing.JPanel {
         fairnessDataset,
         false, true, false
     );
+    
+    XYPlot fairnessPlot = fairnessChart.getXYPlot();
+XYLineAndShapeRenderer fairnessRenderer = new XYLineAndShapeRenderer();
+fairnessRenderer.setSeriesPaint(0, Color.ORANGE);  // línea naranja
+fairnessRenderer.setSeriesShapesVisible(0, false);
+fairnessPlot.setRenderer(fairnessRenderer);
     ChartPanel fairnessChartPanel = new ChartPanel(fairnessChart);
 
         // Limpiar contenido previo
@@ -198,51 +223,51 @@ chartContainer.repaint();
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
         jLabel5.setText("Tiempo de Respuesta:");
-        jPanel3.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 320, -1, -1));
+        jPanel3.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 270, -1, -1));
 
         jLabel6.setText("Equidad:");
-        jPanel3.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(60, 230, -1, -1));
+        jPanel3.add(jLabel6, new org.netbeans.lib.awtextra.AbsoluteConstraints(40, 210, -1, -1));
 
         jLabel4.setText("Utilización del Procesador:");
-        jPanel3.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 430, -1, -1));
+        jPanel3.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 330, -1, -1));
 
         jLabel3.setText("Throughput:");
-        jPanel3.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(50, 150, 80, 20));
+        jPanel3.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 130, 80, 20));
 
         jLabel7.setBackground(new java.awt.Color(255, 255, 255));
-        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 36)); // NOI18N
+        jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(255, 255, 255));
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel7.setText("Medidas de Rendimiento");
-        jPanel3.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 30, -1, -1));
+        jPanel3.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 320, 60));
 
         Throughput.setText("Thoroughtput");
-        jPanel3.add(Throughput, new org.netbeans.lib.awtextra.AbsoluteConstraints(180, 150, 300, -1));
+        jPanel3.add(Throughput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 130, 300, -1));
 
         CpuUtilization.setText("CPU utilization");
-        jPanel3.add(CpuUtilization, new org.netbeans.lib.awtextra.AbsoluteConstraints(220, 430, 210, 20));
+        jPanel3.add(CpuUtilization, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 330, 210, 20));
 
         Fairness.setText("Fairness");
-        jPanel3.add(Fairness, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 230, 220, -1));
+        jPanel3.add(Fairness, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 210, 220, -1));
 
         AverageWaitTime.setText("WaitTime");
-        jPanel3.add(AverageWaitTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(200, 320, 380, 20));
+        jPanel3.add(AverageWaitTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 270, 380, 20));
 
         Clockcycles.setText("Ciclos totales de reloj");
-        jPanel3.add(Clockcycles, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 510, 210, -1));
+        jPanel3.add(Clockcycles, new org.netbeans.lib.awtextra.AbsoluteConstraints(90, 390, 210, -1));
 
         javax.swing.GroupLayout chartContainerLayout = new javax.swing.GroupLayout(chartContainer);
         chartContainer.setLayout(chartContainerLayout);
         chartContainerLayout.setHorizontalGroup(
             chartContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 660, Short.MAX_VALUE)
+            .addGap(0, 630, Short.MAX_VALUE)
         );
         chartContainerLayout.setVerticalGroup(
             chartContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 670, Short.MAX_VALUE)
+            .addGap(0, 640, Short.MAX_VALUE)
         );
 
-        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 0, 660, 670));
+        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 20, 630, 640));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
