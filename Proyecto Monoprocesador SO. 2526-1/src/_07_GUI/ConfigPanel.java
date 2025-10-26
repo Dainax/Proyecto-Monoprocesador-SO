@@ -308,7 +308,7 @@ public class ConfigPanel extends javax.swing.JPanel {
         planPolicy.setBackground(new java.awt.Color(0, 0, 70));
         planPolicy.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        policyComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FCFS", "Round Robin", "SPN", "SRT", "HRRN", "Priority" }));
+        policyComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Priority", "FIFO", "ROUND ROBIN", "SPN", "SRT", "HRRN" }));
 
         savePolicyButton.setText("Guardar Cambios");
         savePolicyButton.addActionListener(new java.awt.event.ActionListener() {
@@ -606,7 +606,6 @@ public class ConfigPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_submitButtonActionPerformed
 
     private void savePolicyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_savePolicyButtonActionPerformed
-        savePolicyButton.addActionListener(e -> {
             if (simulator == null) {
                 JOptionPane.showMessageDialog(this, "No hay simulación activa.");
                 return;
@@ -630,19 +629,16 @@ public class ConfigPanel extends javax.swing.JPanel {
                     PolicyType.FIFO;
             };
 
-            simulator.getOperatingSystem().getScheduler().setCurrentPolicy(newPolicy);
             savePolicy();
             JOptionPane.showMessageDialog(this,
                     "Política de planificación actualizada a: " + newPolicy,
                     "Configuración guardada",
                     JOptionPane.INFORMATION_MESSAGE);
-        });
-        savePolicy();
-        //javax.swing.JOptionPane.showMessageDialog(this, "Política guardada exitosamente.");
+ 
     }//GEN-LAST:event_savePolicyButtonActionPerformed
 
     private void saveCycleButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveCycleButtonActionPerformed
-        saveCycleButton.addActionListener(e -> {
+        
             if (simulator == null) {
                 JOptionPane.showMessageDialog(this, "No hay simulación activa.");
                 return;
@@ -660,7 +656,7 @@ public class ConfigPanel extends javax.swing.JPanel {
                     "Duración de ciclo actualizada a " + newDuration + " segundos",
                     "Configuración guardada",
                     JOptionPane.INFORMATION_MESSAGE);
-        });
+       
 
         saveSystemCycles();
         javax.swing.JOptionPane.showMessageDialog(this, "Ciclos del sistema guardados exitosamente.");
