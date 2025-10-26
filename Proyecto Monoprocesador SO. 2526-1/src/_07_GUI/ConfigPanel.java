@@ -107,12 +107,10 @@ public class ConfigPanel extends javax.swing.JPanel {
         }
     }
 
-    private void savePolicy() {
+    private void savePolicy(PolicyType newpolicy) {
 
         if (simulator != null) {
-            String selectedPolicyName = (String) policyComboBox.getSelectedItem();
-            PolicyType newPolicy = PolicyType.valueOf(selectedPolicyName);
-            simulator.getOperatingSystem().getScheduler().setCurrentPolicy(newPolicy);
+            simulator.getOperatingSystem().getScheduler().setCurrentPolicy(newpolicy);
 
             // 🔥 Forzar actualización del UI
             SwingUtilities.invokeLater(() -> {
@@ -628,8 +626,8 @@ public class ConfigPanel extends javax.swing.JPanel {
                 default ->
                     PolicyType.FIFO;
             };
-
-            savePolicy();
+             System.out.println(newPolicy);
+            savePolicy(newPolicy);
             JOptionPane.showMessageDialog(this,
                     "Política de planificación actualizada a: " + newPolicy,
                     "Configuración guardada",
