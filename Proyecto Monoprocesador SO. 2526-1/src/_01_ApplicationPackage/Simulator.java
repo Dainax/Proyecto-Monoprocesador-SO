@@ -12,6 +12,9 @@ import _07_GUI.SimulationPanel;
 import java.io.FileReader;
 import javax.swing.SwingUtilities;
 import com.google.gson.Gson;
+import _02_DataStructures.SimpleList;
+import _02_DataStructures.SimpleNode;
+
 
 /**
  *
@@ -67,7 +70,7 @@ public class Simulator {
             running = false;
             so.stopOS();
             simulationPanel.pauseClockUI();
-
+            
         } else {
             running = true;
             so.startOS();
@@ -177,46 +180,49 @@ public class Simulator {
             return processes;
         }
     }
+        public int getCompletedProcessesCount() {
+    return this.getOperatingSystem().getTerminatedQueue().GetSize(); // Número de procesos terminados
+}
+        public long getElapsedTime() {
+    return this.getOperatingSystem().getClock().getTotalCyclesElapsed(); // o tiempo en milisegundos
+}
+public double calculateThroughput() {
+    int completed = getCompletedProcessesCount();
+    long elapsed = getElapsedTime(); // tiempo en ticks
 
-    public int getCompletedProcessesCount() {
-        return this.getOperatingSystem().getTerminatedQueue().GetSize(); // Número de procesos terminados
-    }
-
-    public long getElapsedTime() {
-        return this.getOperatingSystem().getClock().getTotalCyclesElapsed(); // o tiempo en milisegundos
-    }
-
-    public double calculateThroughput() {
-        int completed = getCompletedProcessesCount();
-        long elapsed = getElapsedTime(); // tiempo en ticks
-
-        if (elapsed == 0) {
-            return 0;
-        }
-        return (double) completed / elapsed;
-    }
-
-    public double getCPUProductivePercentage() {
-
+    if (elapsed == 0) return 0;
+    return (double) completed / elapsed;
+}
+    public double getCPUProductivePercentage () {
+        
         int productivecycles = this.getOperatingSystem().getCpu().getProductiveCycles();
         int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
-        double productivePercentage = productivecycles / cyclecounter;
-        return productivePercentage;
-
+        
+        if (cyclecounter == 0) return 0;
+        return (double) productivecycles / cyclecounter;
     }
-
-    public double getAverageWaitingTime() {
-
-        int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
+    public double getAverageWaitingTime (){
+        
+        int finishedProcess = this.getOperatingSystem().getTerminatedQueue().GetSize();
         int totalWaitingTime = this.getOperatingSystem().getTotalWaitingTime();
 
-        if (cyclecounter == 0) {
-            return 0;
-        }
-        return (double) totalWaitingTime / cyclecounter;
+        if (finishedProcess == 0) return 0;
+        return (double) totalWaitingTime / finishedProcess;
     }
-
-    public OperatingSystem getSo() {
-        return so;
-    }
+    
+    public double getTotalFairness () {
+       SimpleList<Process1> terminated = this.getOperatingSystem().getTerminatedQueue();
+       if (terminated.isEmpty()) return 1.0;
+       
+       double sum = 0;
+       
+       SimpleNode<Process1> node = terminated.GetpFirst();
+       while (node != null){
+           Process1 p = node.GetData();
+           sum += p.calculateSlowdown();
+           node = node.GetNxt();
+       }
+       
+       return sum / terminated.GetSize();
+    }        
 }
