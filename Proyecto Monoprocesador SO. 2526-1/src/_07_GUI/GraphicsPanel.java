@@ -47,7 +47,7 @@ public class GraphicsPanel extends javax.swing.JPanel {
     public void initChart() {
     // Crear series
     cpuSeries = new TimeSeries("CPU Utilization");
-    clockSeries = new TimeSeries("Clock Cycles");
+    clockSeries = new TimeSeries("Avg Wait Time");
     throughputSeries = new TimeSeries("Throughput");
     fairnessSeries = new TimeSeries("Fairness");
 
@@ -100,12 +100,12 @@ chartContainer.repaint();
     Millisecond now = new Millisecond();
 
     double cpu = simulator.getCPUProductivePercentage();
-    long cycles = simulator.getOperatingSystem().getClock().getTotalCyclesElapsed();
+    double avgWait = simulator.getAverageWaitingTime();
     double throughput = simulator.calculateThroughput();
     double fairness = simulator.getTotalFairness();
 
     cpuSeries.addOrUpdate(now, cpu);
-    clockSeries.addOrUpdate(now, cycles);
+    clockSeries.addOrUpdate(now, avgWait);
     throughputSeries.addOrUpdate(now, throughput);
     fairnessSeries.addOrUpdate(now, fairness);
 
