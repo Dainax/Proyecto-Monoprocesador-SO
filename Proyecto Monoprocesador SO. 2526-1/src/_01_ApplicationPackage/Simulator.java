@@ -200,10 +200,11 @@ public double calculateThroughput() {
     public double getCPUProductivePercentage () {
         
         int productivecycles = this.getOperatingSystem().getCpu().getProductiveCycles();
-        int cyclecounter = this.getOperatingSystem().getCpu().getCycleCounter();
+        long cyclecounter = this.getOperatingSystem().getClock().getTotalCyclesElapsed();
         
-        if (cyclecounter == 0) return 0;
-        return (double) productivecycles / cyclecounter;
+        if (cyclecounter == 0) return -1;
+        return ((double) productivecycles / cyclecounter) * 100.0;
+
     }
     public double getAverageWaitingTime (){
         
@@ -211,14 +212,14 @@ public double calculateThroughput() {
         int totalWaitingTime = this.getOperatingSystem().getTotalWaitingTime();
 
         if (finishedProcess == 0) return 0;
-        return (double) totalWaitingTime / finishedProcess;
+        return (double) totalWaitingTime / finishedProcess ;
     }
     
     public double getTotalFairness () {
        SimpleList<Process1> terminated = this.getOperatingSystem().getTerminatedQueue();
        if (terminated.isEmpty()) return 1.0;
        
-       double sum = 0;
+       double sum = 1;
        
        SimpleNode<Process1> node = terminated.GetpFirst();
        while (node != null){
