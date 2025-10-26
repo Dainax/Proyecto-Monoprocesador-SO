@@ -87,9 +87,54 @@ public class Simulator {
      * Reinicia todo el sistema y la interfaz
      */
     public void resetSimulation() {
-        so.reset();
+        // Primero, intentar detener/ducir completamente la instancia actual del SO
+        if (so != null) {
+            // Marcar como no en ejecución y solicitar apagado completo
+            try {
+                so.shutdownOS();
+            } catch (Exception ignored) {
+            }
+
+            // Esperar a que los hilos terminen (SO, CPU, DMA, Clock)
+            try {
+                so.join(2000); // espera hasta 2s
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
+            try {
+                if (so.getCpu() != null) so.getCpu().join(2000);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
+            try {
+                if (so.getDma() != null) so.getDma().join(2000);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
+            try {
+                if (so.getClock() != null) so.getClock().join(2000);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        // Crear una nueva instancia del SO con la configuración original
+        this.so = new OperatingSystem(PolicyType.FIFO, 1000);
+
+        // Reenlazar el listener del reloj a la UI
+        this.so.getClock().setOnTickListener(() -> {
+            SwingUtilities.invokeLater(() -> {
+                simulationPanel.updateCPU(so.getCpu());
+                simulationPanel.updateQueues(so);
+            });
+        });
+
         running = false;
-        simulationPanel.resetView(); // método opcional para limpiar colas y CPU
+        // Limpiar la vista
+        //simulationPanel.resetView();
     }
 
     public void createProcess(String name, int totalInstructions, ProcessType type, int cyclesToGenerateInterruption, int cyclesToManageInterruption) {
