@@ -117,8 +117,11 @@ public class CPU extends Thread {
                         }
 
                         // Lee el resultado de la ejecucion
-                        boolean processWantsToContinue = currentProcess.didExecuteSuccessfully();
-
+                        boolean processWantsToContinue = true;
+                        if (currentProcess != null) {
+                        processWantsToContinue = currentProcess.didExecuteSuccessfully();
+                        }
+                        
                         // Actualizacion de Quantum
                         if (remainingCycles > 0) {
                             remainingCycles--;
