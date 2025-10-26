@@ -18,7 +18,22 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
+import _01_ApplicationPackage.Simulator;
+import _04_OperatingSystem.PolicyType;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.GridLayout;
+import javax.swing.SwingUtilities;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.time.Millisecond;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
 
 /**
  *
@@ -32,141 +47,177 @@ public class GraphicsPanel extends javax.swing.JPanel {
     public GraphicsPanel() {
         initComponents();
     }
+private static class PolicyCharts {
+    final TimeSeries cpuSeries;
+    final TimeSeries avgWaitSeries;
+    final TimeSeries throughputSeries;
+    final TimeSeries fairnessSeries;
+    final javax.swing.JPanel containerPanel;
 
+    PolicyCharts(TimeSeries cpu, TimeSeries wait, TimeSeries thr, TimeSeries fair, javax.swing.JPanel panel) {
+        this.cpuSeries = cpu;
+        this.avgWaitSeries = wait;
+        this.throughputSeries = thr;
+        this.fairnessSeries = fair;
+        this.containerPanel = panel;
+    }
+}
     private Simulator simulator;
     private TimeSeries cpuSeries;
     private TimeSeries avgWaitSeries;
     private TimeSeries throughputSeries;
     private TimeSeries fairnessSeries;
+    private PolicyCharts[] chartsByOrdinal = new PolicyCharts[PolicyType.values().length];
+    private PolicyType currentPolicy = null;
+    private javax.swing.Timer refreshTimer;
 
     public void setSimulator(Simulator simulator) {
         this.simulator = simulator;
-        initChart();
-        startAutoRefresh();
-        
-   
+        startAutoRefreshPerPolicy();
     }
 
     
-    public void initChart() {
-        chartContainer.setLayout(new GridLayout(2, 2, 5, 5)); // 2x2 con separación de 5 px
+    private PolicyCharts createChartsForPolicy(PolicyType policy) {
+        TimeSeries cpuSeries = new TimeSeries("CPU - " + policy);
+        TimeSeries avgWaitSeries = new TimeSeries("AvgWait - " + policy);
+        TimeSeries throughputSeries = new TimeSeries("Throughput - " + policy);
+        TimeSeries fairnessSeries = new TimeSeries("Fairness - " + policy);
 
-    // CPU
-    cpuSeries = new TimeSeries("CPU Utilization");
-    TimeSeriesCollection cpuDataset = new TimeSeriesCollection(cpuSeries);
-    JFreeChart cpuChart = ChartFactory.createTimeSeriesChart(
-        "CPU Utilization",
-        "Tiempo",
-        "CPU %",
-        cpuDataset,
-        false, true, false
-    );
-    XYPlot cpuPlot = cpuChart.getXYPlot();
-XYLineAndShapeRenderer cpuRenderer = new XYLineAndShapeRenderer();
-cpuRenderer.setSeriesPaint(0, Color.RED);
-cpuRenderer.setSeriesShapesVisible(0, false);
-cpuPlot.setRenderer(cpuRenderer);
-    ChartPanel cpuChartPanel = new ChartPanel(cpuChart);
+        // CPU chart
+        TimeSeriesCollection cpuDataset = new TimeSeriesCollection(cpuSeries);
+        JFreeChart cpuChart = ChartFactory.createTimeSeriesChart(
+            "CPU Utilization (" + policy + ")", "Tiempo", "CPU %", cpuDataset, false, true, false);
+        XYPlot cpuPlot = cpuChart.getXYPlot();
+        cpuPlot.getRangeAxis().setRange(0, 100);
+        cpuPlot.getDomainAxis().setFixedAutoRange(180000.0);
+        XYLineAndShapeRenderer cpuRenderer = new XYLineAndShapeRenderer();
+        cpuRenderer.setSeriesPaint(0, Color.RED);
+        cpuRenderer.setSeriesShapesVisible(0, false);
+        cpuPlot.setRenderer(cpuRenderer);
+        ChartPanel cpuChartPanel = new ChartPanel(cpuChart);
 
-    // Avg Wait
-    avgWaitSeries = new TimeSeries("Avg Wait Time");
-    TimeSeriesCollection waitDataset = new TimeSeriesCollection(avgWaitSeries);
-    JFreeChart waitChart = ChartFactory.createTimeSeriesChart(
-        "Average Waiting Time",
-        "Tiempo",
-        "Ciclos",
-        waitDataset,
-        false, true, false
-    );
+        // Avg Wait chart
+        TimeSeriesCollection waitDataset = new TimeSeriesCollection(avgWaitSeries);
+        JFreeChart waitChart = ChartFactory.createTimeSeriesChart(
+            "Average Waiting Time (" + policy + ")", "Tiempo", "Ciclos", waitDataset, false, true, false);
+        XYPlot waitPlot = waitChart.getXYPlot();
+        waitPlot.getRangeAxis().setRange(0, 200);
+        waitPlot.getDomainAxis().setFixedAutoRange(180000.0);
+        XYLineAndShapeRenderer waitRenderer = new XYLineAndShapeRenderer();
+        waitRenderer.setSeriesPaint(0, Color.BLUE);
+        waitRenderer.setSeriesShapesVisible(0, false);
+        waitPlot.setRenderer(waitRenderer);
+        ChartPanel waitChartPanel = new ChartPanel(waitChart);
+
+        // Throughput chart
+        TimeSeriesCollection thrDataset = new TimeSeriesCollection(throughputSeries);
+        JFreeChart thrChart = ChartFactory.createTimeSeriesChart(
+            "Throughput (" + policy + ")", "Tiempo", "Procesos/s", thrDataset, false, true, false);
+        XYPlot thrPlot = thrChart.getXYPlot();
+        thrPlot.getRangeAxis().setRange(0, 0.1);
+        thrPlot.getDomainAxis().setFixedAutoRange(180000.0);
+        XYLineAndShapeRenderer thrRenderer = new XYLineAndShapeRenderer();
+        thrRenderer.setSeriesPaint(0, Color.GREEN.darker());
+        thrRenderer.setSeriesShapesVisible(0, false);
+        thrPlot.setRenderer(thrRenderer);
+        ChartPanel thrChartPanel = new ChartPanel(thrChart);
+
+        // Fairness chart
+        TimeSeriesCollection fairDataset = new TimeSeriesCollection(fairnessSeries);
+        JFreeChart fairChart = ChartFactory.createTimeSeriesChart(
+            "Fairness (" + policy + ")", "Tiempo", "Valor", fairDataset, false, true, false);
+        XYPlot fairPlot = fairChart.getXYPlot();
+        fairPlot.getRangeAxis().setRange(0, 100);
+        fairPlot.getDomainAxis().setFixedAutoRange(180000.0);
+        XYLineAndShapeRenderer fairRenderer = new XYLineAndShapeRenderer();
+        fairRenderer.setSeriesPaint(0, Color.ORANGE);
+        fairRenderer.setSeriesShapesVisible(0, false);
+        fairPlot.setRenderer(fairRenderer);
+        ChartPanel fairChartPanel = new ChartPanel(fairChart);
+
+        javax.swing.JPanel panel = new javax.swing.JPanel(new GridLayout(2, 2, 4, 4));
+        panel.add(cpuChartPanel);
+        panel.add(waitChartPanel);
+        panel.add(thrChartPanel);
+        panel.add(fairChartPanel);
+
+        return new PolicyCharts(cpuSeries, avgWaitSeries, throughputSeries, fairnessSeries, panel);
+    }
+
+    private void switchPolicyByOrdinal(PolicyType newPolicy) {
+        if (newPolicy == null) return;
+        if (newPolicy.equals(currentPolicy)) return;
+
+        currentPolicy = newPolicy;
+        int idx = newPolicy.ordinal();
+
+        if (chartsByOrdinal[idx] == null) {
+            chartsByOrdinal[idx] = createChartsForPolicy(newPolicy);
+        }
+        final PolicyCharts pc = chartsByOrdinal[idx];
+
+        SwingUtilities.invokeLater(() -> {
+            chartContainer.removeAll();
+            chartContainer.setLayout(new BorderLayout());
+            chartContainer.add(pc.containerPanel, BorderLayout.CENTER);
+            chartContainer.revalidate();
+            chartContainer.repaint();
+        });
+    }
+
+     private void startAutoRefreshPerPolicy() {
+        if (refreshTimer != null && refreshTimer.isRunning()) return;
+
+        refreshTimer = new javax.swing.Timer(1000, e -> {
+            if (simulator == null) return;
+
+            PolicyType policyNow = simulator.getOperatingSystem().getScheduler().getCurrentPolicy();
+            if (policyNow == null) return;
+
+            if (currentPolicy == null || !currentPolicy.equals(policyNow)) {
+                switchPolicyByOrdinal(policyNow);
+            }
+
+            PolicyCharts active = chartsByOrdinal[policyNow.ordinal()];
+            if (active != null) {
+                double cpu = simulator.getCPUProductivePercentage();
+                double avgWait = simulator.getAverageWaitingTime();
+                double throughput = simulator.calculateThroughput();
+                double fairness = simulator.getTotalFairness();
+
+                Millisecond now = new Millisecond();
+                try {
+                    active.cpuSeries.addOrUpdate(now, cpu);
+                    active.avgWaitSeries.addOrUpdate(now, avgWait);
+                    active.throughputSeries.addOrUpdate(now, throughput);
+                    active.fairnessSeries.addOrUpdate(now, fairness);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+                SwingUtilities.invokeLater(() -> updateLabels(cpu, avgWait, throughput, fairness));
+            }
+        });
+
+        refreshTimer.setInitialDelay(0);
+        refreshTimer.start();
+    }
     
-    XYPlot waitPlot = waitChart.getXYPlot();
-XYLineAndShapeRenderer waitRenderer = new XYLineAndShapeRenderer();
-waitRenderer.setSeriesPaint(0, Color.BLUE);       // línea azul
-waitRenderer.setSeriesShapesVisible(0, false);
-waitPlot.setRenderer(waitRenderer);
-    ChartPanel waitChartPanel = new ChartPanel(waitChart);
-
-    // Throughput
-    throughputSeries = new TimeSeries("Throughput");
-    TimeSeriesCollection throughputDataset = new TimeSeriesCollection(throughputSeries);
-    JFreeChart throughputChart = ChartFactory.createTimeSeriesChart(
-        "Throughput",
-        "Tiempo",
-        "Procesos/s",
-        throughputDataset,
-        false, true, false
-    );
-    
-    XYPlot throughputPlot = throughputChart.getXYPlot();
-XYLineAndShapeRenderer throughputRenderer = new XYLineAndShapeRenderer();
-throughputRenderer.setSeriesPaint(0, Color.GREEN); // línea verde
-throughputRenderer.setSeriesShapesVisible(0, false);
-throughputPlot.setRenderer(throughputRenderer);
-    ChartPanel throughputChartPanel = new ChartPanel(throughputChart);
-
-    // Fairness
-    fairnessSeries = new TimeSeries("Fairness");
-    TimeSeriesCollection fairnessDataset = new TimeSeriesCollection(fairnessSeries);
-    JFreeChart fairnessChart = ChartFactory.createTimeSeriesChart(
-        "Fairness",
-        "Tiempo",
-        "Valor",
-        fairnessDataset,
-        false, true, false
-    );
-    
-    XYPlot fairnessPlot = fairnessChart.getXYPlot();
-XYLineAndShapeRenderer fairnessRenderer = new XYLineAndShapeRenderer();
-fairnessRenderer.setSeriesPaint(0, Color.ORANGE);  // línea naranja
-fairnessRenderer.setSeriesShapesVisible(0, false);
-fairnessPlot.setRenderer(fairnessRenderer);
-    ChartPanel fairnessChartPanel = new ChartPanel(fairnessChart);
-
-        // Limpiar contenido previo
-chartContainer.removeAll();
-
-// Agregar los gráficos
-chartContainer.add(cpuChartPanel);
-chartContainer.add(waitChartPanel);
-chartContainer.add(throughputChartPanel);
-chartContainer.add(fairnessChartPanel);
-
-// Refrescar UI
-chartContainer.revalidate();
-chartContainer.repaint();
-
-
-}
-
-    private void updateLabels() {
-    Throughput.setText(String.format("Throughput: %.2f", this.simulator.calculateThroughput()));
-    CpuUtilization.setText(String.format("CPU Utilization: %.2f%%", this.simulator.getCPUProductivePercentage()));
-
-
-
-    Fairness.setText(String.format("Fairness: %.2f ", this.simulator.getTotalFairness()));
-    AverageWaitTime.setText(String.format("Avg Response Time: %.2f ciclos", this.simulator.getAverageWaitingTime()));
-    Clockcycles.setText(String.valueOf(this.simulator.getOperatingSystem().getClock().getTotalCyclesElapsed()));
-
-}
-    private void startAutoRefresh() {
-    javax.swing.Timer timer = new javax.swing.Timer(1000, e -> updateChart());
-    timer.start();
-}
-    
-   private void updateChart() {
-    if (simulator == null) return;
-
-    Millisecond now = new Millisecond();
-
-    cpuSeries.addOrUpdate(now, simulator.getCPUProductivePercentage());
-    avgWaitSeries.addOrUpdate(now, simulator.getAverageWaitingTime());
-    throughputSeries.addOrUpdate(now, simulator.calculateThroughput());
-    fairnessSeries.addOrUpdate(now, simulator.getTotalFairness());
-
-    updateLabels(); // actualizar labels también si los tenés
-}
-
+   private void updateLabels(double cpu, double avgWait, double throughput, double fairness) {
+        CpuUtilization.setText(String.format("%.2f%%", cpu));
+        AverageWaitTime.setText(String.format("Avg Response Time: %.2f ciclos", avgWait));
+        Throughput.setText(String.format("Throughput: %.2f", throughput));
+        Fairness.setText(String.format("Fairness: %.2f", fairness));
+        try {
+            long cycles = simulator.getOperatingSystem().getClock().getTotalCyclesElapsed();
+            Clockcycles.setText(String.format("%d", cycles));
+        } catch (Exception ex) {
+            // ignore
+        }
+    }
+public void stopRefreshing() {
+        if (refreshTimer != null) refreshTimer.stop();
+    }
 
 
 
@@ -210,7 +261,6 @@ chartContainer.repaint();
         jLabel5 = new javax.swing.JLabel();
         jLabel6 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        jLabel3 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         Throughput = new javax.swing.JLabel();
         CpuUtilization = new javax.swing.JLabel();
@@ -218,6 +268,7 @@ chartContainer.repaint();
         AverageWaitTime = new javax.swing.JLabel();
         Clockcycles = new javax.swing.JLabel();
         chartContainer = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
 
         jPanel3.setBackground(new java.awt.Color(13, 84, 141));
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -231,9 +282,6 @@ chartContainer.repaint();
         jLabel4.setText("Utilización del Procesador:");
         jPanel3.add(jLabel4, new org.netbeans.lib.awtextra.AbsoluteConstraints(10, 330, -1, -1));
 
-        jLabel3.setText("Throughput:");
-        jPanel3.add(jLabel3, new org.netbeans.lib.awtextra.AbsoluteConstraints(30, 130, 80, 20));
-
         jLabel7.setBackground(new java.awt.Color(255, 255, 255));
         jLabel7.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel7.setForeground(new java.awt.Color(255, 255, 255));
@@ -242,7 +290,7 @@ chartContainer.repaint();
         jPanel3.add(jLabel7, new org.netbeans.lib.awtextra.AbsoluteConstraints(20, 30, 320, 60));
 
         Throughput.setText("Thoroughtput");
-        jPanel3.add(Throughput, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 130, 300, -1));
+        jPanel3.add(Throughput, new org.netbeans.lib.awtextra.AbsoluteConstraints(100, 100, 90, -1));
 
         CpuUtilization.setText("CPU utilization");
         jPanel3.add(CpuUtilization, new org.netbeans.lib.awtextra.AbsoluteConstraints(190, 330, 210, 20));
@@ -268,6 +316,9 @@ chartContainer.repaint();
         );
 
         jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(350, 20, 630, 640));
+
+        jLabel1.setText("jLabel1");
+        jPanel3.add(jLabel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(170, 170, 90, -1));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -306,7 +357,7 @@ chartContainer.repaint();
     private javax.swing.JLabel Fairness;
     private javax.swing.JLabel Throughput;
     private javax.swing.JPanel chartContainer;
-    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;

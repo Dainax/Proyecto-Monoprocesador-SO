@@ -233,7 +233,7 @@ public class Simulator {
     return this.getOperatingSystem().getTerminatedQueue().GetSize(); // Número de procesos terminados
 }
         public long getElapsedTime() {
-    return this.getOperatingSystem().getClock().getTotalCyclesElapsed(); // o tiempo en milisegundos
+    return this.getOperatingSystem().getClock().getTotalCyclesElapsed(); 
 }
 public double calculateThroughput() {
     int completed = getCompletedProcessesCount();
