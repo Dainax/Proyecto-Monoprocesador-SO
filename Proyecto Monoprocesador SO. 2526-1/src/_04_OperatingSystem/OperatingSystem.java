@@ -44,10 +44,9 @@ public class OperatingSystem extends Thread {
     // Funcion para ver si una politica es expulsiva ()
     // Expulsivas: RR por quantum, SRT por evaluar procesos desbloqueados
     // No expulsivas: FIFO, SPN HRRN, Prioridades por evaluar procesos desbloqueados
-    
     // Apoyos para las estadisticas
     int totalWaitingTime;
-    
+
     //          --------------- Metodos ---------------
     public OperatingSystem(PolicyType currentPolicy, long duration) {
         this.cpu = new CPU(this);
@@ -59,7 +58,7 @@ public class OperatingSystem extends Thread {
         this.terminatedQueue = new SimpleList<Process1>();
         this.clock = new RealTimeClock(this.cpu, this.dma, duration);
         this.totalWaitingTime = 0;
-        
+
     }
 
     // Método para que otros hilos (como la CPU) notifiquen al SO
@@ -261,11 +260,12 @@ public class OperatingSystem extends Thread {
      * @param preemptedProcess El proceso a desalojar.
      */
     public void handlePreemption(Process1 preemptedProcess) {
-
-        preemptedProcess.setPState(ProcessState.READY);
-        this.getReadyQueue().insertLast(preemptedProcess);
-        this.getCpu().setCurrentProcess(null, -1);
-        System.out.println("SO: Desalojo de PID " + preemptedProcess.getPID() + ". Movido a READY.");
+        if (preemptedProcess != null) {
+            preemptedProcess.setPState(ProcessState.READY);
+            this.getReadyQueue().insertLast(preemptedProcess);
+            this.getCpu().setCurrentProcess(null, -1);
+            System.out.println("SO: Desalojo de PID " + preemptedProcess.getPID() + ". Movido a READY.");
+        }
         notifyOS(); // Despierta el hilo del SO para que llame a dispatchProcess
     }
 
