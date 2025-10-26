@@ -323,4 +323,14 @@ public class Process1 extends Thread {
     public void setFinishCycle(int finishCycle) {
         this.finishCycle = finishCycle;
     }
+    
+    public double calculateSlowdown() {
+        long totalTime = this.getFinishCycle() - this.getArriveCycle(); 
+        int serviceTime = this.getTotalInstructions();
+        
+        return (double) totalTime / serviceTime ;
+        
+     }
+    
+    
 }
