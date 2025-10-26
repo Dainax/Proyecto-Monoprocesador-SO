@@ -19,6 +19,7 @@ public class Scheduler {
     private final OperatingSystem osReference;
     // Indica si la cola de listos ya está ordenada
     private boolean isOrdered;
+    private String lastEventLog;
 
     // Para RR
     private final int quantum = 5;
@@ -36,6 +37,7 @@ public class Scheduler {
         this.osReference = osReference;
         this.currentPolicy = currentPolicy;
         this.isOrdered = false;
+        this.lastEventLog = "Sistema Iniciado.";
     }
 
     // ---------- Planificacion a corto plazo ----------
@@ -66,6 +68,7 @@ public class Scheduler {
         this.osReference.getReadyQueue().delNodewithVal(nextProcess);
 
         System.out.println("Seleccionado el proceso " + nextProcess.getPID() + " para ejecutarse");
+        this.logEvent("Proceso " + nextProcess.getPName() + " seleccionado para ejecutarse en el CPU");
         return nextProcess;
     }
 
@@ -384,6 +387,7 @@ public class Scheduler {
 
                 this.osReference.getDma().getBlockedSuspendedProcesses().insertLast(processToSuspend);
                 System.out.println("PID " + processToSuspend.getPID() + " movido a bloqueados suspendidos.");
+                this.logEvent("Proceso " + processToSuspend.getPName() + " movido a bloqueados suspendidos.");
 
             } else if (processToSuspend.getPState() == ProcessState.READY) {
 
@@ -395,7 +399,8 @@ public class Scheduler {
                 processToSuspend.setMAR(-1); //Lo saco de la memoria principal
 
                 this.osReference.getDma().getReadySuspendedProcesses().insertLast(processToSuspend);
-                System.out.println("SO (MTS): SWAP OUT. PID " + processToSuspend.getPID() + " movido a READY_SUSPENDED.");
+                System.out.println("PID " + processToSuspend.getPID() + " movido a listos suspendidos.");
+                this.logEvent("Proceso " + processToSuspend.getPName() + " movido a listos suspendidos.");
             }
         }
 
@@ -403,7 +408,6 @@ public class Scheduler {
         // Verificar si la cola de listos esta vacia -> Traer procesos listos suspendidos si hay memoria
         SimpleList<Process1> readySuspendedQueue = this.osReference.getDma().getReadySuspendedProcesses();
         SimpleList<Process1> blockedSuspendedQueue = this.osReference.getDma().getBlockedSuspendedProcesses();
-        
 
         if (!readySuspendedQueue.isEmpty()) {
             Process1 pToSwapIn = (Process1) readySuspendedQueue.GetpFirst().GetData(); // Usando FIFO
@@ -417,12 +421,13 @@ public class Scheduler {
                 readyProcesses.insertLast(pToSwapIn);
                 this.osReference.getMp().allocate(baseDirection, pToSwapIn.getTotalInstructions()); //️ Asignar espacio en la memoria
                 pToSwapIn.setBaseDirection(baseDirection);
-                System.out.println("SWAP IN (PID " + pToSwapIn.getPID() + ") de listo suspendido a listo.");
+                System.out.println("PID " + pToSwapIn.getPID() + " movido de listo suspendido a listo.");
+                this.logEvent("Proceso " + pToSwapIn.getPName() + " movido de listo suspendido a listo.");
 
             }
         } // Si la cola de listos suspendidos esta vacia y hay procesos en bloqueados 
         // suspendidos estos deberian pasar a la MP
-        else if (blockedSuspendedQueue.GetSize()>3) {
+        else if (blockedSuspendedQueue.GetSize() > 3) {
             Process1 pToSwapIn = (Process1) blockedSuspendedQueue.GetpFirst().GetData(); // Usando FIFO
 
             // Verificar si hay espacio en la Memoria Principal
@@ -434,8 +439,8 @@ public class Scheduler {
                 blockedProcesses.insertLast(pToSwapIn);
                 this.osReference.getMp().allocate(baseDirection, pToSwapIn.getTotalInstructions()); //️ Asignar espacio en la memoria
                 pToSwapIn.setBaseDirection(baseDirection);
-                System.out.println("SWAP IN (PID " + pToSwapIn.getPID() + ") de Bloqueado suspendido a bloqueado.");
-
+                System.out.println("PID " + pToSwapIn.getPID() + "movido de Bloqueado suspendido a bloqueado.");
+                this.logEvent("Proceso " + pToSwapIn.getPName() + " movido de Bloqueado suspendido a bloqueado.");
             }
 
         }
@@ -499,9 +504,16 @@ public class Scheduler {
 
                 // Notificar al planificador
                 this.setIsOrdered(false);
-                System.out.println("Proceso " + newProcessToMP.getPName() + " admitido en la Memoria Principal. Enviando a cola de listos");
+                System.out.println("PID " + newProcessToMP.getPName() + " admitido en la Memoria Principal. Enviando a cola de listos.");
+                this.logEvent("Proceso " + newProcessToMP.getPName() + " enviado a cola de listos.");
             }
         }
+    }
+
+    private void logEvent(String event) {
+        int currentCycle = this.osReference.getCpu().getCycleCounter();
+        // Sobrescribe el ultimo evento que guardo el planificador
+        this.lastEventLog = String.format("🕝 %d: %s", currentCycle, event);
     }
 
     // Getters y Setters
@@ -527,5 +539,9 @@ public class Scheduler {
 
     public void setIsOrdered(boolean isOrdered) {
         this.isOrdered = isOrdered;
+    }
+
+    public String getEventLog() {
+        return this.lastEventLog;
     }
 }

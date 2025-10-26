@@ -8,6 +8,7 @@ import _03_LowLevelAbstractions.CPU;
 import _04_OperatingSystem.OperatingSystem;
 import _04_OperatingSystem.Process1;
 import _04_OperatingSystem.ProcessType;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.io.BufferedReader;
 import java.io.File;
@@ -80,8 +81,22 @@ public class SimulationPanel extends javax.swing.JPanel {
 
         ///////////////////////////////////////////////////////////////////////
 
-   // === CONFIGURAR PANELES INTERNOS PARA CADA SCROLL ===
+        //TextArea del planner Log
+        Color bg =new Color(13,84,141);
+        plannerLog.setEditable(false);
+        plannerLog.setOpaque(true);
+        plannerLog.setLineWrap(true);
+        plannerLog.setWrapStyleWord(true);
+        plannerLog.setBorder(null); 
+        plannerLog.setBackground(bg);
+        jScrollPane1.setOpaque(false);             // el scrollpane por sí mismo no necesita pintar
+        jScrollPane1.getViewport().setOpaque(true);
+        jScrollPane1.getViewport().setBackground(bg);
+        jScrollPane1.repaint();
+        plannerLog.repaint();
 
+
+        // === CONFIGURAR PANELES INTERNOS PARA CADA SCROLL ===
         newPanel = new JPanel();
         newPanel.setLayout(new BoxLayout(newPanel, BoxLayout.Y_AXIS));
         scrollNew.setViewportView(newPanel);
@@ -190,6 +205,7 @@ public class SimulationPanel extends javax.swing.JPanel {
                 marProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getMAR()));
                 pcProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getPC()));
                 idProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getPID()));
+                plannerLog.setText(simulator.getSo().getScheduler().getEventLog());
 
             } else {
                 nameProcessRunning.setText("SO");
@@ -198,7 +214,9 @@ public class SimulationPanel extends javax.swing.JPanel {
                 marProcessRunning.setText("...");
                 pcProcessRunning.setText("...");
                 idProcessRunning.setText("...");
+                plannerLog.setText(simulator.getSo().getScheduler().getEventLog());
             }
+
         } catch (Exception ignored) {
         }
     }
@@ -496,11 +514,12 @@ public class SimulationPanel extends javax.swing.JPanel {
         jLabel5 = new javax.swing.JLabel();
         cycleWatchTime = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
-        plannerLog = new javax.swing.JLabel();
         startSimulation = new javax.swing.JToggleButton();
         uploadSimulation = new javax.swing.JButton();
         resetSimulation = new javax.swing.JButton();
         generate20Process = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        plannerLog = new javax.swing.JTextArea();
 
         jPanel1.setBackground(new java.awt.Color(13, 84, 141));
         jPanel1.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -508,10 +527,8 @@ public class SimulationPanel extends javax.swing.JPanel {
         newProcessPanel.setBackground(new java.awt.Color(0, 0, 70));
         newProcessPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        cpuBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         cpuBoundRadio.setText("CPU Bound");
 
-        ioBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         ioBoundRadio.setText("I/O Bound");
 
         nameField.addActionListener(new java.awt.event.ActionListener() {
@@ -844,28 +861,21 @@ public class SimulationPanel extends javax.swing.JPanel {
         jLabel5.setForeground(new java.awt.Color(255, 255, 255));
         jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel5.setText("Ciclo de Reloj Global");
-        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 500, 240, -1));
+        jPanel1.add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 490, 240, -1));
 
         cycleWatchTime.setBackground(new java.awt.Color(255, 255, 255));
         cycleWatchTime.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         cycleWatchTime.setForeground(new java.awt.Color(255, 255, 255));
         cycleWatchTime.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         cycleWatchTime.setText("0");
-        jPanel1.add(cycleWatchTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 540, 240, -1));
+        jPanel1.add(cycleWatchTime, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 520, 240, -1));
 
         jLabel13.setBackground(new java.awt.Color(255, 255, 255));
         jLabel13.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
         jLabel13.setForeground(new java.awt.Color(255, 255, 255));
         jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel13.setText("Log del Planificador");
-        jPanel1.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 580, 240, -1));
-
-        plannerLog.setBackground(new java.awt.Color(255, 255, 255));
-        plannerLog.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        plannerLog.setForeground(new java.awt.Color(255, 255, 255));
-        plannerLog.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        plannerLog.setText("...");
-        jPanel1.add(plannerLog, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 610, 230, 30));
+        jPanel1.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 560, 240, -1));
 
         startSimulation.setBackground(new java.awt.Color(0, 0, 70));
         startSimulation.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
@@ -911,15 +921,31 @@ public class SimulationPanel extends javax.swing.JPanel {
         });
         jPanel1.add(generate20Process, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 410, 240, 30));
 
+        jScrollPane1.setBackground(new java.awt.Color(13, 84, 141));
+        jScrollPane1.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+
+        plannerLog.setEditable(false);
+        plannerLog.setBackground(new java.awt.Color(13, 84, 141));
+        plannerLog.setColumns(20);
+        plannerLog.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
+        plannerLog.setForeground(new java.awt.Color(255, 255, 255));
+        plannerLog.setRows(5);
+        plannerLog.setText("...");
+        plannerLog.setBorder(null);
+        jScrollPane1.setViewportView(plannerLog);
+
+        jPanel1.add(jScrollPane1, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 600, 240, 50));
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 1000, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 670, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -1021,6 +1047,7 @@ public class SimulationPanel extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JScrollPane jScrollPane1;
     private java.awt.Label label2;
     private java.awt.Label label4;
     private java.awt.Label label5;
@@ -1031,7 +1058,7 @@ public class SimulationPanel extends javax.swing.JPanel {
     private javax.swing.JPanel newPanel;
     private javax.swing.JPanel newProcessPanel;
     private javax.swing.JLabel pcProcessRunning;
-    private javax.swing.JLabel plannerLog;
+    private javax.swing.JTextArea plannerLog;
     private javax.swing.JPanel readyPanel;
     private javax.swing.JButton resetSimulation;
     private javax.swing.JScrollPane scrollBlocked;
