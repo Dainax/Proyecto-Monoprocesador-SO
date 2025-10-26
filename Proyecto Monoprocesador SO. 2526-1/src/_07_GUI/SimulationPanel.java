@@ -199,6 +199,11 @@ public class SimulationPanel extends javax.swing.JPanel {
                 pcProcessRunning.setText("...");
                 idProcessRunning.setText("...");
             }
+            if (this.simulator.getOperatingSystem().getScheduler() != null) {
+
+                String lastEvent = simulator.getSo().getScheduler().getEventLog();
+                plannerLog.setText(lastEvent);
+            }
         } catch (Exception ignored) {
         }
     }
@@ -508,10 +513,8 @@ public class SimulationPanel extends javax.swing.JPanel {
         newProcessPanel.setBackground(new java.awt.Color(0, 0, 70));
         newProcessPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        cpuBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         cpuBoundRadio.setText("CPU Bound");
 
-        ioBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         ioBoundRadio.setText("I/O Bound");
 
         nameField.addActionListener(new java.awt.event.ActionListener() {
@@ -858,14 +861,14 @@ public class SimulationPanel extends javax.swing.JPanel {
         jLabel13.setForeground(new java.awt.Color(255, 255, 255));
         jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel13.setText("Log del Planificador");
-        jPanel1.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 580, 240, -1));
+        jPanel1.add(jLabel13, new org.netbeans.lib.awtextra.AbsoluteConstraints(730, 570, 240, -1));
 
         plannerLog.setBackground(new java.awt.Color(255, 255, 255));
         plannerLog.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         plannerLog.setForeground(new java.awt.Color(255, 255, 255));
         plannerLog.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         plannerLog.setText("...");
-        jPanel1.add(plannerLog, new org.netbeans.lib.awtextra.AbsoluteConstraints(740, 610, 230, 30));
+        jPanel1.add(plannerLog, new org.netbeans.lib.awtextra.AbsoluteConstraints(710, 590, 280, 70));
 
         startSimulation.setBackground(new java.awt.Color(0, 0, 70));
         startSimulation.setFont(new java.awt.Font("Segoe UI", 3, 12)); // NOI18N
@@ -919,7 +922,7 @@ public class SimulationPanel extends javax.swing.JPanel {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 670, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
