@@ -4,7 +4,17 @@
  */
 package _07_GUI;
 import _01_ApplicationPackage.Simulator;
+import java.awt.BorderLayout;
 import java.lang.String; 
+import javax.swing.JLabel;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.time.Millisecond;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+
 
 /**
  *
@@ -17,32 +27,93 @@ public class GraphicsPanel extends javax.swing.JPanel {
      */
     public GraphicsPanel() {
         initComponents();
-        startAutoRefresh();
     }
 
     private Simulator simulator;
+    private TimeSeries cpuSeries;
+    private TimeSeries clockSeries;
+    private TimeSeries throughputSeries;
+    private TimeSeries fairnessSeries;
 
     public void setSimulator(Simulator simulator) {
         this.simulator = simulator;
+        initChart();
+        startAutoRefresh();
         
    
     }
+
     
+    public void initChart() {
+    // Crear series
+    cpuSeries = new TimeSeries("CPU Utilization");
+    clockSeries = new TimeSeries("Avg Wait Time");
+    throughputSeries = new TimeSeries("Throughput");
+    fairnessSeries = new TimeSeries("Fairness");
+
+    // Crear dataset y agregar series
+    TimeSeriesCollection dataset = new TimeSeriesCollection();
+    dataset.addSeries(cpuSeries);
+    dataset.addSeries(clockSeries);
+    dataset.addSeries(throughputSeries);
+    dataset.addSeries(fairnessSeries);
+
+    // Crear gráfico de líneas
+    JFreeChart chart = ChartFactory.createTimeSeriesChart(
+        "Simulación en tiempo real",  // título
+        "Tiempo",                     // eje X
+        "Valor",                      // eje Y
+        dataset,
+        true,  // mostrar leyenda
+        true,  // tooltips
+        false  // urls
+    );
+
+    // Crear panel para el gráfico y agregarlo al panel Swing
+    ChartPanel chartPanel = new ChartPanel(chart);
+    chartPanel.setPreferredSize(chartContainer.getSize()); // ocupar todo el panel
+
+
+   chartContainer.setLayout(new BorderLayout()); // importante
+chartContainer.removeAll();
+chartContainer.add(chartPanel, BorderLayout.CENTER);
+chartContainer.revalidate();
+chartContainer.repaint();
+}
     private void updateLabels() {
     Throughput.setText(String.format("Throughput: %.2f", this.simulator.calculateThroughput()));
     CpuUtilization.setText(String.format("CPU Utilization: %.2f%%", this.simulator.getCPUProductivePercentage()));
 
 
 
-    Fairness.setText(String.format("Avg Response Time: %.2f ciclos", this.simulator.getTotalFairness()));
-    AverageWaitTime.setText(String.format("Fairness: %.2f", this.simulator.getAverageWaitingTime()));
+    Fairness.setText(String.format("Fairness: %.2f ", this.simulator.getTotalFairness()));
+    AverageWaitTime.setText(String.format("Avg Response Time: %.2f ciclos", this.simulator.getAverageWaitingTime()));
     Clockcycles.setText(String.valueOf(this.simulator.getOperatingSystem().getClock().getTotalCyclesElapsed()));
 
 }
     private void startAutoRefresh() {
-    javax.swing.Timer timer = new javax.swing.Timer(1000, e -> updateLabels());
+    javax.swing.Timer timer = new javax.swing.Timer(1000, e -> updateChart());
     timer.start();
 }
+    
+   private void updateChart() {
+    Millisecond now = new Millisecond();
+
+    double cpu = simulator.getCPUProductivePercentage();
+    double avgWait = simulator.getAverageWaitingTime();
+    double throughput = simulator.calculateThroughput();
+    double fairness = simulator.getTotalFairness();
+
+    cpuSeries.addOrUpdate(now, cpu);
+    clockSeries.addOrUpdate(now, avgWait);
+    throughputSeries.addOrUpdate(now, throughput);
+    fairnessSeries.addOrUpdate(now, fairness);
+
+    updateLabels(); // actualizar los labels al mismo tiempo
+}
+
+
+
 
            
     
@@ -90,6 +161,7 @@ public class GraphicsPanel extends javax.swing.JPanel {
         Fairness = new javax.swing.JLabel();
         AverageWaitTime = new javax.swing.JLabel();
         Clockcycles = new javax.swing.JLabel();
+        chartContainer = new javax.swing.JPanel();
 
         jPanel3.setBackground(new java.awt.Color(13, 84, 141));
         jPanel3.setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
@@ -128,13 +200,26 @@ public class GraphicsPanel extends javax.swing.JPanel {
         Clockcycles.setText("Ciclos totales de reloj");
         jPanel3.add(Clockcycles, new org.netbeans.lib.awtextra.AbsoluteConstraints(270, 510, 210, -1));
 
+        javax.swing.GroupLayout chartContainerLayout = new javax.swing.GroupLayout(chartContainer);
+        chartContainer.setLayout(chartContainerLayout);
+        chartContainerLayout.setHorizontalGroup(
+            chartContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 460, Short.MAX_VALUE)
+        );
+        chartContainerLayout.setVerticalGroup(
+            chartContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 390, Short.MAX_VALUE)
+        );
+
+        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 100, 460, 390));
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 1000, Short.MAX_VALUE)
+                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -164,6 +249,7 @@ public class GraphicsPanel extends javax.swing.JPanel {
     private javax.swing.JLabel CpuUtilization;
     private javax.swing.JLabel Fairness;
     private javax.swing.JLabel Throughput;
+    private javax.swing.JPanel chartContainer;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
