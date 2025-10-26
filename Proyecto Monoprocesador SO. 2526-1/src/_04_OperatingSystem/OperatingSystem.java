@@ -396,6 +396,36 @@ public class OperatingSystem extends Thread {
         return clock;
     }
 
+    /**
+     * Apaga completamente los subhilos del SO: CPU, DMA y Reloj. Usar cuando se
+     * quiera destruir la instancia antes de crear otra nueva (reset completo).
+     */
+    public void shutdownOS() {
+        // Marcar para que el hilo del SO termine
+        this.isRunning = false;
+
+        // Parar CPU y DMA (estos métodos ya despiertan los hilos para que salgan)
+        try {
+            this.cpu.stopCPU();
+        } catch (Exception ignored) {
+        }
+        try {
+            this.dma.stopDMA();
+        } catch (Exception ignored) {
+        }
+
+        // Detener permanentemente el reloj
+        try {
+            this.clock.shutdownClock();
+        } catch (Exception ignored) {
+        }
+
+        // Despertar al SO para que salga del wait() y termine
+        synchronized (osMonitor) {
+            osMonitor.notify();
+        }
+    }
+
     public int getTotalWaitingTime() {
         return totalWaitingTime;
     }
