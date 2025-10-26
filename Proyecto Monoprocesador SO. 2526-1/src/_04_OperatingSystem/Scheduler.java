@@ -22,6 +22,8 @@ public class Scheduler {
 
     // Para RR
     private final int quantum = 5;
+    // Para control de admisiones periódicas
+    private int lastAdmissionCycle = -1;
 
     //          --------------- Metodos ---------------
     /**
@@ -446,10 +448,33 @@ public class Scheduler {
      * @return
      */
     public void manageAdmission() {
+        // Cada 10 ciclos, intentar mover 1 proceso de NEW a READY_SUSPENDED (si existe)
+        int currentCycle = 0;
+        try {
+            currentCycle = this.osReference.getCpu().getCycleCounter();
+        } catch (Exception ignored) {
+        }
+
+        if (currentCycle > 0 && currentCycle % 10 == 0 && currentCycle != lastAdmissionCycle) {
+            lastAdmissionCycle = currentCycle;
+            // Tomar el primer proceso de la cola de nuevos y moverlo a ready suspended
+            SimpleList<Process1> newQueue = this.osReference.getDma().getNewProcesses();
+            if (newQueue != null && !newQueue.isEmpty()) {
+                Process1 p = (Process1) newQueue.GetpFirst().GetData();
+                // Remover de la cola de nuevos
+                newQueue.delNodewithVal(p);
+                // Cambiar estado a READY_SUSPENDED y agregar a la cola de ready suspended del DMA
+                p.setPState(ProcessState.READY_SUSPENDED);
+                this.osReference.getDma().addReadySuspendedProcess(p);
+                System.out.println("Planificador a largo plazo: Movido PID " + p.getPID() + " de NEW a READY_SUSPENDED (ciclo " + currentCycle + ")");
+                return;
+            }
+        }
+
         // Admite un proceso si hay 25% de espacio en MP y el sistema no esta full de procesos
         if (this.osReference.getMp().admiteNewProcess() && !this.osReference.getDma().getNewProcesses().isEmpty()) {
 
-            System.out.println("Planificador a largo plazo");
+            System.out.println("Planificador a largo plazo: admisión normal");
             // Utilizara simplemente el FIFO
             Process1 newProcessToMP = (Process1) this.osReference.getDma().getNewProcesses().GetpFirst().GetData();
 
