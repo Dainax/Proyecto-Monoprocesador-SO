@@ -5,6 +5,7 @@
 package _07_GUI;
 import _01_ApplicationPackage.Simulator;
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 import java.lang.String; 
 import javax.swing.JLabel;
 
@@ -31,7 +32,7 @@ public class GraphicsPanel extends javax.swing.JPanel {
 
     private Simulator simulator;
     private TimeSeries cpuSeries;
-    private TimeSeries clockSeries;
+    private TimeSeries avgWaitSeries;
     private TimeSeries throughputSeries;
     private TimeSeries fairnessSeries;
 
@@ -45,41 +46,73 @@ public class GraphicsPanel extends javax.swing.JPanel {
 
     
     public void initChart() {
-    // Crear series
+        chartContainer.setLayout(new GridLayout(2, 2, 5, 5)); // 2x2 con separación de 5 px
+
+    // CPU
     cpuSeries = new TimeSeries("CPU Utilization");
-    clockSeries = new TimeSeries("Avg Wait Time");
-    throughputSeries = new TimeSeries("Throughput");
-    fairnessSeries = new TimeSeries("Fairness");
-
-    // Crear dataset y agregar series
-    TimeSeriesCollection dataset = new TimeSeriesCollection();
-    dataset.addSeries(cpuSeries);
-    dataset.addSeries(clockSeries);
-    dataset.addSeries(throughputSeries);
-    dataset.addSeries(fairnessSeries);
-
-    // Crear gráfico de líneas
-    JFreeChart chart = ChartFactory.createTimeSeriesChart(
-        "Simulación en tiempo real",  // título
-        "Tiempo",                     // eje X
-        "Valor",                      // eje Y
-        dataset,
-        true,  // mostrar leyenda
-        true,  // tooltips
-        false  // urls
+    TimeSeriesCollection cpuDataset = new TimeSeriesCollection(cpuSeries);
+    JFreeChart cpuChart = ChartFactory.createTimeSeriesChart(
+        "CPU Utilization",
+        "Tiempo",
+        "CPU %",
+        cpuDataset,
+        false, true, false
     );
+    
+    ChartPanel cpuChartPanel = new ChartPanel(cpuChart);
 
-    // Crear panel para el gráfico y agregarlo al panel Swing
-    ChartPanel chartPanel = new ChartPanel(chart);
-    chartPanel.setPreferredSize(chartContainer.getSize()); // ocupar todo el panel
+    // Avg Wait
+    avgWaitSeries = new TimeSeries("Avg Wait Time");
+    TimeSeriesCollection waitDataset = new TimeSeriesCollection(avgWaitSeries);
+    JFreeChart waitChart = ChartFactory.createTimeSeriesChart(
+        "Average Waiting Time",
+        "Tiempo",
+        "Ciclos",
+        waitDataset,
+        false, true, false
+    );
+    ChartPanel waitChartPanel = new ChartPanel(waitChart);
 
+    // Throughput
+    throughputSeries = new TimeSeries("Throughput");
+    TimeSeriesCollection throughputDataset = new TimeSeriesCollection(throughputSeries);
+    JFreeChart throughputChart = ChartFactory.createTimeSeriesChart(
+        "Throughput",
+        "Tiempo",
+        "Procesos/s",
+        throughputDataset,
+        false, true, false
+    );
+    ChartPanel throughputChartPanel = new ChartPanel(throughputChart);
 
-   chartContainer.setLayout(new BorderLayout()); // importante
+    // Fairness
+    fairnessSeries = new TimeSeries("Fairness");
+    TimeSeriesCollection fairnessDataset = new TimeSeriesCollection(fairnessSeries);
+    JFreeChart fairnessChart = ChartFactory.createTimeSeriesChart(
+        "Fairness",
+        "Tiempo",
+        "Valor",
+        fairnessDataset,
+        false, true, false
+    );
+    ChartPanel fairnessChartPanel = new ChartPanel(fairnessChart);
+
+        // Limpiar contenido previo
 chartContainer.removeAll();
-chartContainer.add(chartPanel, BorderLayout.CENTER);
+
+// Agregar los gráficos
+chartContainer.add(cpuChartPanel);
+chartContainer.add(waitChartPanel);
+chartContainer.add(throughputChartPanel);
+chartContainer.add(fairnessChartPanel);
+
+// Refrescar UI
 chartContainer.revalidate();
 chartContainer.repaint();
+
+
 }
+
     private void updateLabels() {
     Throughput.setText(String.format("Throughput: %.2f", this.simulator.calculateThroughput()));
     CpuUtilization.setText(String.format("CPU Utilization: %.2f%%", this.simulator.getCPUProductivePercentage()));
@@ -97,20 +130,18 @@ chartContainer.repaint();
 }
     
    private void updateChart() {
+    if (simulator == null) return;
+
     Millisecond now = new Millisecond();
 
-    double cpu = simulator.getCPUProductivePercentage();
-    double avgWait = simulator.getAverageWaitingTime();
-    double throughput = simulator.calculateThroughput();
-    double fairness = simulator.getTotalFairness();
+    cpuSeries.addOrUpdate(now, simulator.getCPUProductivePercentage());
+    avgWaitSeries.addOrUpdate(now, simulator.getAverageWaitingTime());
+    throughputSeries.addOrUpdate(now, simulator.calculateThroughput());
+    fairnessSeries.addOrUpdate(now, simulator.getTotalFairness());
 
-    cpuSeries.addOrUpdate(now, cpu);
-    clockSeries.addOrUpdate(now, avgWait);
-    throughputSeries.addOrUpdate(now, throughput);
-    fairnessSeries.addOrUpdate(now, fairness);
-
-    updateLabels(); // actualizar los labels al mismo tiempo
+    updateLabels(); // actualizar labels también si los tenés
 }
+
 
 
 
@@ -204,14 +235,14 @@ chartContainer.repaint();
         chartContainer.setLayout(chartContainerLayout);
         chartContainerLayout.setHorizontalGroup(
             chartContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 460, Short.MAX_VALUE)
+            .addGap(0, 660, Short.MAX_VALUE)
         );
         chartContainerLayout.setVerticalGroup(
             chartContainerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 390, Short.MAX_VALUE)
+            .addGap(0, 670, Short.MAX_VALUE)
         );
 
-        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(410, 100, 460, 390));
+        jPanel3.add(chartContainer, new org.netbeans.lib.awtextra.AbsoluteConstraints(340, 0, 660, 670));
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -226,7 +257,7 @@ chartContainer.repaint();
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 670, Short.MAX_VALUE)
+                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGap(91, 91, 91))
         );
 
