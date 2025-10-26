@@ -43,6 +43,10 @@ public class Simulator {
         });
     }
 
+    public OperatingSystem getSo() {
+        return so;
+    }
+
     // -----------------------------
     // Control de simulación
     // -----------------------------

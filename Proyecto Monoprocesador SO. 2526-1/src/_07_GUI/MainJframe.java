@@ -43,7 +43,8 @@ public class MainJframe extends javax.swing.JFrame {
         // Crear Simulador y conectar
         simulador = new Simulator((SimulationPanel) simulationPanel, so.getScheduler().getCurrentPolicy(), defaultCycleDuration);
         simulationPanel.setSimulator(simulador); 
-        configPanel.setSimulator(simulador);
+        configPanel.setSimulator(simulador);   
+        graphicsPanel.setSimulator(simulador);
 
 
         

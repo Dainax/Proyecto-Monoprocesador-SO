@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JPanel.java to edit this template
  */
 package _07_GUI;
-
+import _01_ApplicationPackage.Simulator;
 /**
  *
  * @author Danaz
@@ -17,6 +17,38 @@ public class GraphicsPanel extends javax.swing.JPanel {
         initComponents();
     }
 
+    private Simulator simulator;
+
+    public void setSimulator(Simulator simulator) {
+        this.simulator = simulator;
+    }
+    
+
+           
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
