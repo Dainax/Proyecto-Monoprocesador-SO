@@ -124,7 +124,7 @@ public class Process1 extends Thread {
                     }
 
                     // Simula la ejecucion de una instruccion
-                    if (this.PC < this.totalInstructions) {
+                    if (this.executedInstructions < this.totalInstructions) {
                         this.PC = this.PC + 1; // PC y MAR aumentan en 1 por ciclo 
                         this.MAR = this.MAR + 1;
                         this.executedInstructions = this.executedInstructions + 1;
@@ -138,7 +138,7 @@ public class Process1 extends Thread {
                          * operacion E/S el CPU debera ver que este indico que
                          * no se ejecuto exitosamente pero no ha terminado
                          */
-                        if (this.PC == this.cyclesToGenerateException) {
+                        if (this.executedInstructions == this.cyclesToGenerateException) {
                             System.out.println("Generando E/S");
                             this.executedSuccessfully = false; // llama al SO a traves de la CPU para que maneje la operacion E/S
                         }
