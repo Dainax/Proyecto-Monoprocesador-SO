@@ -21,54 +21,71 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-
+import javax.swing.filechooser.FileNameExtensionFilter;
 /**
+ * Panel principal de simulación.
  *
- * @author Danaz
+ * Actúa como la vista dentro del patrón MVC para la simulación de planificación
+ * de procesos. Permite crear procesos, cargar configuraciones desde JSON,
+ * iniciar/pausar/reiniciar la simulación y visualizar el estado de la CPU
+ * y las distintas colas del sistema operativo.
+ *
+ * Documentación y comentarios en español (LatAm).
+ *
+ * NOTA: El método initComponents() y la declaración de variables generadas por
+ * NetBeans (componentes UI) se mantienen fuera de este bloque y no deben
+ * modificarse manualmente por compatibilidad con el GUI Builder.
+ *
+ * @author Danaz (refactorizado)
  */
 public class SimulationPanel extends javax.swing.JPanel {
 
     private Simulator simulator;
     private javax.swing.Timer clockTimer;
 
+    /**
+     * Vincula el simulador con este panel.
+     *
+     * @param simulator instancia del simulador.
+     */
     public void setSimulator(Simulator simulator) {
         this.simulator = simulator;
     }
 
+    /**
+     * Constructor.
+     * Inicializa componentes y configura spinners, radio buttons y áreas de scroll.
+     * initComponents() es generado por NetBeans y se asume ya presente.
+     */
     public SimulationPanel() {
         initComponents();
 
-        uniformScrollPaneSizes();
-        ///////////////INPUTS DE CREAR PROCESOS///////////////////////////////////////////////    
-        // Configuración spinners
-        instructionsSpinner.setModel(new SpinnerNumberModel(1, 1, 1000, 1));  // Min 1, Max 1000, Step 1
-        cyclesSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 1));  // Min 0, no max ESTO DEPENDE DEL INSTRUCTION
-        ioTimeSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));  // Min 0, no max
+        uniformScrollPaneSizes(); // si este método existe en tu versión, mantenlo; si no, elimina la llamada
 
-        // Sincroniza dinámicamente el máximo de cyclesSpinner con instructionsSpinner
+        // Configuración de spinners para creación de procesos
+        instructionsSpinner.setModel(new SpinnerNumberModel(1, 1, 1000, 1));
+        cyclesSpinner.setModel(new SpinnerNumberModel(1, 1, 1, 1)); // el máximo se ajusta dinámicamente
+        ioTimeSpinner.setModel(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+
+        // Sincronizar máximo de cycles con instructions
         instructionsSpinner.addChangeListener(e -> {
             int instructionsValue = (Integer) instructionsSpinner.getValue();
             SpinnerNumberModel cyclesModel = (SpinnerNumberModel) cyclesSpinner.getModel();
-
-            // Actualiza el máximo permitido
             cyclesModel.setMaximum(instructionsValue);
-
-            // Si el valor actual excede el nuevo máximo, ajústalo
             if ((Integer) cyclesSpinner.getValue() > instructionsValue) {
                 cyclesSpinner.setValue(instructionsValue);
             }
         });
 
-        // Grupo de botones de radio (Mutuamente Excluyente)
+        // Grupo de radio buttons (mutuamente excluyentes)
         ButtonGroup boundGroup = new ButtonGroup();
         boundGroup.add(cpuBoundRadio);
         boundGroup.add(ioBoundRadio);
 
-        // Initially, disable cycles spinner (assuming CPU bound by default or none selected)
+        // Por defecto desactivados los spinners dependientes de I/O
         cyclesSpinner.setEnabled(false);
         ioTimeSpinner.setEnabled(false);
 
-        // Add listeners for radio buttons to enable/disable cycles spinner
         cpuBoundRadio.addActionListener(e -> {
             cyclesSpinner.setEnabled(false);
             ioTimeSpinner.setEnabled(false);
@@ -79,24 +96,22 @@ public class SimulationPanel extends javax.swing.JPanel {
             ioTimeSpinner.setEnabled(true);
         });
 
-        ///////////////////////////////////////////////////////////////////////
-
-        //TextArea del planner Log
-        Color bg =new Color(13,84,141);
+        // Configuración del planner log (TextArea)
+        Color bg = new Color(13, 84, 141);
         plannerLog.setEditable(false);
         plannerLog.setOpaque(true);
         plannerLog.setLineWrap(true);
         plannerLog.setWrapStyleWord(true);
-        plannerLog.setBorder(null); 
+        plannerLog.setBorder(null);
         plannerLog.setBackground(bg);
-        jScrollPane1.setOpaque(false);             // el scrollpane por sí mismo no necesita pintar
+
+        jScrollPane1.setOpaque(false);
         jScrollPane1.getViewport().setOpaque(true);
         jScrollPane1.getViewport().setBackground(bg);
         jScrollPane1.repaint();
         plannerLog.repaint();
 
-
-        // === CONFIGURAR PANELES INTERNOS PARA CADA SCROLL ===
+        // Configurar paneles internos que se mostrarán dentro de los JScrollPane
         newPanel = new JPanel();
         newPanel.setLayout(new BoxLayout(newPanel, BoxLayout.Y_AXIS));
         scrollNew.setViewportView(newPanel);
@@ -122,6 +137,10 @@ public class SimulationPanel extends javax.swing.JPanel {
         scrollTerminated.setViewportView(terminatedPanel);
     }
 
+    /**
+     * Si había un temporizador visual del reloj, lo detiene y reinicia la etiqueta.
+     * Utilizado cuando se detiene o reinicia la simulación.
+     */
     public void resetClockUI() {
         if (clockTimer != null) {
             clockTimer.stop();
@@ -129,9 +148,15 @@ public class SimulationPanel extends javax.swing.JPanel {
         }
     }
 
-    //Validación de Datos para la creación de un proceso
+    // ---------------------------------------------------------
+    // Creación de procesos y validación
+    // ---------------------------------------------------------
+
+    /**
+     * Validación de campos y creación de proceso manual.
+     * Llama al simulador para crear el proceso y limpia los campos en caso de éxito.
+     */
     private void validateAndCreateProcess() {
-        // Obtener valores de los campos
         String name = nameField.getText().trim();
         int instructions = (Integer) instructionsSpinner.getValue();
         boolean isCpuBound = cpuBoundRadio.isSelected();
@@ -140,95 +165,93 @@ public class SimulationPanel extends javax.swing.JPanel {
         int cycles;
         int ioTime;
 
-        // 🔹 Validar nombre
         if (name.isEmpty()) {
             JOptionPane.showMessageDialog(this, "El nombre del proceso no puede estar vacío.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // 🔹 Validar selección de tipo
         if (!isCpuBound && !isIoBound) {
             JOptionPane.showMessageDialog(this, "Debe seleccionar si el proceso es CPU Bound o I/O Bound.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // 🔹 Validar rango de instrucciones
         if (instructions < 1 || instructions > 1000) {
             JOptionPane.showMessageDialog(this, "El número de instrucciones debe estar entre 1 y 1000.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // 🔹 Asignar tipo y atributos según selección
         if (isCpuBound) {
             typeBound = ProcessType.CPU_BOUND;
-            cycles = -1;  // ignorar spinner
-            ioTime = -1;  // ignorar spinner
-        } else { // IO Bound
+            cycles = -1;
+            ioTime = -1;
+        } else {
             typeBound = ProcessType.IO_BOUND;
             cycles = (Integer) cyclesSpinner.getValue();
             ioTime = (Integer) ioTimeSpinner.getValue();
-
-            // Validar que los valores de IO tengan sentido
             if (cycles < 1 || ioTime < 1) {
                 JOptionPane.showMessageDialog(this, "Los valores de ciclos e I/O deben ser mayores que 0 para procesos I/O Bound.", "Error de Validación", JOptionPane.ERROR_MESSAGE);
                 return;
             }
         }
 
-        // 🔹 Crear el proceso y enviarlo al simulador
         try {
             simulator.createProcess(name, instructions, typeBound, cycles, ioTime);
             JOptionPane.showMessageDialog(this, "Proceso creado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-
-            // Limpiar los campos
             resetFields();
-
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Error al crear el proceso: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
     }
 
-    /////// Funciones para mostrar en Pantalla///////////////
-    
-    //Aca van los otros datos de la cpu
+    // ---------------------------------------------------------
+    // Visualización del CPU y colas
+    // ---------------------------------------------------------
+
+    /**
+     * Actualiza la sección de CPU con la información del CPU provista.
+     *
+     * @param cpu objeto CPU actual (puede ser null).
+     */
     public void updateCPU(CPU cpu) {
         if (cpu == null) {
             return;
         }
-        // Ejemplo: ajusta los nombres a tus labels
         try {
             if (cpu.getCurrentProcess() != null) {
                 nameProcessRunning.setText(cpu.getCurrentProcess().getPName());
                 typeProcessRunning.setText(cpu.getCurrentProcess().getType().toString());
-                modeProcessRunning.setText(simulator.getSo().getCpu().getCurrentMode());
+                modeProcessRunning.setText(simulator.getOperatingSystem().getCpu().getCurrentMode());
                 marProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getMAR()));
                 pcProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getPC()));
                 idProcessRunning.setText(Integer.toString(cpu.getCurrentProcess().getPID()));
-                plannerLog.setText(simulator.getSo().getScheduler().getEventLog());
-
+                plannerLog.setText(simulator.getOperatingSystem().getScheduler().getEventLog());
             } else {
                 nameProcessRunning.setText("SO");
                 typeProcessRunning.setText("...");
-                modeProcessRunning.setText(simulator.getSo().getCpu().getCurrentMode());
+                modeProcessRunning.setText(simulator.getOperatingSystem().getCpu().getCurrentMode());
                 marProcessRunning.setText("...");
                 pcProcessRunning.setText("...");
                 idProcessRunning.setText("...");
-                plannerLog.setText(simulator.getSo().getScheduler().getEventLog());
+                plannerLog.setText(simulator.getOperatingSystem().getScheduler().getEventLog());
             }
-
         } catch (Exception ignored) {
+            // Evitar que excepciones de visualización rompan la UI
         }
     }
 
-    //Actualiza las colas
+    /**
+     * Actualiza las colas visuales a partir de los datos del OperatingSystem.
+     *
+     * @param so instancia del sistema operativo que contiene las colas.
+     */
     public void updateQueues(OperatingSystem so) {
         if (so == null) {
             return;
         }
 
         SwingUtilities.invokeLater(() -> {
-            // Limpia todos los paneles
+            // Limpiar paneles internos (no los JScrollPane)
             newPanel.removeAll();
             readyPanel.removeAll();
             blockedPanel.removeAll();
@@ -236,61 +259,15 @@ public class SimulationPanel extends javax.swing.JPanel {
             suspendedBlockedPanel.removeAll();
             terminatedPanel.removeAll();
 
-            // 🔹 Nuevos
-            SimpleList<Process1> list = so.getDma().getNewProcesses();
-            SimpleNode<Process1> node = (list == null) ? null : list.GetpFirst();
-            while (node != null) {
-                PCBPanel pcb = new PCBPanel(node.GetData());
-                newPanel.add(pcb);
-                node = node.GetNxt();
-            }
+            // Poblar cada panel con los PCB correspondientes
+            updateQueuePanel(newPanel, so.getDma().getNewProcesses());
+            updateQueuePanel(readyPanel, so.getReadyQueue());
+            updateQueuePanel(blockedPanel, so.getBlockedQueue());
+            updateQueuePanel(suspendedReadyPanel, so.getDma().getReadySuspendedProcesses());
+            updateQueuePanel(suspendedBlockedPanel, so.getDma().getBlockedSuspendedProcesses());
+            updateQueuePanel(terminatedPanel, so.getTerminatedQueue());
 
-            // 🔹 Listos
-            list = so.getReadyQueue();
-            node = (list == null) ? null : list.GetpFirst();
-            while (node != null) {
-                PCBPanel pcb = new PCBPanel(node.GetData());
-                readyPanel.add(pcb);
-                node = node.GetNxt();
-            }
-
-            // 🔹 Bloqueados
-            list = so.getBlockedQueue();
-            node = (list == null) ? null : list.GetpFirst();
-            while (node != null) {
-                PCBPanel pcb = new PCBPanel(node.GetData());
-                blockedPanel.add(pcb);
-                node = node.GetNxt();
-            }
-
-            // 🔹 Suspendidos Listos
-            list = so.getDma().getReadySuspendedProcesses();
-            node = (list == null) ? null : list.GetpFirst();
-            while (node != null) {
-                PCBPanel pcb = new PCBPanel(node.GetData());
-                suspendedReadyPanel.add(pcb);
-                node = node.GetNxt();
-            }
-
-            // 🔹 Suspendidos Bloqueados
-            list = so.getDma().getBlockedSuspendedProcesses();
-            node = (list == null) ? null : list.GetpFirst();
-            while (node != null) {
-                PCBPanel pcb = new PCBPanel(node.GetData());
-                suspendedBlockedPanel.add(pcb);
-                node = node.GetNxt();
-            }
-
-            // 🔹 Terminados
-            list = so.getTerminatedQueue();
-            node = (list == null) ? null : list.GetpFirst();
-            while (node != null) {
-                PCBPanel pcb = new PCBPanel(node.GetData());
-                terminatedPanel.add(pcb);
-                node = node.GetNxt();
-            }
-
-            // 🔹 Refrescar todo
+            // Revalidar/repaint general
             newPanel.revalidate();
             newPanel.repaint();
             readyPanel.revalidate();
@@ -309,38 +286,61 @@ public class SimulationPanel extends javax.swing.JPanel {
         });
     }
 
-    //Reinicia todo en pantalla
-    // Reinicia todo en pantalla
-public void resetView() {
-    SwingUtilities.invokeLater(() -> {
-        cycleWatchTime.setText("0");
-        nameProcessRunning.setText("Idle");
+    /**
+     * Agrega PCBPanels a un panel destino a partir de una SimpleList de procesos.
+     *
+     * @param targetPanel panel contenedor donde se añadirán los PCB.
+     * @param list lista simple de procesos (puede ser null).
+     */
+    private void updateQueuePanel(JPanel targetPanel, SimpleList<Process1> list) {
+        if (list == null) {
+            return;
+        }
+        SimpleNode<Process1> node = list.GetpFirst();
+        while (node != null) {
+            PCBPanel pcb = new PCBPanel(node.GetData());
+            targetPanel.add(pcb);
+            node = node.GetNxt();
+        }
+    }
 
-        // 🔹 Limpia los paneles (NO los scrolls)
-        newPanel.removeAll();
-        readyPanel.removeAll();
-        blockedPanel.removeAll();
-        suspendedReadyPanel.removeAll();
-        suspendedBlockedPanel.removeAll();
-        terminatedPanel.removeAll();
+    // ---------------------------------------------------------
+    // Reinicio y utilidades
+    // ---------------------------------------------------------
 
-        // 🔹 Refresca visualmente
-        newPanel.revalidate();
-        newPanel.repaint();
-        readyPanel.revalidate();
-        readyPanel.repaint();
-        blockedPanel.revalidate();
-        blockedPanel.repaint();
-        suspendedReadyPanel.revalidate();
-        suspendedReadyPanel.repaint();
-        suspendedBlockedPanel.revalidate();
-        suspendedBlockedPanel.repaint();
-        terminatedPanel.revalidate();
-        terminatedPanel.repaint();
-    });
-}
+    /**
+     * Reinicia la vista gráfica sin tocar los JScrollPane (solo limpia los paneles internos).
+     */
+    public void resetView() {
+        SwingUtilities.invokeLater(() -> {
+            cycleWatchTime.setText("0");
+            nameProcessRunning.setText("Idle");
 
+            newPanel.removeAll();
+            readyPanel.removeAll();
+            blockedPanel.removeAll();
+            suspendedReadyPanel.removeAll();
+            suspendedBlockedPanel.removeAll();
+            terminatedPanel.removeAll();
 
+            newPanel.revalidate();
+            newPanel.repaint();
+            readyPanel.revalidate();
+            readyPanel.repaint();
+            blockedPanel.revalidate();
+            blockedPanel.repaint();
+            suspendedReadyPanel.revalidate();
+            suspendedReadyPanel.repaint();
+            suspendedBlockedPanel.revalidate();
+            suspendedBlockedPanel.repaint();
+            terminatedPanel.revalidate();
+            terminatedPanel.repaint();
+        });
+    }
+
+    /**
+     * Limpia los campos del formulario de creación de procesos.
+     */
     private void resetFields() {
         nameField.setText("");
         instructionsSpinner.setValue(1);
@@ -350,6 +350,15 @@ public void resetView() {
         ioBoundRadio.setSelected(false);
     }
 
+    // ---------------------------------------------------------
+    // Temporizador visual del reloj (UI)
+    // ---------------------------------------------------------
+
+    /**
+     * Inicializa un temporizador Swing para mostrar el avance del reloj del SO.
+     *
+     * @param simulator simulador que contiene el OperatingSystem y su Clock.
+     */
     public void initClockTimer(Simulator simulator) {
         if (clockTimer != null && clockTimer.isRunning()) {
             clockTimer.stop();
@@ -362,23 +371,35 @@ public void resetView() {
         clockTimer.start();
     }
 
-// Pausar el temporizador visual del reloj
+    /** Pausar visualización del reloj. */
     public void pauseClockUI() {
         if (clockTimer != null && clockTimer.isRunning()) {
             clockTimer.stop();
         }
     }
 
-// Reanudar el temporizador visual del reloj
+    /** Reanudar visualización del reloj. */
     public void resumeClockUI() {
         if (clockTimer != null && !clockTimer.isRunning()) {
             clockTimer.start();
         }
     }
 
+    // ---------------------------------------------------------
+    // Carga desde JSON (simple parser por líneas)
+    // ---------------------------------------------------------
+
+    /**
+     * Carga una configuración (duración de ciclo y lista de procesos) desde un archivo JSON.
+     *
+     * <p>Este método usa un parseo muy simple basado en líneas para mantener compatibilidad
+     * con el formato que esperabas. Si deseas soporte JSON completo, es recomendable
+     * usar una librería como Gson o Jackson y ajustar el formato.</p>
+     */
     private void loadFromJson() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Cargar configuración desde JSON");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Archivos JSON", "json"));
 
         int result = fileChooser.showOpenDialog(this);
         if (result != JFileChooser.APPROVE_OPTION) {
@@ -398,44 +419,53 @@ public void resetView() {
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
 
-                //  Duración del reloj
+                // Duración del reloj
                 if (line.startsWith("\"clockDurationMs\"")) {
-                    String value = line.split(":")[1].replace(",", "").trim();
-                    clockDuration = Long.parseLong(value);
-                    simulator.getOperatingSystem().getClock().setClockDuration(clockDuration);
+                    String value = line.split(":", 2)[1].replace(",", "").replaceAll("\"", "").trim();
+                    try {
+                        clockDuration = Long.parseLong(value);
+                    } catch (NumberFormatException nfe) {
+                        // mantener valor por defecto si falla parseo
+                    }
 
-                } //  Detectar inicio de proceso
-                else if (line.equals("{")) {
+                } else if (line.equals("{")) {
+                    // inicio de un objeto proceso
                     current = new SimpleProcess();
-                } //  Detectar fin de proceso
-                else if (line.equals("},")) {
+                } else if (line.equals("},") || line.equals("}")) {
+                    // fin de proceso
                     if (current != null) {
                         processList.insertLast(current);
                     }
                     current = null;
-                } //  Último proceso
-                else if (line.equals("}")) {
-                    if (current != null) {
-                        processList.insertLast(current);
-                    }
-                    current = null;
-                } //  Atributos del proceso
-                else if (current != null) {
+                } else if (current != null) {
+                    // atributos del proceso
                     if (line.contains("\"name\"")) {
                         current.setName(extractJsonValue(line));
                     } else if (line.contains("\"instructions\"")) {
-                        current.setInstructions(Integer.parseInt(extractJsonValue(line)));
+                        try {
+                            current.setInstructions(Integer.parseInt(extractJsonValue(line)));
+                        } catch (NumberFormatException ignored) {
+                        }
                     } else if (line.contains("\"type\"")) {
-                        current.setType(ProcessType.valueOf(extractJsonValue(line)));
+                        try {
+                            current.setType(ProcessType.valueOf(extractJsonValue(line)));
+                        } catch (IllegalArgumentException ignored) {
+                        }
                     } else if (line.contains("\"cyclesForIO\"")) {
-                        current.setCyclesForIO(Integer.parseInt(extractJsonValue(line)));
+                        try {
+                            current.setCyclesForIO(Integer.parseInt(extractJsonValue(line)));
+                        } catch (NumberFormatException ignored) {
+                        }
                     } else if (line.contains("\"ioDuration\"")) {
-                        current.setIoDuration(Integer.parseInt(extractJsonValue(line)));
+                        try {
+                            current.setIoDuration(Integer.parseInt(extractJsonValue(line)));
+                        } catch (NumberFormatException ignored) {
+                        }
                     }
                 }
             }
 
-            //  Aplicar configuración cargada
+            // Aplicar configuración cargada
             simulator.getOperatingSystem().getClock().setClockDuration(clockDuration);
 
             SimpleNode<SimpleProcess> node = processList.GetpFirst();
@@ -457,8 +487,17 @@ public void resetView() {
         }
     }
 
+    /**
+     * Extrae el valor de una línea JSON simple del tipo: "key": "value", o "key": value
+     *
+     * @param line línea JSON donde buscar el valor.
+     * @return valor sin comillas ni comas, recortado.
+     */
     private String extractJsonValue(String line) {
-        String[] parts = line.split(":");
+        String[] parts = line.split(":", 2);
+        if (parts.length < 2) {
+            return "";
+        }
         String value = parts[1].replace(",", "").replace("\"", "").trim();
         return value;
     }
@@ -970,7 +1009,6 @@ public void resetView() {
 
     private void submitButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitButtonActionPerformed
         validateAndCreateProcess();
-        // Limpieza de los inputs
         resetFields();
     }//GEN-LAST:event_submitButtonActionPerformed
 

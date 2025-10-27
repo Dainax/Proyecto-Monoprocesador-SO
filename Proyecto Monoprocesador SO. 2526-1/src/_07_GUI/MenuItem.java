@@ -7,45 +7,89 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 
 /**
+ * Representa un elemento individual dentro del menú lateral.
+ *
+ * <p>
+ * Un {@code MenuItem} puede representar distintos tipos de ítems definidos en
+ * {@link Model_Menu.MenuType}, como:</p>
+ * <ul>
+ * <li><b>MENU</b>: Opción seleccionable con ícono y nombre.</li>
+ * <li><b>TITLE</b>: Título de sección dentro del menú.</li>
+ * <li><b>EMPTY</b>: Espaciador visual sin texto ni ícono.</li>
+ * </ul>
+ *
+ * <p>
+ * El componente adapta su estilo según el tipo de ítem recibido en el
+ * constructor y permite resaltar la selección mediante el atributo
+ * {@code selected}.</p>
  *
  * @author Danaz
  */
 public class MenuItem extends javax.swing.JPanel {
 
+    /**
+     * Indica si el elemento del menú se encuentra seleccionado.
+     */
     private boolean selected;
-    
-    
+
+    /**
+     * Crea un nuevo elemento del menú basado en la información proporcionada.
+     *
+     * @param data modelo que contiene el ícono, nombre y tipo del elemento.
+     */
     public MenuItem(Model_Menu data) {
         initComponents();
         setOpaque(false);
-        if(null==data.getType()){
+
+        if (data.getType() == null) {
             lbName.setText(" ");
-        
-        }else switch (data.getType()) {
-            case MENU -> {
-                lbIcon.setIcon(data.toIcon());
-                lbName.setText(data.getName());
-                lbName.setFont(new Font("Segoe UI", Font.BOLD, 18));
-                lbName.setForeground(Color.WHITE);
+        } else {
+            switch (data.getType()) {
+                case MENU -> {
+                    lbIcon.setIcon(data.toIcon());
+                    lbName.setText(data.getName());
+                    lbName.setFont(new Font("Segoe UI", Font.BOLD, 18));
+                    lbName.setForeground(Color.WHITE);
+                }
+                case TITLE -> {
+                    lbIcon.setText(data.getName());
+                    lbIcon.setFont(new Font("Segoe UI", Font.BOLD, 28));
+                    lbIcon.setForeground(Color.WHITE);
+                    lbName.setVisible(false);
+                }
+                default ->
+                    lbName.setText(" ");
             }
-            case TITLE -> {
-                lbIcon.setText(data.getName());
-                lbIcon.setFont(new Font("Segoe UI", Font.BOLD, 28));
-                lbName.setVisible(false);
-                lbName.setForeground(Color.WHITE);
-            }
-            default -> lbName.setText(" ");
         }
     }
 
-    
-    public void setSelected(boolean selected){
-        this.selected=selected;
+    /**
+     * Define si el elemento se encuentra seleccionado. Cambia el estado visual
+     * del ítem.
+     *
+     * @param selected {@code true} si el elemento está seleccionado.
+     */
+    public void setSelected(boolean selected) {
+        this.selected = selected;
         repaint();
-    
     }
-    
-    
+
+    /**
+     * Pinta un efecto visual de selección si el ítem está seleccionado.
+     *
+     * @param g el contexto gráfico utilizado para dibujar el componente.
+     */
+    @Override
+    protected void paintComponent(Graphics g) {
+        if (selected) {
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(new Color(255, 255, 255, 40)); // fondo semitransparente
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+        }
+        super.paintComponent(g);
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -80,20 +124,6 @@ public class MenuItem extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    @Override
-    protected void paintComponent(Graphics grphcs){     
-        if(selected){
-        Graphics2D g2=(Graphics2D)grphcs;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(new Color(255,255,255,80));
-        g2.fillRoundRect(10, 0, getWidth()-20, getHeight(), 5,5);
-        
-        }
-        
-        super.paintComponent(grphcs);
-    }
-    
-    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel lbIcon;
     private javax.swing.JLabel lbName;

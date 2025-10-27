@@ -4,66 +4,62 @@ import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
-import _04_OperatingSystem.Process1;
-import static _04_OperatingSystem.ProcessState.READY;
-import static _04_OperatingSystem.ProcessState.RUNNING;
 import java.awt.Component;
 import java.awt.Font;
-import java.awt.GridLayout;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 
 /**
- *
+ * Panel visual que representa de forma simplificada el PCB (Process Control Block)
+ * de un proceso dentro del simulador del sistema operativo.
+ * 
+ * Muestra información básica: nombre, tipo e instrucciones del proceso.
+ * 
  * @author Danaz
  */
 public class SimplePCBPanel extends javax.swing.JPanel {
 
-    public SimplePCBPanel(String name, String type, int instructions) {
-        setLayout(new GridLayout(3, 1));
-        setBorder(BorderFactory.createLineBorder(Color.GRAY, 1, true));
-        setBackground(new Color(245, 245, 245));
-        setPreferredSize(new Dimension(200, 70));
 
+    /**
+     * Crea un panel visual compacto que muestra los datos principales de un proceso.
+     *
+     * @param name Nombre del proceso.
+     * @param type Tipo de proceso (CPU Bound / IO Bound).
+     * @param instructions Cantidad total de instrucciones.
+     */
+    public SimplePCBPanel(String name, String type, int instructions) {
+        // Inicializar etiquetas
         nameLabel = new JLabel("Nombre: " + name);
         typeLabel = new JLabel("Tipo: " + type);
         instructionsLabel = new JLabel("Instrucciones: " + instructions);
 
-        nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        typeLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        instructionsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-
-        add(nameLabel);
-        add(typeLabel);
-        add(instructionsLabel);
-        
         initUI();
     }
 
-    
-
+    /**
+     * Configura la apariencia visual y disposición de los elementos del panel.
+     */
     private void initUI() {
-        // Fondo y bordes
-        setBackground(new Color(55, 58, 60)); // gris oscuro
+        // Configuración general del panel
+        setBackground(new Color(153,204,255)); // Gris oscuro
         setBorder(BorderFactory.createLineBorder(new Color(150, 150, 150), 2, true));
-        setPreferredSize(new Dimension(160, 120));
-
-        // Layout vertical
+        setPreferredSize(new Dimension(160, 100));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        // Fuente y color
+        // Configuración de fuente y color de texto
         Font font = new Font("Segoe UI", Font.PLAIN, 12);
-        Color textColor = new Color(0,0,0);
+        Color textColor = Color.BLACK;
 
-        // Aplicar formato
-        for (JLabel lbl : new JLabel[]{nameLabel, typeLabel, instructionsLabel}) {
-            lbl.setFont(font);
-            lbl.setForeground(textColor);
-            lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
-            add(lbl);
-            add(Box.createVerticalStrut(3)); // espacio entre líneas
+        // Aplicar formato a las etiquetas
+        for (JLabel label : new JLabel[]{nameLabel, typeLabel, instructionsLabel}) {
+            label.setFont(font);
+            label.setForeground(textColor);
+            label.setAlignmentX(Component.LEFT_ALIGNMENT);
+            add(label);
+            add(Box.createVerticalStrut(3)); // Espacio entre líneas
         }
     }
+
 
    
 
@@ -75,6 +71,8 @@ public class SimplePCBPanel extends javax.swing.JPanel {
         typeLabel = new javax.swing.JLabel();
         nameLabel = new javax.swing.JLabel();
         instructionsLabel = new javax.swing.JLabel();
+
+        jPanel1.setBackground(new java.awt.Color(153, 204, 255));
 
         typeLabel.setForeground(new java.awt.Color(0, 0, 0));
         typeLabel.setText("Type:");

@@ -9,6 +9,14 @@ import java.awt.Image;
 import javax.swing.ImageIcon;
 
 /**
+ * Ventana principal del simulador de sistema operativo monoprocesador.
+ *
+ * Gestiona los paneles principales de la aplicación (Simulación, Configuración
+ * y Gráficos) mediante un {@link CardLayout}, además de inicializar el
+ * simulador y establecer su conexión con cada módulo visual.
+ *
+ * El menú lateral permite la navegación entre paneles, y la ventana se
+ * configura con el ícono e información del sistema.
  *
  * @author Danaz
  */
@@ -29,12 +37,12 @@ public class MainJframe extends javax.swing.JFrame {
         menuPanel1.initMoving(MainJframe.this);
 
         // Configuración por defecto
-        PolicyType defaultPolicy = Priority; 
+        PolicyType defaultPolicy = Priority;
         long defaultCycleDuration = 1000; // 1 ms o ajustable luego
-        
+
         // Crear el OS
         OperatingSystem so = new OperatingSystem(defaultPolicy, defaultCycleDuration);
-        
+
         //Crear Paneles
         simulationPanel = new SimulationPanel();
         configPanel = new ConfigPanel();
@@ -42,12 +50,10 @@ public class MainJframe extends javax.swing.JFrame {
 
         // Crear Simulador y conectar
         simulador = new Simulator((SimulationPanel) simulationPanel, so.getScheduler().getCurrentPolicy(), defaultCycleDuration);
-        simulationPanel.setSimulator(simulador); 
-        configPanel.setSimulator(simulador);   
+        simulationPanel.setSimulator(simulador);
+        configPanel.setSimulator(simulador);
         graphicsPanel.setSimulator(simulador);
 
-
-        
         //Configurar el contenedor central
         cardLayout = new CardLayout();
         content.setLayout(cardLayout);
@@ -78,14 +84,11 @@ public class MainJframe extends javax.swing.JFrame {
     }
 
     public void switchToPanel(String panelName) {
-        cardLayout.show(content, panelName);  
+        cardLayout.show(content, panelName);
         if ("config".equals(panelName) && configPanel != null) {
-        configPanel.refreshConfig();
+            configPanel.refreshConfig();
+        }
     }
-    }
-    
-    
-
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents

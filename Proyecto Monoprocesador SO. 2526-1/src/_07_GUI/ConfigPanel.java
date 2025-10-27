@@ -432,10 +432,10 @@ public class ConfigPanel extends javax.swing.JPanel {
             }
         });
 
-        cpuBoundRadio.setForeground(new java.awt.Color(255, 255, 255));
+        cpuBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         cpuBoundRadio.setText("CPU Bound");
 
-        ioBoundRadio.setForeground(new java.awt.Color(255, 255, 255));
+        ioBoundRadio.setForeground(new java.awt.Color(0, 0, 0));
         ioBoundRadio.setText("I/O Bound");
 
         submitButton.setText("Crear Nuevo Proceso");

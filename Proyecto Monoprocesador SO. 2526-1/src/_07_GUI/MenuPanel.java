@@ -9,51 +9,130 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import javax.swing.JFrame;
+
 /**
+ * Panel lateral que contiene el menú principal de navegación del programa.
+ *
+ * Este panel gestiona la interfaz visual del menú, incluyendo:
+ * 
+ * Los botones de navegación: Simulación, Configuración y Gráficos.
+ * Un encabezado con el título del proyecto.
+ * El fondo con efecto de degradado vertical.
+ * El movimiento del marco principal (ventana sin bordes).
+ * 
+ *
+ *
+ * El {@code MenuPanel} interactúa directamente con {@link MainJframe} para
+ * cambiar entre las distintas vistas del programa según el botón
+ * seleccionado.
  *
  * @author Danaz
  */
 public class MenuPanel extends javax.swing.JPanel {
-    
+
+    /**
+     * Coordenada X del ratón al presionar sobre el panel (para movimiento).
+     */
     private int x;
+
+    /**
+     * Coordenada Y del ratón al presionar sobre el panel (para movimiento).
+     */
     private int y;
+
+    /**
+     * Referencia al JFrame principal del programa.
+     */
     private MainJframe mainFrame;
 
+    /**
+     * Constructor del panel de menú lateral. Inicializa componentes visuales y
+     * la lista de opciones.
+     */
     public MenuPanel() {
         initComponents();
         setOpaque(false);
         listMenu1.setOpaque(false);
         init();
-        
-    }
-    
-    public void setMainFrame(MainJframe mainFrame){
-        this.mainFrame=mainFrame;
     }
 
-    private void init(){
-      //Botones Principales del programa
-      listMenu1.addItem(new Model_Menu("CpuIcon1-white","Simulación", Model_Menu.MenuType.MENU));
-      listMenu1.addItem(new Model_Menu("SettingIcon1","Configuración", Model_Menu.MenuType.MENU));
-      listMenu1.addItem(new Model_Menu("GraphicsIcon1","Gráficos", Model_Menu.MenuType.MENU));   
-    
-      
-      //Listener para los cambios de pantalla con los botones
-      listMenu1.addListSelectionListener(e -> {
-              if (!e.getValueIsAdjusting()) {
-                  int selectedIndex = listMenu1.getSelectedIndex();
-                  switch (selectedIndex) {
-                      case 0 -> mainFrame.switchToPanel("simulation");
-                      case 1 -> mainFrame.switchToPanel("config");
-                      case 2 -> mainFrame.switchToPanel("graphics");
-                  }
-              }
-      });
-    
+    /**
+     * Asigna el marco principal para permitir el cambio de paneles.
+     *
+     * @param mainFrame instancia del JFrame principal.
+     */
+    public void setMainFrame(MainJframe mainFrame) {
+        this.mainFrame = mainFrame;
     }
-            
-            
-    
+
+    /**
+     * Inicializa los elementos del menú y sus acciones asociadas.
+     */
+    private void init() {
+        // Botones principales del programa
+        listMenu1.addItem(new Model_Menu("CpuIcon1-white", "Simulación", Model_Menu.MenuType.MENU));
+        listMenu1.addItem(new Model_Menu("SettingIcon1", "Configuración", Model_Menu.MenuType.MENU));
+        listMenu1.addItem(new Model_Menu("GraphicsIcon1", "Gráficos", Model_Menu.MenuType.MENU));
+
+        // Listener para detectar cambios de selección y cambiar de panel
+        listMenu1.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && mainFrame != null) {
+                int selectedIndex = listMenu1.getSelectedIndex();
+                switch (selectedIndex) {
+                    case 0 ->
+                        mainFrame.switchToPanel("simulation");
+                    case 1 ->
+                        mainFrame.switchToPanel("config");
+                    case 2 ->
+                        mainFrame.switchToPanel("graphics");
+                }
+            }
+        });
+    }
+
+    // =======================================================================
+    //                           MÉTODOS VISUALES
+    // =======================================================================
+    /**
+     * Pinta el fondo del panel con un degradado vertical azul oscuro.
+     *
+     * @param grphcs el contexto gráfico sobre el cual se dibuja el panel.
+     */
+    @Override
+    protected void paintChildren(Graphics grphcs) {
+        Graphics2D g2 = (Graphics2D) grphcs;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        GradientPaint gradient = new GradientPaint(0, 0, Color.decode("#000046"),
+                0, getHeight(), Color.decode("#1CB5E0"));
+        g2.setPaint(gradient);
+        g2.fillRoundRect(0, 0, getWidth(), getHeight(), 0, 0);
+        g2.fillRect(getWidth() - 20, 0, getWidth(), getHeight());
+        super.paintChildren(grphcs);
+    }
+
+    /**
+     * Permite mover la ventana principal al arrastrar con el mouse sobre el
+     * panel superior.
+     *
+     * @param frame Ventana principal a mover.
+     */
+    public void initMoving(JFrame frame) {
+        panelMoving.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent me) {
+                x = me.getX();
+                y = me.getY();
+            }
+        });
+
+        panelMoving.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent me) {
+                frame.setLocation(me.getXOnScreen() - x, me.getYOnScreen() - y);
+            }
+        });
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -122,47 +201,7 @@ public class MenuPanel extends javax.swing.JPanel {
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    
-    //Fondo Degradado
-    @Override
-    protected void paintChildren(Graphics grphcs){
-        Graphics2D g2=(Graphics2D)grphcs;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        GradientPaint g = new GradientPaint(0,0,Color.decode("#000046"), 0,getHeight(),Color.decode("#1CB5E0"));
-        g2.setPaint(g);
-        g2.fillRoundRect(0, 0, getWidth(), getHeight(), 0,0);
-        g2.fillRect(getWidth()-20,0, getWidth(),getHeight());
-        
-        
-        super.paintChildren(grphcs);
-    }
-    
-    
-    
-    public void initMoving(JFrame frame){
-        panelMoving.addMouseListener(new MouseAdapter(){
-         @Override
-        public void mousePressed(MouseEvent me){
-            x=me.getX();
-            y=me.getY();
-        
-        }
-        
-        });
-       
-        panelMoving.addMouseMotionListener(new MouseMotionAdapter(){
-         @Override
-        public void mouseDragged(MouseEvent me){
-        
-            frame.setLocation(me.getXOnScreen()-x,me.getYOnScreen()-y);
-        
-        }
-        
-        });
-        
-    }
-    
-    
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
