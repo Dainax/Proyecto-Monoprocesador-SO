@@ -20,6 +20,7 @@ public class Process1 extends Thread {
     private int MAR;
     private String name;
     private int totalInstructions;
+    private int executedInstructions;
     private int remainingInstructions;
     private ProcessType type;
     private ProcessState state;
@@ -29,8 +30,7 @@ public class Process1 extends Thread {
     private int baseDirection;
 
     /**
-     * ----- Planificación ----- 
-     * FCFS:First-Come-First-Served o FIFO se usara el
+     * ----- Planificación ----- FCFS:First-Come-First-Served o FIFO se usara el
      * id del proceso Para SPN shortest process next se usara el que tenga el
      * menor totalInstruction Para SRT shortest remaining time se usara el que
      * tenga el menor remainingInstruction
@@ -63,17 +63,24 @@ public class Process1 extends Thread {
      *
      * @param name Nombre del proceso
      * @param totalInstructions Numero total de instrucciones
-     * @param type Tipo del proceso, si es IO_BOUND tiene numero de ciclos para generar y manejar interrupcion
+     * @param type Tipo del proceso, si es IO_BOUND tiene numero de ciclos para
+     * generar y manejar interrupcion
      * @param cyclesToGenerateInterruption
      * @param cyclesToManageInterruption
-     * @param baseDirection Direccion de la memoria principal donde inicia el proceso (Usar metodos de la clase MP)
+     * @param baseDirection Direccion de la memoria principal donde inicia el
+     * proceso (Usar metodos de la clase MP)
      */
     public Process1(String name, int totalInstructions, ProcessType type, int cyclesToGenerateInterruption, int cyclesToManageInterruption, int baseDirection) {
         this.PID = PID_COUNTER.getAndIncrement();
-        this.PC = 0;
+        if (baseDirection==-1) {
+            this.PC = baseDirection;
+        } else {
+            this.PC = baseDirection + 1;
+        }
         this.MAR = baseDirection;
         this.name = name;
         this.totalInstructions = totalInstructions;
+        this.executedInstructions = 0;
         this.remainingInstructions = totalInstructions;
         this.type = type;
         this.state = ProcessState.NEW;
@@ -120,6 +127,7 @@ public class Process1 extends Thread {
                     if (this.PC < this.totalInstructions) {
                         this.PC = this.PC + 1; // PC y MAR aumentan en 1 por ciclo 
                         this.MAR = this.MAR + 1;
+                        this.executedInstructions = this.executedInstructions + 1;
                         this.remainingInstructions = this.remainingInstructions - 1;
 
                         System.out.println("[" + this.name + "] Ejecutando: PC=" + this.PC + "/" + this.totalInstructions + ". MAR=" + this.MAR);
@@ -189,6 +197,10 @@ public class Process1 extends Thread {
         this.totalInstructions = totalInstructions;
     }
 
+    public int getExecutedInstructions() {
+        return executedInstructions;
+    }
+
     public int getRemainingInstructions() {
         return remainingInstructions;
     }
@@ -244,9 +256,9 @@ public class Process1 extends Thread {
     public void setBaseDirection(int baseDirection) {
         this.baseDirection = baseDirection;
     }
-    
-    public int getLimitDirection(){
-        return this.getBaseDirection()+this.getTotalInstructions();
+
+    public int getLimitDirection() {
+        return this.getBaseDirection() + this.getTotalInstructions();
     }
 
     public int getPPriority() {
@@ -293,8 +305,6 @@ public class Process1 extends Thread {
         return this.PID == pid;
     }
 
-    
-    
     public String toString() {
         // Calcular el Response Rate solo para la impresión si aún no se ha hecho
         double currentRR = this.responseRate;
@@ -323,14 +333,13 @@ public class Process1 extends Thread {
     public void setFinishCycle(int finishCycle) {
         this.finishCycle = finishCycle;
     }
-    
+
     public double calculateSlowdown() {
-        long totalTime = this.getFinishCycle() - this.getArriveCycle(); 
+        long totalTime = this.getFinishCycle() - this.getArriveCycle();
         int serviceTime = this.getTotalInstructions();
-        
-        return (double) totalTime / serviceTime ;
-        
-     }
-    
-    
+
+        return (double) totalTime / serviceTime;
+
+    }
+
 }

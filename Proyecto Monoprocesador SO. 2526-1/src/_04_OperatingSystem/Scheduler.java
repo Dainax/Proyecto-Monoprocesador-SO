@@ -314,7 +314,7 @@ public class Scheduler {
             int minPriorityReady = 1;
             int maxSizeReady = -1;
 
-            // Condición compleja: "Listos de mucho menor prioridad que el primer proceso en la cola de nuevos"
+            // Listos de mucho menor prioridad que el primer proceso en la cola de nuevos
             // Definimos "mucho menor" como una prioridad numéricamente más alta (peor)
             for (int i = 0; i < readyProcesses.GetSize(); i++) {
                 Process1 p = (Process1) readyProcesses.GetValInIndex(i).GetData();
@@ -380,12 +380,13 @@ public class Scheduler {
 
                 blockedProcesses.delNodewithVal(processToSuspend); //Lo muevo a bloqueados suspendidos
                 processToSuspend.setPState(ProcessState.BLOCKED_SUSPENDED);
+                this.osReference.getDma().getBlockedSuspendedProcesses().insertLast(processToSuspend);
 
                 // Libero la memoria ocupada por el proceso
+                processToSuspend.setPC(-1); //Lo saco de la memoria principal
+                processToSuspend.setMAR(-1);
                 this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions());
-                processToSuspend.setMAR(-1); //Lo saco de la memoria principal
 
-                this.osReference.getDma().getBlockedSuspendedProcesses().insertLast(processToSuspend);
                 System.out.println("PID " + processToSuspend.getPID() + " movido a bloqueados suspendidos.");
                 this.logEvent("Proceso " + processToSuspend.getPName() + " movido a bloqueados suspendidos.");
 
@@ -393,12 +394,13 @@ public class Scheduler {
 
                 readyProcesses.delNodewithVal(processToSuspend); // Lo suspendo
                 processToSuspend.setPState(ProcessState.READY_SUSPENDED);
+                this.osReference.getDma().getReadySuspendedProcesses().insertLast(processToSuspend);
 
                 // Libero la memoria ocupada por el proceso
                 this.osReference.getMp().freeSpace(processToSuspend.getBaseDirection(), processToSuspend.getTotalInstructions());
+                processToSuspend.setPC(-1); //Lo saco de la memoria principal
                 processToSuspend.setMAR(-1); //Lo saco de la memoria principal
 
-                this.osReference.getDma().getReadySuspendedProcesses().insertLast(processToSuspend);
                 System.out.println("PID " + processToSuspend.getPID() + " movido a listos suspendidos.");
                 this.logEvent("Proceso " + processToSuspend.getPName() + " movido a listos suspendidos.");
             }
@@ -420,6 +422,8 @@ public class Scheduler {
                 pToSwapIn.setPState(ProcessState.READY);
                 readyProcesses.insertLast(pToSwapIn);
                 this.osReference.getMp().allocate(baseDirection, pToSwapIn.getTotalInstructions()); //️ Asignar espacio en la memoria
+                pToSwapIn.setPC(baseDirection + pToSwapIn.getExecutedInstructions() + 1);
+                pToSwapIn.setMAR(baseDirection + pToSwapIn.getExecutedInstructions());
                 pToSwapIn.setBaseDirection(baseDirection);
                 System.out.println("PID " + pToSwapIn.getPID() + " movido de listo suspendido a listo.");
                 this.logEvent("Proceso " + pToSwapIn.getPName() + " movido de listo suspendido a listo.");
@@ -438,7 +442,10 @@ public class Scheduler {
                 pToSwapIn.setPState(ProcessState.BLOCKED);
                 blockedProcesses.insertLast(pToSwapIn);
                 this.osReference.getMp().allocate(baseDirection, pToSwapIn.getTotalInstructions()); //️ Asignar espacio en la memoria
+                pToSwapIn.setPC(baseDirection + pToSwapIn.getExecutedInstructions() + 1);
+                pToSwapIn.setMAR(baseDirection + pToSwapIn.getExecutedInstructions());
                 pToSwapIn.setBaseDirection(baseDirection);
+
                 System.out.println("PID " + pToSwapIn.getPID() + "movido de Bloqueado suspendido a bloqueado.");
                 this.logEvent("Proceso " + pToSwapIn.getPName() + " movido de Bloqueado suspendido a bloqueado.");
             }
@@ -456,7 +463,7 @@ public class Scheduler {
         // Cada 10 ciclos, intentar mover 1 proceso de NEW a READY_SUSPENDED (si existe)
         int currentCycle = this.osReference.getCpu().getCycleCounter();
 
-        if (currentCycle-lastAdmissionCycle>30 && currentCycle != lastAdmissionCycle) {
+        if (currentCycle - lastAdmissionCycle > 30 && currentCycle != lastAdmissionCycle) {
             lastAdmissionCycle = currentCycle;
             // Tomar el primer proceso de la cola de nuevos y moverlo a ready suspended
             SimpleList<Process1> newQueue = this.osReference.getDma().getNewProcesses();
@@ -490,14 +497,16 @@ public class Scheduler {
                 // Considerar la cola de listo suspendidos. Por ahora solo listo por simplicidad 
                 // Si hay espacio
             } else {
-                newProcessToMP.setBaseDirection(baseDirection); // Lo ubico en la memoria
-                newProcessToMP.setMAR(baseDirection);
-
-                newProcessToMP.setPState(ProcessState.READY); // Coloco el proceso en listo
-                newProcessToMP.setArriveCycle(this.osReference.getCpu().getCycleCounter());
-
                 this.osReference.getReadyQueue().insertLast(newProcessToMP); // Muevo el proceso de la cola de nuevo a la cola de listos
                 this.osReference.getDma().getNewProcesses().delNodewithVal(newProcessToMP);
+
+                newProcessToMP.setPState(ProcessState.READY); // Coloco el proceso en listo
+
+                newProcessToMP.setPC(baseDirection + 1); // modifico su PC y su mar
+                newProcessToMP.setMAR(baseDirection);
+                newProcessToMP.setBaseDirection(baseDirection); // Lo ubico en la memoria
+
+                newProcessToMP.setArriveCycle(this.osReference.getCpu().getCycleCounter());
 
                 // Asignar el espacio en la memoria principal (Actualiza el array memorySlots)
                 this.osReference.getMp().allocate(baseDirection, newProcessToMP.getTotalInstructions());
@@ -513,7 +522,7 @@ public class Scheduler {
     private void logEvent(String event) {
         int currentCycle = this.osReference.getCpu().getCycleCounter();
         // Sobrescribe el ultimo evento que guardo el planificador
-        this.lastEventLog = String.format("🕝 %d: %s", currentCycle, event);
+        this.lastEventLog = String.format("%d: %s", currentCycle, event);
     }
 
     // Getters y Setters
